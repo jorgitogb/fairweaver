@@ -10,7 +10,7 @@ from pathlib import Path
 
 def load_plugins() -> dict:
     plugins = {}
-    plugins_dir = Path(__file__).parent / "formats"
+    plugins_dir = Path(__file__).parent.parent / "formats"
 
     for plugin_file in plugins_dir.glob("*_plugin.py"):
         spec = importlib.util.spec_from_file_location(plugin_file.stem, plugin_file)

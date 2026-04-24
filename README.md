@@ -61,12 +61,12 @@ fairweaver/
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx              ← main UI
+│   │   ├── App.tsx              ← main UI
 │   │   ├── components/
-│   │   │   ├── UploadZone.jsx
-│   │   │   ├── PivotSelector.jsx
-│   │   │   ├── MappingEditor.jsx
-│   │   │   └── SuggestionPanel.jsx
+│   │   │   ├── UploadZone.tsx
+│   │   │   ├── PivotSelector.tsx
+│   │   │   ├── MappingEditor.tsx
+│   │   │   └── SuggestionPanel.tsx
 │   │   └── api/
 │   │       └── client.js        ← all API calls
 │   ├── package.json

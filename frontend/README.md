@@ -1,16 +1,49 @@
-# React + Vite
+# FAIR Weaver
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Data transformation platform for FAIR (Findable, Accessible, Interoperable, Reusable) metadata.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend**: React + Vite + TypeScript
+- **Backend**: FastAPI (Python 3.12+)
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Frontend
+cd frontend && npm install && npm run dev
 
-## Expanding the ESLint configuration
+# Backend
+cd backend && uv sync && uv run uvicorn main:app --reload
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Docker (full stack)
+docker compose up
+```
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── components/    # React components
+│   │   ├── MappingEditor.tsx
+│   │   ├── PivotSelector.tsx
+│   │   ├── SuggestionPanel.tsx
+│   │   └── UploadZone.tsx
+│   ├── App.tsx
+│   └── main.tsx
+└── index.html
+
+backend/
+├── main.py           # FastAPI entry
+├── plugins/          # Format plugins
+├── mappings/         # Field mappings
+└── pivot_registry.yaml
+```
+
+## API Endpoints
+
+- `GET /pivots` - List pivots
+- `POST /pivots/recommend` - Recommend pivot for file
+- `POST /convert` - Convert to pivot
+- `POST /convert/chain` - Source → pivot → target
