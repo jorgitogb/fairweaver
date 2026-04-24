@@ -2,6 +2,41 @@
 FAIRweaver Mapping Engine
 Handles pivot registry, YAML mapping generation, validation, and conversion.
 AI suggestions via Ollama (plugged in later during hackathon week).
+
+## YAML Mapping Schema
+
+Mapping files use this structure:
+
+    source_format: isa_json       # Required: source format ID (e.g., isa_json, datacite_xml)
+    pivot: agrischemas_fieldtrial # Required: pivot ID from registry
+    version: "0.1.0"        # Required: semantic version
+    author: fairweaver-community # Optional: author name
+    description: "Maps..."      # Optional: description
+    field_rules:               # Required: array of field rules
+      - source: study.identifier   # Source field path (nullable = computed/derived)
+        target: identifier       # Required: target pivot field
+        required: true         # Is required by pivot profile
+        confidence: 0.95     # 0.0-1.0 mapping confidence
+        transform: null       # Optional: transform function name
+        note: "..."        # Optional: human-readable note
+
+## Field Rules
+
+- source: Dot-notation path to field in source document (e.g., "study.title", "submissionDate")
+  - Use null if field is computed/derived from multiple sources
+- target: Target field name from pivot profile
+- required: Whether pivot profile marks this as required
+- confidence: 0.0 (no match) to 1.0 (exact match)
+  - 0.95+: Exact field name match
+  - 0.6-0.9: Fuzzy/alias match
+  - 0.0-0.5: No direct equivalent exists
+- transform: Optional function name (e.g., "date_iso8601", "uppercase")
+- note: Optional explanation for mappers
+
+## Validation
+
+Mappings are validated against MAPPING_SCHEMA_REQUIRED_KEYS:
+{"source_format", "pivot", "version", "field_rules"}
 """
 
 import yaml

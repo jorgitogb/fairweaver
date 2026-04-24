@@ -1,0 +1,77 @@
+source_format: datacite_xml
+pivot: bioschemas_dataset
+version: "0.1.0"
+author: fairweaver-community
+description: Maps DataCite XML fields to Bioschemas Dataset pivot
+
+field_rules:
+  - source: identifier
+    target: identifier
+    required: true
+    confidence: 0.95
+
+  - source: title
+    target: name
+    required: true
+    confidence: 0.95
+    note: "DataCite title maps to Bioschemas name"
+
+  - source: description
+    target: description
+    required: true
+    confidence: 0.9
+    note: "DataCite description/abstract"
+
+  - source: null
+    target: url
+    required: true
+    confidence: 0.0
+    note: "No DataCite equivalent - derive from DOI or add manually"
+
+  - source: null
+    target: keywords
+    required: true
+    confidence: 0.0
+    note: "No DataCite equivalent - use resourceType as proxy or add manually"
+
+  - source: null
+    target: license
+    required: true
+    confidence: 0.0
+    note: "No DataCite equivalent - add manually"
+
+  - source: creator
+    target: creator
+    required: false
+    confidence: 0.8
+    note: "First creator name - may need name parsing"
+
+  - source: publicationYear
+    target: datePublished
+    required: false
+    confidence: 0.5
+    transform: date_year_only
+    note: "Publication year only, not full ISO date"
+
+  - source: publisher
+    target: publisher
+    required: false
+    confidence: 0.95
+
+  - source: null
+    target: dateModified
+    required: false
+    confidence: 0.0
+    note: "No DataCite equivalent - can derive from metadata update"
+
+  - source: resourceType
+    target: variableMeasured
+    required: false
+    confidence: 0.3
+    note: "Loose match - resourceTypeGeneral as proxy"
+
+  - source: null
+    target: distribution
+    required: false
+    confidence: 0.0
+    note: "No DataCite equivalent - can link to landing page"

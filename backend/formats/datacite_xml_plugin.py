@@ -17,7 +17,9 @@ def load(content: bytes) -> dict:
     root = ET.fromstring(content)
 
     def find(tag: str) -> str:
-        el = root.find(f"dc:{tag}", NS) or root.find(tag)
+        el = root.find(f"dc:{tag}", NS)
+        if el is None:
+            el = root.find(tag)
         return el.text.strip() if el is not None and el.text else ""
 
     flat = {
@@ -45,36 +47,52 @@ def write(json_ld: dict) -> dict:
 
 
 def _find_title(root) -> str:
-    titles = root.find("dc:titles", NS) or root.find("titles")
+    titles = root.find("dc:titles", NS)
+    if titles is None:
+        titles = root.find("titles")
     if titles is not None:
-        t = titles.find("dc:title", NS) or titles.find("title")
+        t = titles.find("dc:title", NS)
+        if t is None:
+            t = titles.find("title")
         if t is not None and t.text:
             return t.text.strip()
     return ""
 
 
 def _find_description(root) -> str:
-    descs = root.find("dc:descriptions", NS) or root.find("descriptions")
+    descs = root.find("dc:descriptions", NS)
+    if descs is None:
+        descs = root.find("descriptions")
     if descs is not None:
-        d = descs.find("dc:description", NS) or descs.find("description")
+        d = descs.find("dc:description", NS)
+        if d is None:
+            d = descs.find("description")
         if d is not None and d.text:
             return d.text.strip()
     return ""
 
 
 def _find_resource_type(root) -> str:
-    rt = root.find("dc:resourceType", NS) or root.find("resourceType")
+    rt = root.find("dc:resourceType", NS)
+    if rt is None:
+        rt = root.find("resourceType")
     if rt is not None:
         return rt.get("resourceTypeGeneral", rt.text or "")
     return ""
 
 
 def _find_creator(root) -> str:
-    creators = root.find("dc:creators", NS) or root.find("creators")
+    creators = root.find("dc:creators", NS)
+    if creators is None:
+        creators = root.find("creators")
     if creators is not None:
-        c = creators.find("dc:creator", NS) or creators.find("creator")
+        c = creators.find("dc:creator", NS)
+        if c is None:
+            c = creators.find("creator")
         if c is not None:
-            name = c.find("dc:creatorName", NS) or c.find("creatorName")
+            name = c.find("dc:creatorName", NS)
+            if name is None:
+                name = c.find("creatorName")
             if name is not None and name.text:
                 return name.text.strip()
     return ""
