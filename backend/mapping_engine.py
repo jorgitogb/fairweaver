@@ -1,48 +1,15 @@
 """
 FAIRweaver Mapping Engine
 Handles pivot registry, YAML mapping generation, validation, and conversion.
-AI suggestions via Ollama (plugged in later during hackathon week).
-
-## YAML Mapping Schema
-
-Mapping files use this structure:
-
-    source_format: isa_json       # Required: source format ID (e.g., isa_json, datacite_xml)
-    pivot: agrischemas_fieldtrial # Required: pivot ID from registry
-    version: "0.1.0"        # Required: semantic version
-    author: fairweaver-community # Optional: author name
-    description: "Maps..."      # Optional: description
-    field_rules:               # Required: array of field rules
-      - source: study.identifier   # Source field path (nullable = computed/derived)
-        target: identifier       # Required: target pivot field
-        required: true         # Is required by pivot profile
-        confidence: 0.95     # 0.0-1.0 mapping confidence
-        transform: null       # Optional: transform function name
-        note: "..."        # Optional: human-readable note
-
-## Field Rules
-
-- source: Dot-notation path to field in source document (e.g., "study.title", "submissionDate")
-  - Use null if field is computed/derived from multiple sources
-- target: Target field name from pivot profile
-- required: Whether pivot profile marks this as required
-- confidence: 0.0 (no match) to 1.0 (exact match)
-  - 0.95+: Exact field name match
-  - 0.6-0.9: Fuzzy/alias match
-  - 0.0-0.5: No direct equivalent exists
-- transform: Optional function name (e.g., "date_iso8601", "uppercase")
-- note: Optional explanation for mappers
-
-## Validation
-
-Mappings are validated against MAPPING_SCHEMA_REQUIRED_KEYS:
-{"source_format", "pivot", "version", "field_rules"}
+Uses rule-based matching with SAIA AI assistance for intelligent suggestions.
 """
 
 import yaml
 import json
 from pathlib import Path
 from typing import Any
+
+from ai_client import generate_mapping_suggestion, suggest_missing_fields, is_available
 
 
 MAPPING_SCHEMA_REQUIRED_KEYS = {"source_format", "pivot", "version", "field_rules"}
@@ -127,16 +94,38 @@ class MappingEngine:
     def generate_mapping(self, data: dict, pivot_id: str) -> dict:
         """
         Generate a draft YAML mapping from input data to pivot.
-        Rule-based for now; AI (Ollama RAG) replaces this during hackathon week.
+        Tries AI first if available, falls back to rule-based matching.
         """
         pivot_meta = self.pivots.get(pivot_id, {})
         required = pivot_meta.get("required_fields", [])
         recommended = pivot_meta.get("recommended_fields", [])
-        input_keys = list(self._flatten_keys(data))
-
+        input_keys = self._flatten_keys(data)
+        
+        # Try AI first if available
+        if is_available():
+            pivot_fields = list(zip(required + recommended, [f in required for f in required + recommended]))
+            ai_result = generate_mapping_suggestion(
+                source_fields=input_keys,
+                pivot_fields=pivot_fields,
+                pivot_id=pivot_id,
+            )
+            if ai_result:
+                try:
+                    field_rules = json.loads(ai_result)
+                    if field_rules and isinstance(field_rules, list):
+                        return {
+                            "source_format": "unknown",
+                            "pivot": pivot_id,
+                            "version": "0.1.0",
+                            "author": "fairweaver-ai",
+                            "field_rules": field_rules,
+                        }
+                except json.JSONDecodeError:
+                    pass
+        
+        # Fall back to rule-based matching
         field_rules = []
         for target_field in required + recommended:
-            # Naive match: exact name or common alias
             source_field = self._find_best_match(target_field, input_keys)
             confidence = 0.9 if source_field == target_field else (0.6 if source_field else 0.0)
             field_rules.append({

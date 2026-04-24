@@ -28,6 +28,11 @@ PIVOT_REGISTRY_PATH = Path(os.getenv("PIVOT_REGISTRY_PATH", "pivot_registry.yaml
 engine = MappingEngine(PIVOT_REGISTRY_PATH)
 plugins = load_plugins()
 
+# SAIA API configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://chat-ai.academiccloud.de/v1")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
+
 
 # ── Pivots ────────────────────────────────────────────────────────────────────
 
