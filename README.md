@@ -1,22 +1,29 @@
 # 🧬 FAIRweaver
 
-> AI-assisted metadata interoperability platform with selectable pivot.
+> AI-assisted metadata interoperability platform with selectable pivot.  
 > BioHackathon Germany 2026 · de.NBI Cloud · Apache 2.0
 
-FAIRweaver converts research metadata between formats (ISA-JSON, DataCite, RO-Crate, Darwin Core, MIAPPE) using a **selectable interoperability pivot** (Bioschemas, AgroSchemas, Schema.org, or your own JSON-LD context). A local AI model (Ollama) generates portable YAML mappings and suggests missing FAIR fields — all inference runs on-premise, no data leaves your environment.
+FAIRweaver converts research metadata between formats (ISA-JSON, DataCite, RO-Crate, Darwin Core, MIAPPE) using a **selectable interoperability pivot** — Bioschemas, AgroSchemas, Schema.org, or your own JSON-LD context. An AI model generates portable YAML mapping files and suggests missing FAIR fields. All AI inference runs via the [GWDG Academic Cloud API](https://docs.hpc.gwdg.de/services/saia/index.html) — no local GPU required.
 
 ---
 
 ## Quickstart (development)
 
+### Prerequisites
+
+- Python 3.12+ with [uv](https://docs.astral.sh/uv/)
+- Node.js 20+
+- A GWDG Academic Cloud API key → [docs.hpc.gwdg.de/services/saia](https://docs.hpc.gwdg.de/services/saia/index.html)
+
 ### 1. Backend
 
 ```bash
 cd backend
+cp ../.env.example ../.env   # add your OPENAI_API_KEY
 uv sync
 uv run uvicorn main:app --reload
-# API available at http://localhost:8000
-# Docs at http://localhost:8000/docs
+# API:  http://localhost:8000
+# Docs: http://localhost:8000/docs
 ```
 
 ### 2. Frontend
@@ -25,21 +32,33 @@ uv run uvicorn main:app --reload
 cd frontend
 npm install
 npm run dev
-# UI available at http://localhost:5173
+# UI: http://localhost:5173
 ```
 
-### 3. Full stack with Docker (includes Ollama)
+### 3. Full stack with Docker
 
 ```bash
 cp .env.example .env
+# Edit .env and set OPENAI_API_KEY
 docker compose up
-# UI + API at http://localhost:8000
+# Backend: http://localhost:8000
+# Frontend: http://localhost:8080
 ```
 
-Pull the AI model on first run:
+---
+
+## Environment variables
+
+Copy `.env.example` to `.env` and fill in your key:
+
 ```bash
-docker compose exec ollama ollama pull mistral:7b-instruct-q4_K_M
+OPENAI_API_KEY=your_api_key_here
+OPENAI_BASE_URL=https://chat-ai.academiccloud.de/v1
+OPENAI_MODEL=meta-llama-3.1-8b-instruct
+LOG_LEVEL=info
 ```
+
+The API is OpenAI-compatible — `OPENAI_BASE_URL` points to GWDG by default but can be swapped for any compatible endpoint.
 
 ---
 
@@ -48,37 +67,69 @@ docker compose exec ollama ollama pull mistral:7b-instruct-q4_K_M
 ```
 fairweaver/
 ├── backend/
-│   ├── main.py                  ← FastAPI app
-│   ├── mapping_engine.py        ← pivot registry, YAML mapping, conversion
-│   ├── pivot_registry.yaml      ← registered pivot profiles
-│   ├── mappings/                ← community YAML mapping files
+│   ├── main.py                   ← FastAPI app + all REST endpoints
+│   ├── mapping_engine.py         ← pivot registry, YAML mapping, conversion
+│   ├── ai_client.py              ← GWDG API wrapper (mapping gen, suggestions, RAG)
+│   ├── pivot_registry.yaml       ← registered pivot profiles
+│   ├── mappings/                 ← community YAML mapping files (CC0)
 │   ├── plugins/
-│   │   ├── loader.py            ← auto-discovers format plugins
+│   │   ├── loader.py             ← auto-discovers format plugins at startup
 │   │   └── formats/
 │   │       ├── isa_json_plugin.py
 │   │       └── datacite_xml_plugin.py
-│   ├── requirements.txt
+│   ├── pyproject.toml            ← uv/hatchling config
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── Main.tsx              ← main UI
+│   │   ├── Main.tsx              ← app entry point
 │   │   ├── components/
 │   │   │   ├── UploadZone.tsx
 │   │   │   ├── PivotSelector.tsx
 │   │   │   ├── MappingEditor.tsx
 │   │   │   └── SuggestionPanel.tsx
 │   │   └── api/
-│   │       └── client.js        ← all API calls
+│   │       └── client.ts         ← typed API client (all fetch calls)
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── Dockerfile
 ├── docker-compose.yml
 ├── .env.example
+├── AGENTS.md                     ← guide for AI coding assistants
 └── README.md
 ```
 
 ---
 
-## Adding a new format plugin
+## AI models (GWDG Academic Cloud)
+
+| Task                        | Default model                | Override env var |
+| --------------------------- | ---------------------------- | ---------------- |
+| YAML mapping generation     | `llama-3.3-70b-instruct`     | `OPENAI_MODEL`   |
+| Real-time field suggestions | `meta-llama-3.1-8b-instruct` | —                |
+| Embeddings / RAG            | `e5-mistral-7b-instruct`     | —                |
+
+All available models: [docs.hpc.gwdg.de/services/chat-ai/models](https://docs.hpc.gwdg.de/services/chat-ai/models/index.html)
+
+---
+
+## API endpoints
+
+| Method | Path                 | Description                                   |
+| ------ | -------------------- | --------------------------------------------- |
+| GET    | `/pivots`            | List registered pivot profiles                |
+| POST   | `/pivots/recommend`  | AI-recommend best pivot for an input file     |
+| GET    | `/mappings`          | List available YAML mappings                  |
+| POST   | `/mappings/generate` | AI-generate a YAML mapping draft              |
+| POST   | `/mappings/validate` | Validate a YAML mapping file                  |
+| POST   | `/convert`           | Convert input → pivot JSON-LD                 |
+| POST   | `/convert/chain`     | Bidirectional: source → pivot → target format |
+
+Interactive docs at `http://localhost:8000/docs`
+
+---
+
+## Adding a format plugin
 
 Create `backend/plugins/formats/myformat_plugin.py`:
 
@@ -88,7 +139,7 @@ LABEL = "My Format"
 EXTENSIONS = [".xyz"]
 
 def load(content: bytes) -> dict:
-    # Parse bytes → flat dict
+    # Parse bytes → flat dict for the mapping engine
     ...
 
 def write(json_ld: dict) -> dict:
@@ -96,11 +147,11 @@ def write(json_ld: dict) -> dict:
     ...
 ```
 
-That's it — the plugin is auto-discovered on next startup.
+The plugin is auto-discovered on next startup — no registration needed.
 
 ---
 
-## Adding a new pivot
+## Adding a pivot
 
 Add an entry to `backend/pivot_registry.yaml`:
 
@@ -115,26 +166,10 @@ my_consortium_schema:
 
 ---
 
-## API endpoints
+## Roadmap (hackathon week · 07–11 Dec 2026)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/pivots` | List registered pivot profiles |
-| POST | `/pivots/recommend` | AI-recommend best pivot for input file |
-| GET | `/mappings` | List available YAML mappings |
-| POST | `/mappings/generate` | AI-generate a YAML mapping draft |
-| POST | `/mappings/validate` | Validate a YAML mapping file |
-| POST | `/convert` | Convert input → pivot JSON-LD |
-| POST | `/convert/chain` | Convert input → pivot → target format |
-
-Interactive docs: `http://localhost:8000/docs`
-
----
-
-## Roadmap (hackathon week — Dec 2026)
-
-- [ ] Ollama + RAG pipeline over YAML mapping corpus
-- [ ] Additional format plugins: RO-Crate, Darwin Core CSV, MIAPPE XLSX
+- [ ] RAG pipeline over YAML mapping corpus (embeddings via GWDG API)
+- [ ] Format plugins: RO-Crate, Darwin Core CSV, MIAPPE XLSX
 - [ ] YAML mapping editor in the UI
 - [ ] Custom pivot upload (JSON-LD context)
 - [ ] Validation against 10 real NFDI4Agri datasets
@@ -144,6 +179,8 @@ Interactive docs: `http://localhost:8000/docs`
 
 ## Contributing
 
-YAML mappings are CC0. Code is Apache 2.0. PRs welcome — see plugin docs above.
+YAML mappings are **CC0**. Code is **Apache 2.0**. PRs welcome.
+
+See `AGENTS.md` for architecture notes and common issues if you are using an AI coding assistant.
 
 **BioHackathon Germany 2026** · Göttingen · 07–11 December 2026
