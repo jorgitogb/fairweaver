@@ -7,28 +7,10 @@ services:
       - "8000:8000"
     environment:
       - PIVOT_REGISTRY_PATH=/app/pivot_registry.yaml
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-mistral:7b-instruct-q4_K_M}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://chat-ai.academiccloud.de/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-meta-llama-3.1-8b-instruct}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
-      - ./backend/mappings:/app/mappings # live-reload mappings without rebuild
-    depends_on:
-      - ollama
+      - ./backend/mappings:/app/mappings
     restart: unless-stopped
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_models:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    restart: unless-stopped
-
-volumes:
-  ollama_models:
