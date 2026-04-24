@@ -13,9 +13,8 @@ FAIRweaver converts research metadata between formats (ISA-JSON, DataCite, RO-Cr
 
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+uv sync
+uv run uvicorn main:app --reload
 # API available at http://localhost:8000
 # Docs at http://localhost:8000/docs
 ```

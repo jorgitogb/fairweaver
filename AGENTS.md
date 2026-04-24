@@ -3,8 +3,8 @@
 ## Quick Commands
 
 ```bash
-# Backend
-cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload
+# Backend (using uv)
+cd backend && uv sync && uv run uvicorn main:app --reload
 
 # Frontend
 cd frontend && npm install && npm run dev
@@ -66,3 +66,13 @@ Fallback: `isa_json`
 3. **Format detection wrong**: Verify file extension matches content
 4. **Missing fields**: Check pivot's required_fields in registry
 5. **CORS error**: Frontend must be on localhost:5173
+6. **Build errors**: Use `uv pip install -e .` in venv; requires Python 3.12+
+7. **pyproject.toml issues**: Uses hatchling; ensure packages defined in `[tool.hatch.build.targets.wheel]`
+
+## Python Environment
+
+- **Backend requires**: Python 3.12+ (uses `typing.TypeAlias` syntax)
+- **Package manager**: uv (not pip)
+- **Setup**: `cd backend && uv sync && uv run uvicorn main:app --reload`
+- **Editable install**: `uv pip install -e .` for development
+- **pyproject.toml**: Modern Python packaging config with hatchling build backend
