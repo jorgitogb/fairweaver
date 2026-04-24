@@ -1,0 +1,104 @@
+pivots:
+
+  bioschemas_dataset:
+    label: "Bioschemas Dataset"
+    context_url: "https://bioschemas.org/profiles/Dataset/1.0-RELEASE"
+    domains: [genomics, proteomics, biodiversity, general]
+    required_fields:
+      - identifier
+      - name
+      - description
+      - url
+      - keywords
+      - license
+    recommended_fields:
+      - creator
+      - datePublished
+      - dateModified
+      - publisher
+      - version
+      - measurementTechnique
+      - variableMeasured
+      - distribution
+
+  bioschemas_taxon:
+    label: "Bioschemas Taxon"
+    context_url: "https://bioschemas.org/profiles/Taxon/1.0-RELEASE"
+    domains: [biodiversity, taxonomy]
+    required_fields:
+      - identifier
+      - name
+      - taxonRank
+    recommended_fields:
+      - parentTaxon
+      - scientificName
+      - alternateName
+      - sameAs
+      - url
+
+  bioschemas_biosample:
+    label: "Bioschemas BioSample"
+    context_url: "https://bioschemas.org/profiles/BioSample/0.1-RELEASE"
+    domains: [genomics, biodiversity, general]
+    required_fields:
+      - identifier
+      - name
+      - description
+    recommended_fields:
+      - url
+      - additionalProperty
+      - collector
+      - locationCreated
+
+  agrischemas_fieldtrial:
+    label: "AgroSchemas Field Trial Study"
+    context_url: "https://agrischemas.org/profiles/FieldTrialStudy/0.2"
+    domains: [agronomy, plant_phenotyping, soil_science]
+    required_fields:
+      - identifier
+      - title
+      - description
+      - startDate
+      - crop
+      - location
+    recommended_fields:
+      - endDate
+      - growingSeason
+      - experimentalDesign
+      - trait
+      - germplasm
+      - contact
+      - license
+      - datasetDoi
+
+  agrischemas_cropvariety:
+    label: "AgroSchemas Crop Variety"
+    context_url: "https://agrischemas.org/profiles/CropVariety/0.1"
+    domains: [agronomy, plant_phenotyping]
+    required_fields:
+      - identifier
+      - name
+      - crop
+    recommended_fields:
+      - variety
+      - breeder
+      - registrationYear
+      - countryOfOrigin
+      - traits
+
+  schemaorg_generic:
+    label: "Schema.org Dataset (generic)"
+    context_url: "https://schema.org"
+    domains: [general]
+    required_fields:
+      - name
+      - description
+      - url
+    recommended_fields:
+      - identifier
+      - keywords
+      - license
+      - creator
+      - datePublished
+      - publisher
+      - distribution

@@ -1,0 +1,44 @@
+source_format: isa_json
+pivot: agrischemas_fieldtrial
+version: "0.1.0"
+author: fairweaver-community
+description: Maps ISA-JSON investigation fields to AgroSchemas FieldTrialStudy pivot
+
+field_rules:
+  - source: study.identifier
+    target: identifier
+    required: true
+    confidence: 0.95
+    transform: null
+
+  - source: study.title
+    target: title
+    required: true
+    confidence: 0.95
+    transform: null
+
+  - source: study.description
+    target: description
+    required: true
+    confidence: 0.9
+    transform: null
+
+  - source: submissionDate
+    target: startDate
+    required: true
+    confidence: 0.6
+    transform: null
+    note: "submissionDate is a proxy; prefer study-level start date if available"
+
+  - source: study.contact.email
+    target: contact
+    required: false
+    confidence: 0.8
+    transform: null
+
+  - source: title
+    target: datasetDoi
+    required: false
+    confidence: 0.0
+    transform: null
+    note: "No direct ISA-JSON equivalent — must be added manually"
