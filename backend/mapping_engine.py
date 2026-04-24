@@ -21,6 +21,8 @@ class MappingEngine:
         self.pivots = self._load_registry()
         self.mappings_dir = registry_path.parent / "mappings"
         self.mappings_dir.mkdir(exist_ok=True)
+        self._last_mapping_ai = False
+        self._last_mapping_model = None
 
     # ── Registry ──────────────────────────────────────────────────────────────
 
@@ -113,6 +115,8 @@ class MappingEngine:
                 try:
                     field_rules = json.loads(ai_result)
                     if field_rules and isinstance(field_rules, list):
+                        self._last_mapping_ai = True
+                        self._last_mapping_model = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
                         return {
                             "source_format": "unknown",
                             "pivot": pivot_id,
@@ -124,6 +128,8 @@ class MappingEngine:
                     pass
         
         # Fall back to rule-based matching
+        self._last_mapping_ai = False
+        self._last_mapping_model = None
         field_rules = []
         for target_field in required + recommended:
             source_field = self._find_best_match(target_field, input_keys)
@@ -164,11 +170,17 @@ class MappingEngine:
         required_fields = set(pivot_meta.get("required_fields", []))
         recommended_fields = set(pivot_meta.get("recommended_fields", []))
 
-        # Load best available mapping or fall back to generated draft
+        # Load best available mapping or generate new one
         mapping = self._load_best_mapping(source_format, pivot_id)
+        mapping_source = "cached"
         if not mapping:
             mapping = self.generate_mapping(data, pivot_id)
+            mapping_source = "ai" if self._last_mapping_ai else "rules"
 
+        # Determine mapping source for response
+        if mapping_source == "cached" and mapping:
+            mapping_source = "cached"
+        
         json_ld: dict[str, Any] = {"@context": context_url, "@type": "Dataset"}
         applied_targets = set()
 
@@ -201,6 +213,15 @@ class MappingEngine:
             "json_ld": json_ld,
             "missing_fields": missing_fields,
             "confidence": confidence,
+            "mapping_source": mapping_source,
+            "model": self._last_mapping_model if mapping_source == "ai" else None,
+        }
+
+    def get_mapping_info(self) -> dict:
+        """Get info about the last mapping generation."""
+        return {
+            "ai_used": self._last_mapping_ai,
+            "model": self._last_mapping_model,
         }
 
     # ── Helpers ───────────────────────────────────────────────────────────────

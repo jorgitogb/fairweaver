@@ -138,6 +138,25 @@ export default function App() {
               </button>
             )}
 
+            {result && (
+              <div className="flex items-center gap-2 text-xs">
+                {result.mapping_source === "ai" ? (
+                  <span className="flex items-center gap-1 bg-violet-100 text-violet-700 px-2 py-1 rounded-full">
+                    <span>🤖</span> AI-powered
+                    {result.model && <span className="text-violet-500">({result.model})</span>}
+                  </span>
+                ) : result.mapping_source === "rules" ? (
+                  <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                    <span>📐</span> Rule-based
+                  </span>
+                ) : (
+                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    Cached
+                  </span>
+                )}
+              </div>
+            )}
+
             {convertMutation.isError && (
               <p className="text-red-500 text-sm">
                 ⚠ {(convertMutation.error as Error).message}

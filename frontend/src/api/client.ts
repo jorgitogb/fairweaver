@@ -40,6 +40,8 @@ export interface GeneratedMapping {
   version: string;
   author: string;
   field_rules: FieldRule[];
+  ai_generated?: boolean;
+  model?: string;
 }
 
 export interface MissingField {
@@ -54,6 +56,8 @@ export interface ConvertResult {
   output: Record<string, unknown>;
   missing_fields: MissingField[];
   confidence: number;
+  mapping_source?: "ai" | "rules" | "cached";
+  model?: string;
 }
 
 export interface ConvertChainResult {
