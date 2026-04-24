@@ -16,7 +16,9 @@ export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [pivotId, setPivotId] = useState<string>("bioschemas_dataset");
   const [result, setResult] = useState<ConvertResult | null>(null);
-  const [recommendations, setRecommendations] = useState<PivotRecommendation[]>([]);
+  const [recommendations, setRecommendations] = useState<PivotRecommendation[]>(
+    [],
+  );
 
   const recommendMutation = useMutation({
     mutationFn: (f: File) => recommendPivot(f),
@@ -51,13 +53,15 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🧬</span>
-            <span className="font-bold text-slate-800 tracking-tight">FAIRweaver</span>
+            <span className="font-bold text-slate-800 tracking-tight">
+              FAIRweaver
+            </span>
             <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
               v0.1 · pre-hackathon
             </span>
           </div>
           <a
-            href="https://github.com/yourorg/fairweaver"
+            href="https://github.com/jorgitogb/fairweaver"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
@@ -75,9 +79,9 @@ export default function App() {
             <span className="text-emerald-600">FAIR by design</span>
           </h1>
           <p className="text-slate-500 max-w-xl">
-            Upload a metadata file, select an interoperability pivot (Bioschemas,
-            AgroSchemas, Schema.org…), and get a FAIR-compliant JSON-LD output —
-            with AI-assisted field suggestions.
+            Upload a metadata file, select an interoperability pivot
+            (Bioschemas, AgroSchemas, Schema.org…), and get a FAIR-compliant
+            JSON-LD output — with AI-assisted field suggestions.
           </p>
         </div>
 

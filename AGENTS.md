@@ -16,7 +16,7 @@ cp .env.example .env && docker compose up
 ## Architecture
 
 - **Monorepo**: `backend/` (FastAPI) + `frontend/` (React/Vite)
-- **Entry points**: `backend/main.py`, `frontend/src/App.tsx`
+- **Entry points**: `backend/main.py`, `frontend/src/Main.tsx`
 - **API port**: 8000 | **Frontend port**: 5173
 
 ## Plugin System (Critical)

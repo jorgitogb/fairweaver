@@ -61,7 +61,7 @@ fairweaver/
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx              ← main UI
+│   │   ├── Main.tsx              ← main UI
 │   │   ├── components/
 │   │   │   ├── UploadZone.tsx
 │   │   │   ├── PivotSelector.tsx
