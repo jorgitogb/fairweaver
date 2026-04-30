@@ -31,8 +31,8 @@ app.add_middleware(
 
 # Load pivot registry and plugins on startup
 PIVOT_REGISTRY_PATH = Path(os.getenv("PIVOT_REGISTRY_PATH", "pivot_registry.yaml"))
-engine = MappingEngine(PIVOT_REGISTRY_PATH)
 plugins = load_plugins()
+engine = MappingEngine(PIVOT_REGISTRY_PATH, plugins)
 
 # SAIA API configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -51,13 +51,27 @@ def list_pivots():
 @app.post("/pivots/recommend", summary="AI-recommend best pivot for an input document")
 async def recommend_pivot(file: UploadFile = File(...)):
     content = await file.read()
+    filename = file.filename or ""
+    
     try:
         data = json.loads(content)
     except Exception:
         raise HTTPException(status_code=422, detail="File must be valid JSON")
     if not isinstance(data, dict):
         raise HTTPException(status_code=422, detail="File must be a JSON object, not an array")
-    recommendations = engine.recommend_pivot(data)
+
+    # Detect format from content
+    source_format = detect_format(filename, content)
+
+    # Parse using plugin to get flat field structure (for proper matching)
+    if source_format in plugins:
+        try:
+            parsed = plugins[source_format].load(content)
+            data = parsed
+        except Exception:
+            pass
+
+    recommendations = engine.recommend_pivot(data, source_format=source_format)
     return {"recommendations": recommendations}
 
 
@@ -122,11 +136,12 @@ async def convert(
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Failed to parse file: {e}")
 
-    result = engine.convert(parsed, source_format, pivot_id)
+    result = engine.convert_nested(parsed, source_format, pivot_id)
+    output = result.get("json_ld", result)
     return {
         "pivot_id": pivot_id,
         "source_format": source_format,
-        "output": result["json_ld"],
+        "output": output,
         "field_rules": result.get("field_rules", []),
         "missing_fields": result.get("missing_fields", []),
         "confidence": result.get("confidence", None),
@@ -234,10 +249,14 @@ def detect_format(filename: str, content: bytes) -> str:
     if ext == ".json":
         try:
             data = json.loads(content)
-            ctx = data.get("@context", "")
+            ctx = data.get("@context")
             if isinstance(ctx, str) and "schema.org" in ctx:
                 return "schema_org"
-            if "@type" in data and "ro-crate" in str(data).lower():
+            if isinstance(ctx, list):
+                ctx_str = " ".join(str(c) for c in ctx)
+                if "ro-crate" in ctx_str.lower() or "ro/crate" in ctx_str.lower():
+                    return "ro_crate"
+            if "@graph" in data:
                 return "ro_crate"
         except Exception:
             pass

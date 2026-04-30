@@ -1,5 +1,4 @@
 pivots:
-
   bioschemas_dataset:
     label: "Bioschemas Dataset"
     context_url: "https://bioschemas.org/profiles/Dataset/1.0-RELEASE"
@@ -102,3 +101,30 @@ pivots:
       - datePublished
       - publisher
       - distribution
+
+  fairagro_searchhub:
+    label: "FAIRagro Search Hub"
+    context_url: "https://fairagro.net/schema/v1"
+    domains: [agronomy, soil_science, precision_agriculture]
+    blocks:
+      citation:
+        required_fields:
+          - title
+          - dsDescription
+          - author
+          - otherId
+        recommended_fields: []
+      generalExtended:
+        required_fields: []
+        recommended_fields:
+          - license
+          - sourceDatasetURI
+          - sourceRDI
+      crop:
+        required_fields: []
+        recommended_fields:
+          - crop
+      sensor:
+        required_fields: []
+        recommended_fields:
+          - sensor

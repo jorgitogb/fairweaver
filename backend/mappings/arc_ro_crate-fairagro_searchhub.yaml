@@ -1,0 +1,75 @@
+source_format: ro_crate
+pivot: fairagro_searchhub
+version: "0.1.0"
+author: fairweaver-community
+description: Maps ARC RO-Crate metadata to FAIRagro Search Hub format
+
+field_rules:
+  # ── citation block ─────────────────────────────────────────────
+  - source: name
+    target: citation.title
+    block: citation
+    required: true
+    confidence: 0.95
+
+  - source: description
+    target: citation.dsDescription
+    block: citation
+    required: true
+    confidence: 0.9
+    transform: wrap_description
+
+  - source: creator
+    target: citation.author
+    block: citation
+    required: true
+    confidence: 0.85
+    transform: parse_person
+
+  - source: identifier
+    target: citation.otherId
+    block: citation
+    required: true
+    confidence: 0.9
+    transform: wrap_other_id
+
+  - source: datePublished
+    target: citation.productionDate
+    block: citation
+    required: false
+    confidence: 0.8
+
+  # ── generalExtended block ───────────────────────────────────
+  - source: license
+    target: generalExtended.license
+    block: generalExtended
+    required: false
+    confidence: 0.9
+
+  - source: "@id"
+    target: generalExtended.sourceDatasetURI
+    block: generalExtended
+    required: false
+    confidence: 0.8
+
+  # ── crop block ────────────────────────────────────────────────
+  - source: additionalType
+    target: crop.cropSpecies
+    block: crop
+    required: false
+    confidence: 0.7
+
+  # ── sensor block ──────────────────────────────────────────────
+  - source: measurementTechnique
+    target: sensor.sensorSensorType
+    block: sensor
+    required: false
+    confidence: 0.8
+    transform: wrap_sensor
+
+  - source: measurementMethod
+    target: sensor.sensorPlatform
+    block: sensor
+    required: false
+    confidence: 0.7
+    transform: wrap_platform

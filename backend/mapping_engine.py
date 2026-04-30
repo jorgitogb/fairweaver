@@ -16,13 +16,14 @@ MAPPING_SCHEMA_REQUIRED_KEYS = {"source_format", "pivot", "version", "field_rule
 
 
 class MappingEngine:
-    def __init__(self, registry_path: Path):
+    def __init__(self, registry_path: Path, plugins=None):
         self.registry_path = registry_path
         self.pivots = self._load_registry()
         self.mappings_dir = registry_path.parent / "mappings"
         self.mappings_dir.mkdir(exist_ok=True)
         self._last_mapping_ai = False
         self._last_mapping_model = None
+        self.plugins = plugins or {}
 
     # ── Registry ──────────────────────────────────────────────────────────────
 
@@ -46,7 +47,7 @@ class MappingEngine:
 
     # ── Pivot recommendation ──────────────────────────────────────────────────
 
-    def recommend_pivot(self, data: dict) -> list:
+    def recommend_pivot(self, data: dict, source_format: str = None) -> list:
         """Score each pivot by field coverage against the input document."""
         input_keys = set(self._flatten_keys(data))
         recommendations = []
@@ -54,14 +55,45 @@ class MappingEngine:
         for pid, meta in self.pivots.items():
             required = set(meta.get("required_fields", []))
             recommended = set(meta.get("recommended_fields", []))
+            
+            # ALSO check blocks structure (for pivots like fairagro_searchhub)
+            blocks = meta.get("blocks", {})
+            for block_name, block_meta in blocks.items():
+                required |= set(block_meta.get("required_fields", []))
+                recommended |= set(block_meta.get("recommended_fields", []))
+            
             all_fields = required | recommended
 
             if not all_fields:
                 continue
 
-            matched = input_keys & all_fields
-            coverage = round(len(matched) / len(all_fields) * 100, 1)
-            missing_required = list(required - input_keys)
+            # Try to load mapping for this pivot to invert source→target lookup
+            source_fields = set()
+            if source_format:
+                mapping = self._load_best_mapping(source_format, pid)
+                if mapping:
+                    for rule in mapping.get("field_rules", []):
+                        src = rule.get("source")
+                        tgt = rule.get("target", "")
+                        # Add source field if target is a required/recommended field
+                        if src and any(tgt.endswith(f) for f in all_fields):
+                            source_fields.add(src)
+            
+            # If we have mapping source fields, use those; otherwise use target fields directly
+            fields_to_check = source_fields if source_fields else all_fields
+            
+            matched = input_keys & fields_to_check
+            coverage = round(len(matched) / len(fields_to_check) * 100, 1) if fields_to_check else 0
+            
+            # Calculate missing based on source→target mapping
+            if source_fields:
+                missing_required = [f for f in required if not any(
+                    any(r.get("source") == src and r.get("target", "").endswith(f) 
+                        for r in mapping.get("field_rules", []))
+                    for src in input_keys
+                )]
+            else:
+                missing_required = list(required - input_keys)
 
             recommendations.append(
                 {
@@ -231,6 +263,84 @@ class MappingEngine:
             "mapping_source": mapping_source,
             "model": self._last_mapping_model if mapping_source == "ai" else None,
         }
+
+    def convert_nested(self, data: dict, source_format: str, pivot_id: str) -> dict:
+        """Convert using nested block structure."""
+        pivot_meta = self.pivots.get(pivot_id, {})
+        blocks = pivot_meta.get("blocks", {})
+        
+        # Load mapping
+        mapping = self._load_best_mapping(source_format, pivot_id)
+        if not mapping:
+            mapping = self.generate_mapping(data, pivot_id)
+        
+        # Group field_rules by block
+        rules_by_block = {}
+        for rule in mapping.get("field_rules", []):
+            block = rule.get("block", "default")
+            if block not in rules_by_block:
+                rules_by_block[block] = []
+            rules_by_block[block].append(rule)
+        
+        # Build nested output
+        output = {}
+        
+        for block_name, block_fields in blocks.items():
+            rules = rules_by_block.get(block_name, [])
+            if not rules:
+                continue
+            
+            block_data = {}
+            required_fields = set(block_fields.get("required_fields", []))
+            
+            for rule in rules:
+                source = rule.get("source")
+                target = rule.get("target")
+                transform = rule.get("transform")
+                
+                value = None
+                if source and source in data:
+                    value = data[source]
+                    
+                    # Apply transform if defined
+                    if transform:
+                        value = self._apply_transform(transform, value, data, source_format)
+                elif transform:
+                    # Apply transform even if source is missing (transform may produce defaults)
+                    value = self._apply_transform(transform, None, data, source_format)
+                
+                if value:  # Skip if value is still None/falsy
+                    # Parse target path relative to block (e.g., "citation.title" → {title: ...} within citation block)
+                    if target.startswith(block_name + "."):
+                        relative_target = target[len(block_name) + 1:]  # Remove "block." prefix
+                    else:
+                        relative_target = target
+                    self._set_nested(block_data, relative_target, value)
+            
+            if block_data:
+                output[block_name] = block_data
+        
+        return output
+
+    def _apply_transform(self, transform_name: str, value: Any, data: dict, source_format: str) -> Any:
+        """Apply a named transform function."""
+        # Look up transform from plugin
+        plugin = self.plugins.get(source_format)
+        if hasattr(plugin, transform_name):
+            return getattr(plugin, transform_name)(value)
+        return value
+
+    def _set_nested(self, data: dict, path: str, value: Any) -> None:
+        """Set a nested path in dict (e.g., "citation.title" = value)."""
+        parts = path.split(".")
+        current = data
+        
+        for part in parts[:-1]:
+            if part not in current:
+                current[part] = {}
+            current = current[part]
+        
+        current[parts[-1]] = value
 
     def get_mapping_info(self) -> dict:
         """Get info about the last mapping generation."""

@@ -18,7 +18,7 @@ import { Loader2, Globe, Upload, Github } from "lucide-react";
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [pivotId, setPivotId] = useState<string>("bioschemas_dataset");
+  const [pivotId, setPivotId] = useState<string>("fairagro_searchhub");
   const [result, setResult] = useState<ConvertResult | null>(null);
   const [recommendations, setRecommendations] = useState<PivotRecommendation[]>(
     [],

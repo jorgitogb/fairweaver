@@ -188,9 +188,10 @@ export async function convertFile(
 ): Promise<ConvertResult> {
   const form = new FormData();
   form.append("file", file);
-  form.append("source_format", sourceFormat);
-  form.append("pivot_id", pivotId);
-  return request("/convert", { method: "POST", body: form });
+  const params = new URLSearchParams();
+  params.set("source_format", sourceFormat);
+  params.set("pivot_id", pivotId);
+  return request(`/convert?${params.toString()}`, { method: "POST", body: form });
 }
 
 export async function convertChain(
@@ -201,8 +202,9 @@ export async function convertChain(
 ): Promise<ConvertChainResult> {
   const form = new FormData();
   form.append("file", file);
-  form.append("source_format", sourceFormat);
-  form.append("pivot_id", pivotId);
-  form.append("target_format", targetFormat);
-  return request("/convert/chain", { method: "POST", body: form });
+  const params = new URLSearchParams();
+  params.set("source_format", sourceFormat);
+  params.set("pivot_id", pivotId);
+  params.set("target_format", targetFormat);
+  return request(`/convert/chain?${params.toString()}`, { method: "POST", body: form });
 }
