@@ -141,6 +141,14 @@ the component. Never use `any` for API response types.
 
 ---
 
+## Current Work
+
+- **Completed:** Created `schema_org_plugin.py` (extracts 11 Schema.org fields: name, creator, keywords, license, datePublished, publisher, url, inLanguage, version, @id). Updated `detect_format()` to detect Schema.org JSON-LD via `@context` containing `"schema.org"`. eDAL coverage 14% → 71%. All 59 tests passing.
+- **Stopped at:** Planned `arc_crate_plugin.py` (ARC / RO-Crate as default output format) + `target_format` param in `/convert` + target format dropdown in UI. Need ARC spec details to implement.
+- **Next:** Look up ARC / RO-Crate standard → implement `arc_crate_plugin.py` → extend `/convert` with `target_format` → add target format dropdown to frontend
+
+---
+
 ## Commit Message Convention
 
 Use [Conventional Commits](https://www.conventionalcommits.org/). Every commit title must follow:

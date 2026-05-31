@@ -1,0 +1,49 @@
+source_format: darwin_core_csv
+pivot: bioschemas_dataset
+version: "0.1.0"
+author: fairweaver-community
+description: Maps Darwin Core CSV fields to Bioschemas Dataset pivot
+
+field_rules:
+  - source: scientificName
+    target: name
+    required: true
+    confidence: 0.9
+    note: "Scientific name maps to dataset name"
+
+  - source: catalogNumber
+    target: identifier
+    required: true
+    confidence: 0.9
+
+  - source: basisOfRecord
+    target: keywords
+    required: true
+    confidence: 0.5
+    note: "Darwin Core basisOfRecord as keyword"
+
+  - source: eventDate
+    target: datePublished
+    required: false
+    confidence: 0.7
+
+  - source: decimalLatitude
+    target: spatialCoverage
+    required: false
+    confidence: 0.5
+
+  - source: decimalLongitude
+    target: spatialCoverage
+    required: false
+    confidence: 0.5
+
+  - source: country
+    target: identifier
+    required: false
+    confidence: 0.3
+    note: "Tenative location metadata"
+
+  - source: recordedBy
+    target: creator
+    required: false
+    confidence: 0.8

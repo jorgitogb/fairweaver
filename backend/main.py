@@ -1,14 +1,20 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-import yaml
 import json
+import logging
 import os
 from pathlib import Path
 
+import yaml
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
 from mapping_engine import MappingEngine
+from oai_pmh import harvest, list_sets
 from plugins.loader import load_plugins
+from sickle.oaiexceptions import CannotDisseminateFormat, NoRecordsMatch
+
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 
 app = FastAPI(
     title="FAIRweaver API",
@@ -36,6 +42,7 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
 
 # ── Pivots ────────────────────────────────────────────────────────────────────
 
+
 @app.get("/pivots", summary="List all registered pivot profiles")
 def list_pivots():
     return {"pivots": engine.list_pivots()}
@@ -48,11 +55,14 @@ async def recommend_pivot(file: UploadFile = File(...)):
         data = json.loads(content)
     except Exception:
         raise HTTPException(status_code=422, detail="File must be valid JSON")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=422, detail="File must be a JSON object, not an array")
     recommendations = engine.recommend_pivot(data)
     return {"recommendations": recommendations}
 
 
 # ── Mappings ──────────────────────────────────────────────────────────────────
+
 
 @app.get("/mappings", summary="List available YAML mappings")
 def list_mappings(source_format: str = None, pivot: str = None):
@@ -87,6 +97,7 @@ async def validate_mapping(file: UploadFile = File(...)):
 
 # ── Conversion ────────────────────────────────────────────────────────────────
 
+
 @app.post("/convert", summary="Convert input metadata to pivot JSON-LD")
 async def convert(
     file: UploadFile = File(...),
@@ -116,8 +127,11 @@ async def convert(
         "pivot_id": pivot_id,
         "source_format": source_format,
         "output": result["json_ld"],
+        "field_rules": result.get("field_rules", []),
         "missing_fields": result.get("missing_fields", []),
         "confidence": result.get("confidence", None),
+        "mapping_source": result.get("mapping_source"),
+        "model": result.get("model"),
     }
 
 
@@ -156,7 +170,58 @@ async def convert_chain(
     }
 
 
+# ── OAI-PMH Harvesting ───────────────────────────────────────────────────────
+
+
+class HarvestRequest(BaseModel):
+    base_url: str
+    metadata_prefix: str
+    set: str | None = None
+    from_date: str | None = None
+    until_date: str | None = None
+    max_records: int = 10000
+
+
+@app.post("/harvest", summary="Harvest metadata from OAI-PMH endpoint")
+async def harvest_oai_pmh(req: HarvestRequest):
+    try:
+        result = harvest(
+            base_url=req.base_url,
+            metadata_prefix=req.metadata_prefix,
+            set=req.set,
+            from_date=req.from_date,
+            until_date=req.until_date,
+            max_records=req.max_records,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except CannotDisseminateFormat as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Metadata prefix '{req.metadata_prefix}' not supported by this repository: {e}",
+        )
+    except NoRecordsMatch:
+        return {"records": [], "total": 0, "metadata_format": req.metadata_prefix}
+    return result
+
+
+class ListSetsRequest(BaseModel):
+    base_url: str
+
+
+@app.post("/list-sets", summary="List available sets from OAI-PMH endpoint")
+async def list_oai_sets(req: ListSetsRequest):
+    try:
+        sets = list_sets(base_url=req.base_url)
+        return {"sets": sets}
+    except ConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def detect_format(filename: str, content: bytes) -> str:
     ext = Path(filename).suffix.lower()
@@ -166,10 +231,12 @@ def detect_format(filename: str, content: bytes) -> str:
         ".csv": "darwin_core_csv",
         ".xlsx": "miappe_xlsx",
     }
-    # Try to detect RO-Crate from JSON content
     if ext == ".json":
         try:
             data = json.loads(content)
+            ctx = data.get("@context", "")
+            if isinstance(ctx, str) and "schema.org" in ctx:
+                return "schema_org"
             if "@type" in data and "ro-crate" in str(data).lower():
                 return "ro_crate"
         except Exception:

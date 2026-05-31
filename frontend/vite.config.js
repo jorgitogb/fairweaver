@@ -9,6 +9,8 @@ export default defineConfig({
       '/pivots': 'http://localhost:8000',
       '/mappings': 'http://localhost:8000',
       '/convert': 'http://localhost:8000',
+      '/harvest': 'http://localhost:8000',
+      '/list-sets': 'http://localhost:8000',
     },
   },
 })

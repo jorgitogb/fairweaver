@@ -3,14 +3,18 @@ import { useMutation } from "@tanstack/react-query";
 import {
   convertFile,
   recommendPivot,
+  harvestOAIPMH,
   type ConvertResult,
   type PivotRecommendation,
+  type HarvestRequest,
+  type HarvestResult,
+  type HarvestedRecord,
 } from "./api/client";
 import UploadZone from "./components/UploadZone";
 import PivotSelector from "./components/PivotSelector";
-import MappingEditor from "./components/MappingEditor";
-import SuggestionPanel from "./components/SuggestionPanel";
-import { Loader2, Github } from "lucide-react";
+import ComparisonView from "./components/ComparisonView";
+import HarvestZone from "./components/HarvestZone";
+import { Loader2, Globe, Upload, Github } from "lucide-react";
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -19,6 +23,9 @@ export default function App() {
   const [recommendations, setRecommendations] = useState<PivotRecommendation[]>(
     [],
   );
+  const [mode, setMode] = useState<"upload" | "harvest">("upload");
+  const [harvestResults, setHarvestResults] = useState<HarvestResult | null>(null);
+  const [harvestError, setHarvestError] = useState<string | null>(null);
 
   const recommendMutation = useMutation({
     mutationFn: (f: File) => recommendPivot(f),
@@ -38,12 +45,49 @@ export default function App() {
     onSuccess: (data) => setResult(data),
   });
 
+  const harvestMutation = useMutation({
+    mutationFn: harvestOAIPMH,
+    onSuccess: (data) => {
+      setHarvestResults(data);
+      setHarvestError(null);
+    },
+    onError: (err) => {
+      setHarvestError((err as Error).message);
+    },
+  });
+
   const handleFileAccepted = (f: File) => {
     setFile(f);
     setResult(null);
     if (f.name.endsWith(".json")) {
       recommendMutation.mutate(f);
     }
+  };
+
+  const handleHarvest = (req: HarvestRequest) => {
+    setHarvestResults(null);
+    setHarvestError(null);
+    setResult(null);
+    setFile(null);
+    harvestMutation.mutate(req);
+  };
+
+  const handleSelectRecord = (record: HarvestedRecord) => {
+    const blob = new Blob([JSON.stringify(record.metadata, null, 2)], {
+      type: "application/json",
+    });
+    const safeName = record.identifier.replace(/[^a-zA-Z0-9]/g, "_");
+    const f = new File([blob], `harvested-${safeName}.json`);
+    handleFileAccepted(f);
+  };
+
+  const handleModeSwitch = (newMode: "upload" | "harvest") => {
+    setMode(newMode);
+    setFile(null);
+    setResult(null);
+    setHarvestResults(null);
+    setHarvestError(null);
+    setRecommendations([]);
   };
 
   return (
@@ -73,121 +117,192 @@ export default function App() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+        {/* Mode toggle */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Metadata interoperability,{" "}
-            <span className="text-emerald-600">FAIR by design</span>
-          </h1>
-          <p className="text-slate-500 max-w-xl">
-            Upload a metadata file, select an interoperability pivot
-            (Bioschemas, AgroSchemas, Schema.org…), and get a FAIR-compliant
-            JSON-LD output — with AI-assisted field suggestions.
+          <div className="flex items-center gap-2 bg-slate-100 rounded-full p-1 w-fit">
+            <button
+              onClick={() => handleModeSwitch("upload")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                mode === "upload"
+                  ? "bg-emerald-600 text-white"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              Upload File
+            </button>
+            <button
+              onClick={() => handleModeSwitch("harvest")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                mode === "harvest"
+                  ? "bg-emerald-600 text-white"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              OAI-PMH Harvest
+            </button>
+          </div>
+          <p className="text-slate-500 max-w-xl mt-3">
+            {mode === "upload"
+              ? "Upload a metadata file, select an interoperability pivot (Bioschemas, AgroSchemas, Schema.org…), and get a FAIR-compliant JSON-LD output — with AI-assisted field suggestions."
+              : "Pull metadata from any OAI-PMH endpoint, select a record, and convert it to pivot JSON-LD — reusing the same conversion pipeline."}
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: upload + pivot */}
+          {/* Left column */}
           <div className="space-y-6">
-            <section>
-              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                1 · Upload metadata
-              </h2>
-              <UploadZone onFileAccepted={handleFileAccepted} />
-              {file && (
-                <p className="mt-2 text-sm text-slate-600 flex items-center gap-1.5">
-                  📄 <span className="font-medium">{file.name}</span>
-                  <span className="text-slate-400">
-                    ({(file.size / 1024).toFixed(1)} KB)
-                  </span>
-                </p>
-              )}
-            </section>
+            {mode === "upload" ? (
+              <>
+                <section>
+                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    1 · Upload metadata
+                  </h2>
+                  <UploadZone onFileAccepted={handleFileAccepted} />
+                  {file && (
+                    <p className="mt-2 text-sm text-slate-600 flex items-center gap-1.5">
+                      📄 <span className="font-medium">{file.name}</span>
+                      <span className="text-slate-400">
+                        ({(file.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </p>
+                  )}
+                </section>
 
-            {file && (
+                {file && (
+                  <section>
+                    <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                      2 · Choose pivot
+                      {recommendMutation.isPending && (
+                        <span className="ml-2 text-xs text-amber-500 font-normal normal-case">
+                          AI analysing…
+                        </span>
+                      )}
+                    </h2>
+                    <PivotSelector
+                      value={pivotId}
+                      onChange={setPivotId}
+                      recommendations={recommendations}
+                    />
+                  </section>
+                )}
+
+                {file && (
+                  <button
+                    onClick={() => convertMutation.mutate()}
+                    disabled={convertMutation.isPending}
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+                  >
+                    {convertMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Converting…
+                      </>
+                    ) : (
+                      "Convert to pivot JSON-LD →"
+                    )}
+                  </button>
+                )}
+
+                {result && (
+                  <div className="flex items-center gap-2 text-xs">
+                    {result.mapping_source === "ai" ? (
+                      <span className="flex items-center gap-1 bg-violet-100 text-violet-700 px-2 py-1 rounded-full">
+                        <span>🤖</span> AI-powered
+                        {result.model && <span className="text-violet-500">({result.model})</span>}
+                      </span>
+                    ) : result.mapping_source === "rules" ? (
+                      <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                        <span>📐</span> Rule-based
+                      </span>
+                    ) : (
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        Cached
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {convertMutation.isError && (
+                  <p className="text-red-500 text-sm">
+                    ⚠ {(convertMutation.error as Error).message}
+                  </p>
+                )}
+              </>
+            ) : (
+              /* Harvest mode */
               <section>
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                  2 · Choose pivot
-                  {recommendMutation.isPending && (
-                    <span className="ml-2 text-xs text-amber-500 font-normal normal-case">
-                      AI analysing…
-                    </span>
-                  )}
+                  1 · Harvest from OAI-PMH
                 </h2>
-                <PivotSelector
-                  value={pivotId}
-                  onChange={setPivotId}
-                  recommendations={recommendations}
+                <HarvestZone
+                  onHarvest={handleHarvest}
+                  isHarvesting={harvestMutation.isPending}
+                  harvestError={harvestError}
+                  results={harvestResults}
+                  onSelectRecord={handleSelectRecord}
                 />
+
+                {file && (
+                  <div className="mt-6">
+                    <section>
+                      <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                        2 · Choose pivot
+                      </h2>
+                      <PivotSelector
+                        value={pivotId}
+                        onChange={setPivotId}
+                      />
+                    </section>
+
+                    <button
+                      onClick={() => convertMutation.mutate()}
+                      disabled={convertMutation.isPending}
+                      className="mt-4 w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+                    >
+                      {convertMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Converting…
+                        </>
+                      ) : (
+                        "Convert to pivot JSON-LD →"
+                      )}
+                    </button>
+
+                    {convertMutation.isError && (
+                      <p className="mt-2 text-red-500 text-sm">
+                        ⚠ {(convertMutation.error as Error).message}
+                      </p>
+                    )}
+                  </div>
+                )}
               </section>
-            )}
-
-            {file && (
-              <button
-                onClick={() => convertMutation.mutate()}
-                disabled={convertMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
-              >
-                {convertMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Converting…
-                  </>
-                ) : (
-                  "Convert to pivot JSON-LD →"
-                )}
-              </button>
-            )}
-
-            {result && (
-              <div className="flex items-center gap-2 text-xs">
-                {result.mapping_source === "ai" ? (
-                  <span className="flex items-center gap-1 bg-violet-100 text-violet-700 px-2 py-1 rounded-full">
-                    <span>🤖</span> AI-powered
-                    {result.model && <span className="text-violet-500">({result.model})</span>}
-                  </span>
-                ) : result.mapping_source === "rules" ? (
-                  <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
-                    <span>📐</span> Rule-based
-                  </span>
-                ) : (
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    Cached
-                  </span>
-                )}
-              </div>
-            )}
-
-            {convertMutation.isError && (
-              <p className="text-red-500 text-sm">
-                ⚠ {(convertMutation.error as Error).message}
-              </p>
             )}
           </div>
 
           {/* Right: output + suggestions */}
           <div className="space-y-6">
             {result ? (
-              <>
-                <section>
-                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    3 · Output
-                  </h2>
-                  <MappingEditor
-                    output={result.output}
-                    missingFields={result.missing_fields}
-                    confidence={result.confidence}
-                  />
-                </section>
-                <section>
-                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    4 · FAIR suggestions
-                  </h2>
-                  <SuggestionPanel missingFields={result.missing_fields} />
-                </section>
-              </>
+              <section>
+                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  3 · Output
+                </h2>
+                <ComparisonView
+                  fieldRules={result.field_rules}
+                  missingFields={result.missing_fields}
+                  output={result.output}
+                  confidence={result.confidence}
+                  mappingSource={result.mapping_source}
+                  model={result.model}
+                />
+              </section>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-300 text-sm text-center p-10 border-2 border-dashed border-slate-200 rounded-xl">
-                Output and AI suggestions will appear here after conversion
+                {mode === "upload"
+                  ? "Output and AI suggestions will appear here after conversion"
+                  : "Select a harvested record and convert it — the result will appear here"}
               </div>
             )}
           </div>

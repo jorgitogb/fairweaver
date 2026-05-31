@@ -54,6 +54,7 @@ export interface ConvertResult {
   pivot_id: string;
   source_format: string;
   output: Record<string, unknown>;
+  field_rules: FieldRule[];
   missing_fields: MissingField[];
   confidence: number;
   mapping_source?: "ai" | "rules" | "cached";
@@ -71,6 +72,58 @@ export interface ConvertChainResult {
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+}
+
+// ── OAI-PMH Harvesting ─────────────────────────────────────────────────────────
+
+export interface HarvestRequest {
+  base_url: string;
+  metadata_prefix: "oai_dc" | "oai_datacite";
+  set?: string;
+  from_date?: string;
+  until_date?: string;
+  max_records?: number;
+}
+
+export interface HarvestedRecord {
+  identifier: string;
+  datestamp: string;
+  set_spec: string[];
+  metadata: Record<string, string[]>;
+  metadata_format: string;
+}
+
+export interface HarvestResult {
+  records: HarvestedRecord[];
+  total: number;
+  metadata_format: string;
+}
+
+export interface SetInfo {
+  spec: string;
+  name: string;
+}
+
+export interface ListSetsResponse {
+  sets: SetInfo[];
+}
+
+export async function listSets(baseUrl: string): Promise<ListSetsResponse> {
+  return request("/list-sets", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ base_url: baseUrl }),
+  });
+}
+
+export async function harvestOAIPMH(
+  req: HarvestRequest
+): Promise<HarvestResult> {
+  return request("/harvest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
 }
 
 // ── HTTP helper ───────────────────────────────────────────────────────────────

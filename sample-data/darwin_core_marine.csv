@@ -1,0 +1,4 @@
+scientificName,basisOfRecord,eventDate,institutionCode,collectionCode,catalogNumber,decimalLatitude,decimalLongitude,country,stateProvince,locality,kingdom,phylum,class,order,family,genus,specificEpithet,recordedBy,identifiedBy
+Balaenoptera musculus,OBSERVATION,2023-01-15,OBIS,OBIS-survey,90123,-25.0,-45.0,International,Waters,South Atlantic,Animalia,Chordata,Mammalia,Cetartiodactyla,Balaenopteridae,Balaenoptera,musculus,OceanWatch,OceanWatch
+Chelonia mydas,NESTING_SURVEY,2023-07-20,OBIS,OBIS-survey,90124,10.0,-75.0,Colombia,Bolivar,Rosario Islands,Animalia,Chordata,Reptilia,Testudines,Cheloniidae,Chelonia,mydas,TurtleTrack,TurtleTrack
+Posidonia oceanica,PRESERVED_SPECIMEN,2022-05-10,HGM,HGM-herb,34567,38.0,14.5,Italy,Sicily,Tyrrhenian Sea,Plantae,Tracheophyta,Liliopsida,Alismatales,Posidoniaceae,Posidonia,oceana,MarineBio,MarineBio

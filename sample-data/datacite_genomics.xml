@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://datacite.org/schema/kernel-4
+          http://schema.datacite.org/meta/kernel-4/metadata.xsd">
+  <identifier identifierType="DOI">10.5281/zenodo.8324512</identifier>
+  <titles>
+    <title>Whole Genome Assembly of Hordeum vulgare (Barley) Cultivar Barke</title>
+  </titles>
+  <publisher>Zenodo</publisher>
+  <publicationYear>2023</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">Genome assembly</resourceType>
+  <creators>
+    <creator>
+      <creatorName>Martinez, Carlos</creatorName>
+    </creator>
+  </creators>
+  <descriptions>
+    <description descriptionType="Abstract">A high-quality reference genome assembly for barley (Hordeum vulgare) cultivar Barke, generated using PacBio HiFi and Hi-C proximity ligation sequencing.</description>
+  </descriptions>
+  <language>en</language>
+</resource>

@@ -13,6 +13,8 @@ EXTENSIONS = [".json"]
 def load(content: bytes) -> dict:
     """Parse ISA-JSON bytes into a flat dict for the mapping engine."""
     data = json.loads(content)
+    if not isinstance(data, dict):
+        raise ValueError("ISA-JSON must be a JSON object, not an array")
 
     # ISA-JSON top level: investigation object
     flat = {
@@ -27,12 +29,14 @@ def load(content: bytes) -> dict:
     studies = data.get("studies", [])
     if studies:
         study = studies[0]
-        flat.update({
-            "study.title": study.get("title", ""),
-            "study.description": study.get("description", ""),
-            "study.identifier": study.get("identifier", ""),
-            "study.filename": study.get("filename", ""),
-        })
+        flat.update(
+            {
+                "study.title": study.get("title", ""),
+                "study.description": study.get("description", ""),
+                "study.identifier": study.get("identifier", ""),
+                "study.filename": study.get("filename", ""),
+            }
+        )
         # Contacts
         contacts = study.get("people", [])
         if contacts:

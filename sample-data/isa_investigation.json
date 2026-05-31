@@ -1,0 +1,22 @@
+{
+  "identifier": "INV-2024-001",
+  "title": "Metagenomic Analysis of Soil Microbiomes in Agricultural Fields",
+  "description": "A comprehensive metagenomic study comparing microbial diversity across organic and conventional farming systems in Lower Saxony, Germany.",
+  "submissionDate": "2024-03-15",
+  "publicReleaseDate": "2024-09-01",
+  "studies": [
+    {
+      "identifier": "STU-2024-001",
+      "title": "16S rRNA Amplicon Sequencing of Soil Samples",
+      "description": "Soil microbiome profiling using 16S rRNA amplicon sequencing across 12 agricultural sites.",
+      "filename": "soil_microbiome_16S.csv",
+      "people": [
+        {
+          "firstName": "Anna",
+          "lastName": "Schmidt",
+          "email": "anna.schmidt@uni-goettingen.de"
+        }
+      ]
+    }
+  ]
+}

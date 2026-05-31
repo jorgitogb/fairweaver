@@ -41,8 +41,12 @@ def write(json_ld: dict) -> dict:
         "identifier": json_ld.get("identifier", ""),
         "title": json_ld.get("name", json_ld.get("title", "")),
         "description": json_ld.get("description", ""),
-        "publicationYear": json_ld.get("datePublished", "")[:4] if json_ld.get("datePublished") else "",
-        "publisher": json_ld.get("publisher", {}).get("name", "") if isinstance(json_ld.get("publisher"), dict) else json_ld.get("publisher", ""),
+        "publicationYear": json_ld.get("datePublished", "")[:4]
+        if json_ld.get("datePublished")
+        else "",
+        "publisher": json_ld.get("publisher", {}).get("name", "")
+        if isinstance(json_ld.get("publisher"), dict)
+        else json_ld.get("publisher", ""),
     }
 
 

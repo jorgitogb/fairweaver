@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ai_client import generate_mapping_suggestion, suggest_missing_fields, is_available
+from ai_client import generate_mapping_suggestion, is_available
 
 
 MAPPING_SCHEMA_REQUIRED_KEYS = {"source_format", "pivot", "version", "field_rules"}
@@ -63,12 +63,14 @@ class MappingEngine:
             coverage = round(len(matched) / len(all_fields) * 100, 1)
             missing_required = list(required - input_keys)
 
-            recommendations.append({
-                "pivot_id": pid,
-                "label": meta.get("label", pid),
-                "coverage_pct": coverage,
-                "missing_required": missing_required,
-            })
+            recommendations.append(
+                {
+                    "pivot_id": pid,
+                    "label": meta.get("label", pid),
+                    "coverage_pct": coverage,
+                    "missing_required": missing_required,
+                }
+            )
 
         return sorted(recommendations, key=lambda x: x["coverage_pct"], reverse=True)
 
@@ -83,14 +85,16 @@ class MappingEngine:
                 continue
             if pivot and m.get("pivot") != pivot:
                 continue
-            results.append({
-                "filename": f.name,
-                "source_format": m.get("source_format"),
-                "pivot": m.get("pivot"),
-                "version": m.get("version"),
-                "author": m.get("author", "community"),
-                "field_count": len(m.get("field_rules", [])),
-            })
+            results.append(
+                {
+                    "filename": f.name,
+                    "source_format": m.get("source_format"),
+                    "pivot": m.get("pivot"),
+                    "version": m.get("version"),
+                    "author": m.get("author", "community"),
+                    "field_count": len(m.get("field_rules", [])),
+                }
+            )
         return results
 
     def generate_mapping(self, data: dict, pivot_id: str) -> dict:
@@ -102,10 +106,12 @@ class MappingEngine:
         required = pivot_meta.get("required_fields", [])
         recommended = pivot_meta.get("recommended_fields", [])
         input_keys = self._flatten_keys(data)
-        
+
         # Try AI first if available
         if is_available():
-            pivot_fields = list(zip(required + recommended, [f in required for f in required + recommended]))
+            pivot_fields = list(
+                zip(required + recommended, [f in required for f in required + recommended])
+            )
             ai_result = generate_mapping_suggestion(
                 source_fields=input_keys,
                 pivot_fields=pivot_fields,
@@ -116,7 +122,9 @@ class MappingEngine:
                     field_rules = json.loads(ai_result)
                     if field_rules and isinstance(field_rules, list):
                         self._last_mapping_ai = True
-                        self._last_mapping_model = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
+                        self._last_mapping_model = os.getenv(  # noqa: F821
+                            "OPENAI_MODEL", "meta-llama-3.1-8b-instruct"
+                        )
                         return {
                             "source_format": "unknown",
                             "pivot": pivot_id,
@@ -126,7 +134,7 @@ class MappingEngine:
                         }
                 except json.JSONDecodeError:
                     pass
-        
+
         # Fall back to rule-based matching
         self._last_mapping_ai = False
         self._last_mapping_model = None
@@ -134,13 +142,15 @@ class MappingEngine:
         for target_field in required + recommended:
             source_field = self._find_best_match(target_field, input_keys)
             confidence = 0.9 if source_field == target_field else (0.6 if source_field else 0.0)
-            field_rules.append({
-                "source": source_field,
-                "target": target_field,
-                "required": target_field in required,
-                "confidence": confidence,
-                "transform": None,
-            })
+            field_rules.append(
+                {
+                    "source": source_field,
+                    "target": target_field,
+                    "required": target_field in required,
+                    "confidence": confidence,
+                    "transform": None,
+                }
+            )
 
         mapping = {
             "source_format": "unknown",
@@ -180,7 +190,7 @@ class MappingEngine:
         # Determine mapping source for response
         if mapping_source == "cached" and mapping:
             mapping_source = "cached"
-        
+
         json_ld: dict[str, Any] = {"@context": context_url, "@type": "Dataset"}
         applied_targets = set()
 
@@ -194,23 +204,28 @@ class MappingEngine:
         # Detect missing required and recommended fields
         missing_fields = []
         for field in required_fields - applied_targets:
-            missing_fields.append({
-                "field": field,
-                "level": "minimum",
-                "description": f"Required by {pivot_id} profile",
-            })
+            missing_fields.append(
+                {
+                    "field": field,
+                    "level": "minimum",
+                    "description": f"Required by {pivot_id} profile",
+                }
+            )
         for field in recommended_fields - applied_targets:
-            missing_fields.append({
-                "field": field,
-                "level": "recommended",
-                "description": f"Recommended by {pivot_id} profile",
-            })
+            missing_fields.append(
+                {
+                    "field": field,
+                    "level": "recommended",
+                    "description": f"Recommended by {pivot_id} profile",
+                }
+            )
 
         total = len(required_fields) + len(recommended_fields)
         confidence = round(len(applied_targets) / total, 2) if total else 1.0
 
         return {
             "json_ld": json_ld,
+            "field_rules": mapping.get("field_rules", []),
             "missing_fields": missing_fields,
             "confidence": confidence,
             "mapping_source": mapping_source,

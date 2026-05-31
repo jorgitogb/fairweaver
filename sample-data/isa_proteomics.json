@@ -1,0 +1,22 @@
+{
+  "identifier": "INV-2024-002",
+  "title": "Proteomic Profiling of Arabidopsis thaliana Under Drought Stress",
+  "description": "LC-MS/MS proteomic analysis of Arabidopsis thaliana leaf tissue under controlled drought conditions.",
+  "submissionDate": "2024-06-01",
+  "publicReleaseDate": "2024-12-01",
+  "studies": [
+    {
+      "identifier": "STU-2024-002",
+      "title": "Quantitative Proteomics of Drought-Stressed Arabidopsis",
+      "description": "TMT-labeled quantitative proteomics comparing control vs drought-stressed plants at 3 time points.",
+      "filename": "arabidopsis_proteomics.xlsx",
+      "people": [
+        {
+          "firstName": "Markus",
+          "lastName": "Weber",
+          "email": "m.weber@mpimp-golm.mpg.de"
+        }
+      ]
+    }
+  ]
+}
