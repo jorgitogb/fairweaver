@@ -124,8 +124,29 @@ All available models: [docs.hpc.gwdg.de/services/chat-ai/models](https://docs.hp
 | POST   | `/mappings/validate` | Validate a YAML mapping file                  |
 | POST   | `/convert`           | Convert input → pivot JSON-LD                 |
 | POST   | `/convert/chain`     | Bidirectional: source → pivot → target format |
+| POST   | `/harvest/convert`   | Harvest from OAI-PMH + convert to pivot JSON-LD |
 
 Interactive docs at `http://localhost:8000/docs`
+
+---
+
+## Workflow
+
+### 1. File Upload Flow
+
+1. **Upload** a metadata file (ISA-JSON, DataCite XML, Darwin Core CSV, MIAPPE XLSX, RO-Crate JSON-LD)
+2. **AI recommends** the best interoperability pivot (Bioschemas, AgroSchemas, Schema.org)
+3. **Select pivot** — choose from available interoperability profiles
+4. **Convert** — get JSON-LD output with field coverage, matched fields, and missing fields
+5. **Review** — see which required/recommended fields are present or missing
+
+### 2. OAI-PMH Harvest Flow
+
+1. **Enter endpoint** — provide OAI-PMH base URL (e.g., `https://ws.pangaea.de/oai/provider`)
+2. **Select format** — choose `oai_dc` (Dublin Core) or `oai_datacite`
+3. **Optional filters** — set spec, from date, until date
+4. **Harvest & convert** — fetch records and map to FAIRagro Search Hub pivot
+5. **Review results** — accordion list showing each record with coverage %, matched fields, and missing fields
 
 ---
 
