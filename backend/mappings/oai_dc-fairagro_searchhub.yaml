@@ -1,0 +1,50 @@
+source_format: oai_dc
+pivot: fairagro_searchhub
+version: "0.1.0"
+author: fairweaver-community
+description: Maps OAI-PMH Dublin Core metadata to FAIRagro Search Hub format
+
+field_rules:
+  # ── citation block ─────────────────────────────────────────────
+  - source: title
+    target: citation.title
+    block: citation
+    required: true
+    confidence: 0.95
+
+  - source: description
+    target: citation.dsDescription
+    block: citation
+    required: true
+    confidence: 0.9
+
+  - source: creator
+    target: citation.author
+    block: citation
+    required: true
+    confidence: 0.85
+
+  - source: identifier
+    target: citation.otherId
+    block: citation
+    required: true
+    confidence: 0.8
+
+  - source: date
+    target: citation.productionDate
+    block: citation
+    required: false
+    confidence: 0.7
+
+  # ── generalExtended block ───────────────────────────────────────
+  - source: rights
+    target: generalExtended.license
+    block: generalExtended
+    required: false
+    confidence: 0.9
+
+  - source: identifier
+    target: generalExtended.sourceDatasetURI
+    block: generalExtended
+    required: false
+    confidence: 0.7

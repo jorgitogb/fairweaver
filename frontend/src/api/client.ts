@@ -108,6 +108,27 @@ export interface ListSetsResponse {
   sets: SetInfo[];
 }
 
+export interface HarvestConvertRequest {
+  base_url: string;
+  metadata_prefix?: string;
+  set?: string;
+  from_date?: string;
+  until_date?: string;
+  max_records?: number;
+  pivot_id?: string;
+}
+
+export interface HarvestConvertRecord extends ConvertResult {
+  identifier: string;
+  datestamp: string;
+  set_spec: string[];
+}
+
+export interface HarvestConvertResponse {
+  records: HarvestConvertRecord[];
+  total: number;
+}
+
 export async function listSets(baseUrl: string): Promise<ListSetsResponse> {
   return request("/list-sets", {
     method: "POST",
@@ -120,6 +141,16 @@ export async function harvestOAIPMH(
   req: HarvestRequest
 ): Promise<HarvestResult> {
   return request("/harvest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+}
+
+export async function harvestConvert(
+  req: HarvestConvertRequest
+): Promise<HarvestConvertResponse> {
+  return request("/harvest/convert", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

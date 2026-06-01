@@ -7,8 +7,8 @@ EXTENSIONS = [".json"]
 
 def load(content: bytes) -> dict:
     data = json.loads(content)
-    if not isinstance(data, dict):
-        raise ValueError("Schema.org JSON-LD must be a JSON object, not an array")
+    if isinstance(data, list):
+        data = data[0] if data else {}
 
     return {
         "identifier": data.get("@id", data.get("identifier", "")),

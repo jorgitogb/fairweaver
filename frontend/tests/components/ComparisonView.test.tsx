@@ -60,23 +60,20 @@ describe("ComparisonView", () => {
     expect(idMatches.length).toBe(3);
   });
 
-  it("shows missing required fields with MISSING label", () => {
+  it("shows missing fields section at bottom with count", () => {
     render(<ComparisonView {...defaultProps} />);
-    const matches = screen.getAllByText("MISSING");
+    expect(screen.getByText(/Missing Fields \(7\)/i)).toBeInTheDocument();
+  });
+
+  it("shows required badge on required missing fields", () => {
+    render(<ComparisonView {...defaultProps} />);
+    const matches = screen.getAllByText("required");
     expect(matches.length).toBe(4);
   });
 
-  it("shows missing recommended count badge", () => {
+  it("shows recommended badge on recommended missing fields", () => {
     render(<ComparisonView {...defaultProps} />);
-    expect(screen.getByText(/RECOMMENDED — 3 missing/i)).toBeInTheDocument();
-  });
-
-  it("reveals missing recommended fields on toggle", async () => {
-    const user = userEvent.setup();
-    render(<ComparisonView {...defaultProps} />);
-    const toggleBtn = screen.getByText(/RECOMMENDED — 3 missing/i);
-    await user.click(toggleBtn);
-    const matches = screen.getAllByText(/^missing$/);
+    const matches = screen.getAllByText("recommended");
     expect(matches.length).toBe(3);
   });
 
@@ -124,6 +121,6 @@ describe("ComparisonView", () => {
       />
     );
     expect(screen.getByText(/100% coverage/i)).toBeInTheDocument();
-    expect(screen.queryByText(/MISSING/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Missing Fields/i)).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 source_format: ro_crate
 pivot: fairagro_searchhub
-version: "0.1.0"
+version: "0.2.0"
 author: fairweaver-community
 description: Maps ARC RO-Crate metadata to FAIRagro Search Hub format
 
@@ -11,6 +11,12 @@ field_rules:
     block: citation
     required: true
     confidence: 0.95
+
+  - source: alternative_titles
+    target: citation.alternativeTitle
+    block: citation
+    required: false
+    confidence: 0.8
 
   - source: description
     target: citation.dsDescription
@@ -39,7 +45,7 @@ field_rules:
     required: false
     confidence: 0.8
 
-  # ── generalExtended block ───────────────────────────────────
+  # ── generalExtended block ───────────────────────────────────────
   - source: license
     target: generalExtended.license
     block: generalExtended
@@ -53,23 +59,53 @@ field_rules:
     confidence: 0.8
 
   # ── crop block ────────────────────────────────────────────────
-  - source: additionalType
-    target: crop.cropSpecies
+  - source: crop_species
+    target: crop.crop.cropSpecies
     block: crop
     required: false
-    confidence: 0.7
+    confidence: 0.85
 
-  # ── sensor block ──────────────────────────────────────────────
+  - source: crop_species_uri
+    target: crop.crop.cropSpeciesURI
+    block: crop
+    required: false
+    confidence: 0.8
+
+  - source: crop_pest
+    target: crop.crop.cropPest
+    block: crop
+    required: false
+    confidence: 0.75
+
+  - source: crop_pest_uri
+    target: crop.crop.cropPestURI
+    block: crop
+    required: false
+    confidence: 0.75
+
+  # ── sensor block ─────────────────────────────────────────────
   - source: measurementTechnique
-    target: sensor.sensorSensorType
+    target: sensor.sensor.sensorType
+    block: sensor
+    required: false
+    confidence: 0.85
+    transform: wrap_sensor_type
+
+  - source: measurementMethod
+    target: sensor.sensor.sensorPlatformType
     block: sensor
     required: false
     confidence: 0.8
-    transform: wrap_sensor
+    transform: wrap_sensor_type
 
-  - source: measurementMethod
-    target: sensor.sensorPlatform
+  - source: drone_manufacturer
+    target: sensor.sensor.sensorPlatformManufacturerName
     block: sensor
     required: false
     confidence: 0.7
-    transform: wrap_platform
+
+  - source: drone_model
+    target: sensor.sensor.sensorPlatformModelName
+    block: sensor
+    required: false
+    confidence: 0.7

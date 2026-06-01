@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from mapping_engine import MappingEngine
+from formats.oai_dc_plugin import normalize as normalize_oai_dc
 from oai_pmh import harvest, list_sets
 from plugins.loader import load_plugins
 from sickle.oaiexceptions import CannotDisseminateFormat, NoRecordsMatch
@@ -52,13 +53,11 @@ def list_pivots():
 async def recommend_pivot(file: UploadFile = File(...)):
     content = await file.read()
     filename = file.filename or ""
-    
+
     try:
         data = json.loads(content)
     except Exception:
         raise HTTPException(status_code=422, detail="File must be valid JSON")
-    if not isinstance(data, dict):
-        raise HTTPException(status_code=422, detail="File must be a JSON object, not an array")
 
     # Detect format from content
     source_format = detect_format(filename, content)
@@ -222,6 +221,70 @@ async def harvest_oai_pmh(req: HarvestRequest):
     return result
 
 
+class HarvestConvertRequest(BaseModel):
+    base_url: str
+    metadata_prefix: str = "oai_dc"
+    set: str | None = None
+    from_date: str | None = None
+    until_date: str | None = None
+    max_records: int = 10
+    pivot_id: str = "fairagro_searchhub"
+
+
+@app.post("/harvest/convert", summary="Harvest and convert OAI-PMH records to pivot JSON-LD")
+async def harvest_convert(req: HarvestConvertRequest):
+    try:
+        harvested = harvest(
+            base_url=req.base_url,
+            metadata_prefix=req.metadata_prefix,
+            set=req.set,
+            from_date=req.from_date,
+            until_date=req.until_date,
+            max_records=req.max_records,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except CannotDisseminateFormat as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Metadata prefix '{req.metadata_prefix}' not supported: {e}",
+        )
+    except NoRecordsMatch:
+        return {"records": [], "total": 0}
+
+    pivot_id = req.pivot_id
+    source_format = "oai_dc"
+    results = []
+    for rec in harvested.get("records", []):
+        try:
+            parsed = normalize_oai_dc(rec["metadata"])
+        except Exception as e:
+            logger.warning("skip record %s: normalize failed: %s", rec.get("identifier"), e)
+            continue
+        try:
+            conv = engine.convert_nested(parsed, source_format, pivot_id)
+        except Exception as e:
+            logger.warning("skip record %s: convert failed: %s", rec.get("identifier"), e)
+            continue
+        results.append({
+            "identifier": rec.get("identifier"),
+            "datestamp": rec.get("datestamp"),
+            "set_spec": rec.get("set_spec", []),
+            "pivot_id": pivot_id,
+            "source_format": source_format,
+            "output": conv.get("json_ld", conv),
+            "field_rules": conv.get("field_rules", []),
+            "missing_fields": conv.get("missing_fields", []),
+            "confidence": conv.get("confidence"),
+            "mapping_source": conv.get("mapping_source"),
+            "model": conv.get("model"),
+        })
+
+    return {"records": results, "total": len(results)}
+
+
 class ListSetsRequest(BaseModel):
     base_url: str
 
@@ -246,9 +309,17 @@ def detect_format(filename: str, content: bytes) -> str:
         ".csv": "darwin_core_csv",
         ".xlsx": "miappe_xlsx",
     }
+
+    if ext == ".xml":
+        snippet = content[:2000].lower()
+        if b"oai_dc:dc" in snippet or b"oai_dc" in snippet and b"dc:title" in snippet:
+            return "oai_dc"
+
     if ext == ".json":
         try:
             data = json.loads(content)
+            if isinstance(data, list):
+                data = data[0] if data else {}
             ctx = data.get("@context")
             if isinstance(ctx, str) and "schema.org" in ctx:
                 return "schema_org"

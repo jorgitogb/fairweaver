@@ -1,25 +1,18 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Loader2, Globe, Search, X } from "lucide-react";
-import type { HarvestRequest, HarvestResult, HarvestedRecord, SetInfo } from "../api/client";
+import type { HarvestConvertRequest, SetInfo } from "../api/client";
 import { listSets } from "../api/client";
-import HarvestResults from "./HarvestResults";
 
 interface HarvestZoneProps {
-  onHarvest: (req: HarvestRequest) => void;
+  onHarvest: (req: HarvestConvertRequest) => void;
   isHarvesting: boolean;
   harvestError: string | null;
-  results: HarvestResult | null;
-  onSelectRecord: (record: HarvestedRecord) => void;
-  disabled?: boolean;
 }
 
 export default function HarvestZone({
   onHarvest,
   isHarvesting,
   harvestError,
-  results,
-  onSelectRecord,
-  disabled,
 }: HarvestZoneProps) {
   const [url, setUrl] = useState("");
   const [prefix, setPrefix] = useState<"oai_dc" | "oai_datacite">("oai_dc");
@@ -86,8 +79,8 @@ export default function HarvestZone({
   };
 
   const handleSubmit = () => {
-    const req: HarvestRequest = {
-      base_url: url,
+    const req: HarvestConvertRequest = {
+      base_url: url.trim(),
       metadata_prefix: prefix,
     };
     if (setSpec) req.set = setSpec;
@@ -136,12 +129,12 @@ export default function HarvestZone({
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Set
             </label>
-            <button
-              type="button"
-              onClick={handleBrowseSets}
-              disabled={!url.trim() || fetchingSets || disabled}
-              className="text-xs text-emerald-600 hover:text-emerald-700 disabled:text-slate-300 font-medium flex items-center gap-0.5"
-            >
+              <button
+                type="button"
+                onClick={handleBrowseSets}
+                disabled={!url.trim() || fetchingSets}
+                className="text-xs text-emerald-600 hover:text-emerald-700 disabled:text-slate-300 font-medium flex items-center gap-0.5"
+              >
               {fetchingSets ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
@@ -233,7 +226,7 @@ export default function HarvestZone({
       {/* Harvest button */}
       <button
         onClick={handleSubmit}
-        disabled={!canHarvest || disabled}
+        disabled={!canHarvest}
         className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
       >
         {isHarvesting ? (
@@ -254,14 +247,6 @@ export default function HarvestZone({
         <p className="text-red-500 text-sm flex items-center gap-1">
           <span>⚠</span> {harvestError}
         </p>
-      )}
-
-      {/* Results */}
-      {results && (
-        <HarvestResults
-          results={results}
-          onSelectRecord={onSelectRecord}
-        />
       )}
     </div>
   );

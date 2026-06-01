@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HarvestZone from "../../src/components/HarvestZone";
+import type { HarvestConvertRequest } from "../../src/api/client";
 
 const { mockListSets } = vi.hoisted(() => ({
   mockListSets: vi.fn(),
@@ -11,20 +12,6 @@ vi.mock("../../src/api/client", async () => {
   const actual = await vi.importActual("../../src/api/client");
   return { ...actual, listSets: mockListSets };
 });
-
-const sampleResults = {
-  records: [
-    {
-      identifier: "oai:test:1",
-      datestamp: "2023-01-01",
-      set_spec: ["public"],
-      metadata: { title: ["Test Dataset"] },
-      metadata_format: "oai_dc",
-    },
-  ],
-  total: 1,
-  metadata_format: "oai_dc",
-};
 
 const fakeSets = [
   { spec: "public", name: "Public datasets" },
@@ -39,8 +26,6 @@ describe("HarvestZone", () => {
         onHarvest={() => {}}
         isHarvesting={false}
         harvestError={null}
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     expect(screen.getByPlaceholderText(/pangaea/i)).toBeInTheDocument();
@@ -53,8 +38,6 @@ describe("HarvestZone", () => {
         onHarvest={() => {}}
         isHarvesting={false}
         harvestError={null}
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     const btn = screen.getByRole("button", { name: /harvest/i });
@@ -68,8 +51,6 @@ describe("HarvestZone", () => {
         onHarvest={() => {}}
         isHarvesting={false}
         harvestError={null}
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     const input = screen.getByPlaceholderText(/pangaea/i);
@@ -80,14 +61,12 @@ describe("HarvestZone", () => {
 
   it("calls onHarvest with correct params on submit", async () => {
     const user = userEvent.setup();
-    const onHarvest = vi.fn();
+    const onHarvest = vi.fn<HarvestConvertRequest>();
     render(
       <HarvestZone
         onHarvest={onHarvest}
         isHarvesting={false}
         harvestError={null}
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     await user.type(screen.getByPlaceholderText(/pangaea/i), "https://example.org/oai");
@@ -104,8 +83,6 @@ describe("HarvestZone", () => {
         onHarvest={() => {}}
         isHarvesting={true}
         harvestError={null}
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     expect(screen.getByText(/harvesting/i)).toBeInTheDocument();
@@ -117,24 +94,9 @@ describe("HarvestZone", () => {
         onHarvest={() => {}}
         isHarvesting={false}
         harvestError="Connection refused"
-        results={null}
-        onSelectRecord={() => {}}
       />
     );
     expect(screen.getByText(/connection refused/i)).toBeInTheDocument();
-  });
-
-  it("shows HarvestResults when results are provided", () => {
-    render(
-      <HarvestZone
-        onHarvest={() => {}}
-        isHarvesting={false}
-        harvestError={null}
-        results={sampleResults}
-        onSelectRecord={() => {}}
-      />
-    );
-    expect(screen.getByText(/1 record/i)).toBeInTheDocument();
   });
 });
 
