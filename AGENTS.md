@@ -143,9 +143,9 @@ the component. Never use `any` for API response types.
 
 ## Current Work
 
-- **Completed:** Created `schema_org_plugin.py` (extracts 11 Schema.org fields: name, creator, keywords, license, datePublished, publisher, url, inLanguage, version, @id). Updated `detect_format()` to detect Schema.org JSON-LD via `@context` containing `"schema.org"`. eDAL coverage 14% → 71%. All 59 tests passing.
-- **Stopped at:** Planned `arc_crate_plugin.py` (ARC / RO-Crate as default output format) + `target_format` param in `/convert` + target format dropdown in UI. Need ARC spec details to implement.
-- **Next:** Look up ARC / RO-Crate standard → implement `arc_crate_plugin.py` → extend `/convert` with `target_format` → add target format dropdown to frontend
+- **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub. Added `oai_dc_plugin.py` (10 fields), `oai_dc-fairagro_searchhub.yaml` mapping, `/harvest/convert` endpoint. Frontend shows accordion list of ComparisonViews (coverage %, matched/missing fields) per record. All 52 tests passing.
+- **Stopped at:** Harvest flow fully functional for oai_dc → FAIRagro Search Hub. No pivot selector in harvest mode (uses default `fairagro_searchhub`).
+- **Next:** Add pivot selector to harvest mode so users can choose different pivots before harvesting → pass `pivot_id` to `/harvest/convert` → each record displays with selected pivot mapping.
 
 ---
 
