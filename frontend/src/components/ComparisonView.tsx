@@ -68,8 +68,8 @@ export default function ComparisonView({
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="rounded-xl border border-slate-200 overflow-hidden min-w-0">
+   return (
+     <div className="rounded-xl border border-slate-200 overflow-hidden w-full">
       {/* Header tabs */}
       <div className="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-4 py-2">
         <div className="flex gap-1">
@@ -88,11 +88,11 @@ export default function ComparisonView({
           ))}
         </div>
         <div className="flex items-center gap-3">
-          {mappingSource && (
-            <span className="text-xs text-slate-400 font-mono">
-              {mappingSource}
-            </span>
-          )}
+           {mappingSource && (
+             <span className="text-xs text-slate-400 font-mono whitespace-nowrap">
+               {mappingSource}
+             </span>
+           )}
           <span
             className={`text-xs font-medium ${
               confidence > 0.7
@@ -115,32 +115,36 @@ export default function ComparisonView({
       </div>
 
       {tab === "output" ? (
-        <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 text-emerald-300 font-mono">
-          {JSON.stringify(output, null, 2)}
-        </pre>
+         <div className="overflow-x-auto w-full">
+           <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 text-emerald-300 font-mono min-w-fit whitespace-pre">
+             {JSON.stringify(output, null, 2)}
+           </pre>
+         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 divide-x divide-slate-200 min-h-64">
+           <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-slate-200 min-h-64 w-full">
             {/* ── LEFT: Source Fields ─────────────────────────── */}
             <div className="p-4">
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 Input Fields
               </h3>
-              {sourceFields.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No source fields mapped</p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {sourceFields.map((field) => (
-                    <li
-                      key={field}
-                      className="flex items-center gap-2 text-sm font-mono text-slate-700"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                      {field}
-                    </li>
-                  ))}
-                </ul>
-              )}
+               {sourceFields.length === 0 ? (
+                 <p className="text-xs text-slate-400 italic">No source fields mapped</p>
+               ) : (
+                 <div className="overflow-x-auto">
+                   <ul className="space-y-1.5 min-w-fit">
+                     {sourceFields.map((field) => (
+                       <li
+                         key={field}
+                         className="flex items-center gap-2 text-sm font-mono text-slate-700 whitespace-nowrap"
+                       >
+                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                         {field}
+                       </li>
+                     ))}
+                   </ul>
+                 </div>
+               )}
               <p className="text-xs text-slate-400 mt-3">
                 {sourceFields.length} source field{sourceFields.length !== 1 ? "s" : ""} mapped
               </p>
@@ -152,13 +156,15 @@ export default function ComparisonView({
                 Pivot Fields ({mappedCount}/{totalCount})
               </h3>
 
-              {pivotFields.filter((f) => f.mapped).length > 0 && (
-                <div className="space-y-1">
-                  {pivotFields
-                    .filter((f) => f.mapped)
-                    .map(renderField)}
-                </div>
-              )}
+               {pivotFields.filter((f) => f.mapped).length > 0 && (
+                 <div className="overflow-x-auto">
+                   <div className="space-y-1 min-w-fit">
+                     {pivotFields
+                       .filter((f) => f.mapped)
+                       .map(renderField)}
+                   </div>
+                 </div>
+               )}
 
               {pivotFields.length === 0 && (
                 <p className="text-xs text-slate-400 italic">No pivot fields defined</p>
@@ -172,24 +178,26 @@ export default function ComparisonView({
                 <AlertTriangle className="w-3 h-3 text-amber-500" />
                 Missing Fields ({missingPivotFields.length + orphanMissing.length})
               </h3>
-              <div className="space-y-1">
-                {missingPivotFields.map((f) => (
-                  <div key={f.target} className="flex items-center gap-1.5 py-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-300 shrink-0" />
-                    <span className="text-xs font-mono text-slate-500">{f.target}</span>
-                    <span className={`text-[10px] font-semibold ${f.required ? "text-red-500" : "text-amber-500"}`}>
-                      {f.required ? "required" : "recommended"}
-                    </span>
-                  </div>
-                ))}
-                {orphanMissing.map((f) => (
-                  <div key={f.field} className="flex items-center gap-1.5 py-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-300 shrink-0" />
-                    <span className="text-xs font-mono text-slate-500">{f.field}</span>
-                    <span className="text-[10px] font-semibold text-slate-400">{f.level}</span>
-                  </div>
-                ))}
-              </div>
+                 <div className="overflow-x-auto">
+                   <div className="space-y-1 min-w-fit">
+                     {missingPivotFields.map((f) => (
+                       <div key={f.target} className="flex items-center gap-1.5 py-0.5 whitespace-nowrap">
+                         <span className="w-1.5 h-1.5 rounded-full bg-red-300 shrink-0" />
+                         <span className="text-xs font-mono text-slate-500">{f.target}</span>
+                         <span className={`text-[10px] font-semibold ${f.required ? "text-red-500" : "text-amber-500"}`}>
+                           {f.required ? "required" : "recommended"}
+                         </span>
+                       </div>
+                     ))}
+                     {orphanMissing.map((f) => (
+                       <div key={f.field} className="flex items-center gap-1.5 py-0.5 whitespace-nowrap">
+                         <span className="w-1.5 h-1.5 rounded-full bg-red-300 shrink-0" />
+                         <span className="text-xs font-mono text-slate-500">{f.field}</span>
+                         <span className="text-[10px] font-semibold text-slate-400">{f.level}</span>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
             </div>
           )}
         </>
@@ -200,11 +208,11 @@ export default function ComparisonView({
 
 function renderField(f: PivotFieldEntry) {
   return (
-    <div key={f.target} className="flex items-center gap-1.5 py-0.5">
+    <div key={f.target} className="flex items-center gap-1.5 py-0.5 whitespace-nowrap">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
       <span className="text-xs font-mono text-slate-700">{f.target}</span>
       {f.source && (
-        <span className="text-[10px] text-slate-400 ml-auto flex items-center gap-0.5">
+        <span className="text-[10px] text-slate-400 ml-auto flex items-center gap-0.5 whitespace-nowrap">
           <ArrowRight className="w-2.5 h-2.5" />
           {f.source}
         </span>

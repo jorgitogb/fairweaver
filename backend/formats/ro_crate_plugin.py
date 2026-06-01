@@ -7,6 +7,9 @@ FAIRagro Search Hub specification.
 
 import json
 from typing import Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 FORMAT_ID = "ro_crate"
@@ -14,11 +17,18 @@ LABEL = "RO-Crate"
 EXTENSIONS = [".json"]  # ro-crate-metadata.json
 
 
-def load(content: bytes) -> dict:
+def load(content: bytes, validate_fairagro: bool = True) -> dict:
     """Parse ARC RO-Crate and extract fields for FAIRagro mapping.
 
     Traverses the @graph to find Investigation, Study, and Assay entities,
     following the FAIRagro Search Hub specification paths.
+    
+    Args:
+        content: ARC RO-Crate JSON content
+        validate_fairagro: Whether to validate against FAIRagro template (default: True)
+    
+    Returns:
+        dict: Extracted fields with optional validation info
     """
     data = json.loads(content)
     graph = data.get("@graph", [])
@@ -144,12 +154,126 @@ def load(content: bytes) -> dict:
     if drone_models:
         result["drone_model"] = drone_models[0]
 
+    # FAIRagro template validation
+    if validate_fairagro:
+        try:
+            from arc_templates.fairagro_validator import FairagroArcValidator
+            validator = FairagroArcValidator()
+            validation = validator.validate(data)
+            if not validation["valid"]:
+                logger.warning(f"FAIRagro ARC validation failed: {validation['errors']}")
+                # Add validation info to result for frontend feedback
+                result["_validation"] = validation
+        except ImportError:
+            logger.debug("FAIRagro validator not available, skipping validation")
+        except Exception as e:
+            logger.error(f"FAIRagro validation error: {e}")
+
     return result
 
 
 def write(json_ld: dict) -> bytes:
-    """Convert FAIRagro JSON back to RO-Crate JSON-LD (stub - Phase 1)."""
-    raise NotImplementedError("Reverse conversion not yet implemented")
+    """Convert FAIRagro JSON back to ARC RO-Crate JSON-LD format.
+    
+    Args:
+        json_ld: FAIRagro JSON data (can be flat or nested structure)
+    
+    Returns:
+        bytes: ARC RO-Crate JSON-LD content
+    """
+    
+    # Create basic RO-Crate structure
+    ro_crate = {
+        "@context": "https://w3id.org/ro/crate/1.1/context",
+        "@graph": []
+    }
+
+    # Add RO-Crate metadata descriptor
+    ro_crate["@graph"].append({
+        "@id": "ro-crate-metadata.json",
+        "@type": "CreativeWork",
+        "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+        "about": {"@id": "ro-crate-metadata.json"}
+    })
+
+    # Handle both flat and nested structures
+    if "@context" in json_ld:
+        # Already in JSON-LD format, use as-is
+        investigation = json_ld
+    else:
+        # Create Investigation entity from flat structure
+        investigation = {
+            "@id": "#investigation",
+            "@type": "Dataset",
+            "additionalType": "Investigation",
+            "name": json_ld.get("name", "Untitled Investigation"),
+            "description": json_ld.get("description", ""),
+            "identifier": json_ld.get("identifier", ""),
+            "license": json_ld.get("license", ""),
+            "datePublished": json_ld.get("datePublished", ""),
+        }
+
+    # Add creator if present
+    if "creator" in json_ld:
+        investigation["creator"] = json_ld["creator"]
+
+    # Add keywords if present
+    if "keywords" in json_ld:
+        investigation["keywords"] = json_ld["keywords"]
+
+    ro_crate["@graph"].append(investigation)
+
+    # Create Study entity if study data present
+    if "alternative_titles" in json_ld:
+        study = {
+            "@id": "#study",
+            "@type": "Dataset",
+            "additionalType": "Study",
+            "name": json_ld["alternative_titles"][0] if isinstance(json_ld["alternative_titles"], list) else json_ld["alternative_titles"],
+            "description": json_ld.get("description", ""),
+        }
+        ro_crate["@graph"].append(study)
+
+    # Create Assay entity if assay data present
+    if "measurementTechnique" in json_ld or "measurementMethod" in json_ld:
+        assay = {
+            "@id": "#assay",
+            "@type": "Dataset",
+            "additionalType": "Assay",
+            "name": "Assay 1",
+            "description": "Automated assay from Schema.org conversion",
+        }
+
+        if "measurementTechnique" in json_ld:
+            assay["measurementTechnique"] = json_ld["measurementTechnique"]
+
+        if "measurementMethod" in json_ld:
+            assay["measurementMethod"] = json_ld["measurementMethod"]
+
+        ro_crate["@graph"].append(assay)
+
+    # Add crop/sensor data as additional properties if present
+    if "crop_species" in json_ld:
+        if "about" not in investigation:
+            investigation["about"] = []
+        investigation["about"].append({
+            "@id": "#crop_data",
+            "@type": "PropertyValue",
+            "name": "Organism",
+            "value": json_ld["crop_species"]
+        })
+
+    if "measurementTechnique" in json_ld:
+        if "about" not in investigation:
+            investigation["about"] = []
+        investigation["about"].append({
+            "@id": "#sensor_data",
+            "@type": "PropertyValue",
+            "name": "Measurement Technique",
+            "value": json_ld["measurementTechnique"]
+        })
+
+    return json.dumps(ro_crate, indent=2).encode('utf-8')
 
 
 # ── Graph helpers ──────────────────────────────────────────────────────────────
@@ -359,3 +483,46 @@ def wrap_platform(method: Any) -> list[dict]:
 
 # Alias for wrap_sensor
 wrap_sensor = wrap_sensor_type
+
+
+def parse_schema_org_person(creator_data: Any) -> Any:
+    """Transform Schema.org creator to ARC format."""
+    if not creator_data:
+        return None
+
+    if isinstance(creator_data, dict):
+        # Handle Schema.org Person format
+        if creator_data.get("@type") == "Person":
+            return {
+                "@type": "Person",
+                "name": creator_data.get("name", ""),
+                "email": creator_data.get("email", ""),
+                "affiliation": creator_data.get("affiliation", {})
+            }
+        return creator_data
+
+    if isinstance(creator_data, str):
+        return {"name": creator_data}
+
+    if isinstance(creator_data, list):
+        return [parse_schema_org_person(item) for item in creator_data]
+
+    return creator_data
+
+
+def extract_study_entities(has_part_data: Any) -> Any:
+    """Extract study entities from Schema.org hasPart."""
+    if not has_part_data:
+        return None
+
+    if isinstance(has_part_data, list):
+        studies = []
+        for item in has_part_data:
+            if isinstance(item, dict) and item.get("@type") == "Dataset":
+                studies.append({
+                    "name": item.get("name", ""),
+                    "description": item.get("description", "")
+                })
+        return studies
+
+    return None

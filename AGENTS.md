@@ -144,8 +144,9 @@ the component. Never use `any` for API response types.
 ## Current Work
 
 - **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub. Added `oai_dc_plugin.py` (10 fields), `oai_dc-fairagro_searchhub.yaml` mapping, `/harvest/convert` endpoint. Frontend shows accordion list of ComparisonViews (coverage %, matched/missing fields) per record. All 52 tests passing.
-- **Stopped at:** Harvest flow fully functional for oai_dc → FAIRagro Search Hub. No pivot selector in harvest mode (uses default `fairagro_searchhub`).
-- **Next:** Add pivot selector to harvest mode so users can choose different pivots before harvesting → pass `pivot_id` to `/harvest/convert` → each record displays with selected pivot mapping.
+- **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation. Created frontend components (ArcExportPanel, ArcBatchProcessor, ArcTemplateSelector) with complete TypeScript types and documentation.
+- **Stopped at:** Frontend components are implemented but not yet tested with real user workflows. Backend ARC export is fully functional and ready for production deployment.
+- **Next:** Test the frontend components with various file types and edge cases. Verify integration with backend API endpoints and document test results before production deployment.
 
 ---
 

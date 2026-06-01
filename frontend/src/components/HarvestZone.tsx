@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Loader2, Globe, Search, X } from "lucide-react";
-import type { HarvestConvertRequest, SetInfo } from "../api/client";
-import { listSets } from "../api/client";
+import type { HarvestConvertRequest, SetInfo, PivotProfile } from "../api/client";
+import { listSets, fetchPivots } from "../api/client";
 
 interface HarvestZoneProps {
   onHarvest: (req: HarvestConvertRequest) => void;
@@ -19,6 +19,10 @@ export default function HarvestZone({
   const [setSpec, setSetSpec] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [untilDate, setUntilDate] = useState("");
+  const [pivotId, setPivotId] = useState<string>("fairagro_searchhub");
+  const [pivots, setPivots] = useState<PivotProfile[]>([]);
+  const [loadingPivots, setLoadingPivots] = useState<boolean>(true);
+  const [pivotsError, setPivotsError] = useState<string | null>(null);
 
   const [availableSets, setAvailableSets] = useState<SetInfo[] | null>(null);
   const [fetchingSets, setFetchingSets] = useState(false);
@@ -26,6 +30,22 @@ export default function HarvestZone({
   const [setFilter, setSetFilter] = useState("");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const loadPivots = async () => {
+      try {
+        setLoadingPivots(true);
+        const { pivots } = await fetchPivots();
+        setPivots(pivots);
+      } catch (e) {
+        console.error("Failed to load pivots:", e);
+        setPivotsError(e instanceof Error ? e.message : "Failed to load pivots");
+      } finally {
+        setLoadingPivots(false);
+      }
+    };
+    loadPivots();
+  }, []);
 
   useEffect(() => {
     if (!availableSets) return;
@@ -82,6 +102,7 @@ export default function HarvestZone({
     const req: HarvestConvertRequest = {
       base_url: url.trim(),
       metadata_prefix: prefix,
+      pivot_id: pivotId,
     };
     if (setSpec) req.set = setSpec;
     if (fromDate) req.from_date = fromDate;
@@ -107,20 +128,49 @@ export default function HarvestZone({
         />
       </div>
 
-      {/* Metadata prefix */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-          Metadata format
-        </label>
-        <select
-          value={prefix}
-          onChange={(e) => setPrefix(e.target.value as "oai_dc" | "oai_datacite")}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
-        >
-          <option value="oai_dc">Dublin Core (oai_dc)</option>
-          <option value="oai_datacite">DataCite (oai_datacite)</option>
-        </select>
-      </div>
+       {/* Metadata prefix */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+            Metadata format
+          </label>
+          <select
+            value={prefix}
+            onChange={(e) => setPrefix(e.target.value as "oai_dc" | "oai_datacite")}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+          >
+            <option value="oai_dc">Dublin Core (oai_dc)</option>
+            <option value="oai_datacite">DataCite (oai_datacite)</option>
+          </select>
+        </div>
+
+        {/* Target Pivot */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+            Target Pivot
+          </label>
+          {loadingPivots ? (
+            <div className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+              <span className="text-slate-400">Loading pivots...</span>
+            </div>
+          ) : pivotsError ? (
+            <div className="w-full border border-red-300 rounded-lg px-3 py-2 text-sm text-red-600">
+              {pivotsError}
+            </div>
+          ) : (
+            <select
+              value={pivotId}
+              onChange={(e) => setPivotId(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+            >
+              {pivots.map((pivot) => (
+                <option key={pivot.id} value={pivot.id}>
+                  {pivot.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
       {/* Optional fields */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

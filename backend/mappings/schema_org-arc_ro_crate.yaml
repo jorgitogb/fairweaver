@@ -1,0 +1,102 @@
+source_format: schema_org
+pivot: arc_ro_crate
+version: "1.0.0"
+author: fairweaver-community
+description: Maps Schema.org JSON-LD to ARC RO-Crate format
+
+field_rules:
+  # Investigation entity mapping
+  - source: "@id"
+    target: "@id"
+    block: investigation
+    required: true
+    confidence: 0.95
+
+  - source: "name"
+    target: "name"
+    block: investigation
+    required: true
+    confidence: 0.9
+
+  - source: "description"
+    target: "description"
+    block: investigation
+    required: true
+    confidence: 0.9
+
+  - source: "creator"
+    target: "creator"
+    block: investigation
+    required: true
+    confidence: 0.85
+    transform: parse_schema_org_person
+
+  - source: "identifier"
+    target: "identifier"
+    block: investigation
+    required: true
+    confidence: 0.9
+
+  - source: "license"
+    target: "license"
+    block: investigation
+    required: false
+    confidence: 0.8
+
+  - source: "datePublished"
+    target: "datePublished"
+    block: investigation
+    required: false
+    confidence: 0.8
+
+  - source: "keywords"
+    target: "keywords"
+    block: investigation
+    required: false
+    confidence: 0.75
+
+  - source: "publisher"
+    target: "publisher"
+    block: investigation
+    required: false
+    confidence: 0.7
+
+  # Study entity mapping (if present in Schema.org)
+  - source: "hasPart"
+    target: "about"
+    block: study
+    required: false
+    confidence: 0.7
+    transform: extract_study_entities
+
+  # Assay entity mapping (if present in Schema.org)
+  - source: "measurementTechnique"
+    target: "measurementTechnique"
+    block: assay
+    required: false
+    confidence: 0.75
+
+  - source: "measurementMethod"
+    target: "measurementMethod"
+    block: assay
+    required: false
+    confidence: 0.7
+
+  # Additional metadata
+  - source: "url"
+    target: "url"
+    block: general
+    required: false
+    confidence: 0.6
+
+  - source: "inLanguage"
+    target: "inLanguage"
+    block: general
+    required: false
+    confidence: 0.6
+
+  - source: "version"
+    target: "version"
+    block: general
+    required: false
+    confidence: 0.6

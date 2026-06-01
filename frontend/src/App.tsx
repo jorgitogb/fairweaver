@@ -10,7 +10,7 @@ import {
   type HarvestConvertRequest,
 } from "./api/client";
 import UploadZone from "./components/UploadZone";
-import PivotSelector from "./components/PivotSelector";
+import SimplePivotSelector from "./components/SimplePivotSelector";
 import ComparisonView from "./components/ComparisonView";
 import HarvestZone from "./components/HarvestZone";
 import { Loader2, Globe, Upload, Github, ChevronDown, ChevronUp } from "lucide-react";
@@ -117,7 +117,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+       <main className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Mode toggle */}
         <div>
           <div className="flex items-center gap-2 bg-slate-100 rounded-full p-1 w-fit">
@@ -172,7 +172,7 @@ export default function App() {
                   )}
                 </section>
 
-                {file && (
+                 {file && (
                   <section>
                     <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                       2 · Choose pivot
@@ -182,7 +182,7 @@ export default function App() {
                         </span>
                       )}
                     </h2>
-                    <PivotSelector
+                    <SimplePivotSelector
                       value={pivotId}
                       onChange={setPivotId}
                       recommendations={recommendations}
@@ -247,10 +247,10 @@ export default function App() {
             )}
           </div>
 
-          {/* Right: output + suggestions */}
-          <div className="space-y-6 min-w-0">
+           {/* Right: output + suggestions */}
+           <div className="space-y-6 w-full">
             {mode === "upload" && result ? (
-              <section className="min-w-0">
+                 <section className="w-full">
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                   3 · Output
                 </h2>
@@ -264,7 +264,7 @@ export default function App() {
                 />
               </section>
             ) : mode === "harvest" && harvestResults && harvestResults.length > 0 ? (
-              <section className="min-w-0 space-y-4">
+                 <section className="w-full space-y-4">
                 <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                   3 · Harvested Records ({harvestResults.length})
                 </h2>

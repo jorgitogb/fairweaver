@@ -1,0 +1,202 @@
+# FAIRagro ARC Template - Standard structure for FAIRagro Search Hub
+# This template defines the required structure for ARC RO-Crate files
+# to be compatible with both FAIRagro Search Hub and DataPLANT ARC specification
+template_id: "fairagro_arc_v2"
+name: "FAIRagro ARC Template (DataPLANT Compliant)"
+description: "Standard ARC structure for FAIRagro Search Hub compatibility, fully compliant with DataPLANT ARC specification v3.0"
+version: "2.0.0"
+specification: "DataPLANT ARC v3.0 + FAIRagro Search Hub v1.0"
+domains: ["agronomy", "plant_phenotyping", "biodiversity", "genomics"]
+
+# ARC Directory Structure Requirements (DataPLANT ARC Specification)
+arc_structure:
+  required_directories:
+    - ".arc"
+    - "studies"
+    - "assays"
+    - "workflows"
+    - "runs"
+  required_files:
+    - "isa.investigation.xlsx"
+    - "ro-crate-metadata.json"
+  optional_files:
+    - "LICENSE"
+    - "README.md"
+
+# Required ISA-XLSX Files (DataPLANT ARC Specification)
+required_isa_files:
+  - "isa.investigation.xlsx"
+  - "studies/*/isa.study.xlsx"
+  - "assays/*/isa.assay.xlsx"
+  - "workflows/*/workflow.cwl"
+  - "runs/*/run.cwl"
+
+# Required entity types for FAIRagro mapping
+required_entities:
+  - Investigation
+  - Study
+  - Assay
+
+# Required fields per entity type (FAIRagro + DataPLANT requirements)
+required_fields:
+  Investigation:
+    - name
+    - description
+    - creator
+    - identifier
+    - license
+    - datePublished
+    - investigationContacts
+    - investigationPublications
+  Study:
+    - name
+    - description
+    - studyDesignDescriptors
+  Assay:
+    - name
+    - description
+    - measurementTechnique
+    - measurementMethod
+    - technologyType
+    - technologyPlatform
+
+# Recommended fields for better mapping
+recommended_fields:
+  Investigation:
+    - alternative_titles
+    - keywords
+    - publisher
+    - investigationIdentifier
+  Study:
+    - about
+    - studyDesignType
+    - studyPersonnel
+  Assay:
+    - about
+    - measurementTechnique
+    - measurementMethod
+    - assayCategory
+    - assayType
+
+# Workflow and Run Requirements (DataPLANT ARC Specification)
+workflow_requirements:
+  - workflows/*/workflow.cwl must be valid CWL v1.2+
+  - Workflows should include Docker container descriptions
+  - Workflows should be self-contained (no external file references)
+
+run_requirements:
+  - runs/*/run.cwl must be valid CWL v1.2+
+  - Runs must specify all output files in CWL description
+  - Runs should include parameter files (run.yml)
+  - Runs must be reproducible from assay/workflow inputs
+
+# Data Path Annotation Requirements (DataPLANT ARC Specification)
+data_path_annotation:
+  patterns:
+    - general: "Relative paths from ARC root"
+    - folder_specific: "Relative paths from dataset/resources folders"
+  constraints:
+    - local: "Files must be within ARC directory"
+    - public: "URLs must follow RFC3986 and be publicly accessible"
+
+# Field extraction paths (FAIRagro-specific)
+field_paths:
+  citation:
+    title: "Investigation.name"
+    description: "Investigation.description"
+    author: "Investigation.creator | Investigation.investigationContacts"
+    otherId: "Investigation.identifier | Investigation.investigationIdentifier"
+    productionDate: "Investigation.datePublished"
+    license: "Investigation.license"
+  crop:
+    cropSpecies: "Study.about.LabProcess.object.Sample.additionalProperty[Organism]"
+    cropPest: "Study.about.LabProcess.object.Sample.additionalProperty[Infection Taxon]"
+  sensor:
+    sensorType: "Assay.measurementTechnique | Assay.technologyType"
+    sensorPlatformType: "Assay.measurementMethod | Assay.technologyPlatform"
+    sensorPlatformManufacturerName: "Assay.about.LabProcess.additionalProperty[Drone Manufacturer]"
+    sensorPlatformModelName: "Assay.about.LabProcess.additionalProperty[Drone Model]"
+
+# Validation rules (DataPLANT ARC + FAIRagro requirements)
+validation_rules:
+  # DataPLANT ARC Structure Validation
+  - rule: "ARC must have required directory structure"
+    path: "ARC_ROOT"
+    type: "directory_structure"
+    required_dirs: [".arc", "studies", "assays", "workflows", "runs"]
+  
+  - rule: "ARC must have required ISA-XLSX files"
+    path: "ARC_ROOT"
+    type: "file_existence"
+    required_files: ["isa.investigation.xlsx", "ro-crate-metadata.json"]
+
+  # FAIRagro Entity Validation
+  - rule: "Investigation must have exactly one creator"
+    path: "Investigation.creator | Investigation.investigationContacts"
+    type: "required"
+  
+  - rule: "Investigation must have required administrative metadata"
+    path: "Investigation"
+    type: "required_fields"
+    fields: ["name", "description", "identifier", "license", "datePublished"]
+
+  - rule: "Assay must have measurementTechnique or measurementMethod"
+    path: "Assay.measurementTechnique, Assay.measurementMethod, Assay.technologyType"
+    type: "at_least_one"
+
+  # DataPLANT ARC Validation
+  - rule: "All studies must have isa.study.xlsx files"
+    path: "studies/*"
+    type: "file_existence"
+    required_files: ["isa.study.xlsx"]
+
+  - rule: "All assays must have isa.assay.xlsx files"
+    path: "assays/*"
+    type: "file_existence"
+    required_files: ["isa.assay.xlsx"]
+
+  - rule: "All workflows must have workflow.cwl files"
+    path: "workflows/*"
+    type: "file_existence"
+    required_files: ["workflow.cwl"]
+
+  - rule: "All runs must have run.cwl files"
+    path: "runs/*"
+    type: "file_existence"
+    required_files: ["run.cwl"]
+
+  # Data Path Validation
+  - rule: "All data paths must be resolvable"
+    path: "*.xlsx"
+    type: "path_resolution"
+    patterns: ["general", "folder_specific", "url"]
+
+# Licensing Requirements (DataPLANT ARC Specification)
+licensing:
+  required: false  # Optional but strongly recommended
+  recommended_licenses:
+    - "CC-BY-4.0"
+    - "MIT"
+    - "Apache-2.0"
+  license_file: "LICENSE or LICENSE.txt or LICENSE.md"
+
+# Publishable ARC Requirements (DataPLANT ARC Specification)
+publishable_requirements:
+  - "Investigation must have: identifier, title, description, contacts, publication"
+  - "ARC must contain at least one assay or workflow"
+  - "All data paths must resolve to existing resources"
+  - "ARC must be reproducible (runs must be executable)"
+
+# Reproducible ARC Requirements (DataPLANT ARC Specification)
+reproducible_requirements:
+  - "All runs must have executable CWL descriptions"
+  - "All workflows must be self-contained"
+  - "All software dependencies must be specified"
+  - "All input data must be accessible"
+
+# FAIRagro-Specific Requirements
+fairagro_requirements:
+  - "Investigation must map to FAIRagro citation block"
+  - "Study/Assay must map to FAIRagro crop/sensor blocks"
+  - "Required FAIRagro fields must be present for mapping"
+  - "Field confidence scores must meet minimum thresholds"

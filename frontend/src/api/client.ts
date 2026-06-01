@@ -237,5 +237,167 @@ export async function convertChain(
   params.set("source_format", sourceFormat);
   params.set("pivot_id", pivotId);
   params.set("target_format", targetFormat);
-  return request(`/convert/chain?${params.toString()}`, { method: "POST", body: form });
+   return request(`/convert/chain?${params.toString()}`, { method: "POST", body: form });
+}
+
+// ── ARC Template API ────────────────────────────────────────────────────────
+
+export interface ArcValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  template_id: string;
+  template_version: string;
+}
+
+export async function validateArcFairagro(
+  file: File
+): Promise<ArcValidationResult> {
+  const form = new FormData();
+  form.append("file", file);
+  return request("/arc/validate/fairagro", {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function getFairagroArcTemplate(): Promise<{
+  template_id: string;
+  name: string;
+  description: string;
+  version: string;
+  required_entities: string[];
+  required_fields: Record<string, string[]>;
+}> {
+  return request("/arc/templates/fairagro");
+}
+
+export interface ArcExportResult {
+  arcContent?: string;
+  validation: ArcValidationResult;
+  filename: string;
+}
+
+export interface ArcBatchPreviewResult {
+  filename: string;
+  result: ArcExportResult;
+}
+
+export interface ArcBatchExportResult {
+  filename: string;
+  arc_filename: string;
+  validation: ArcValidationResult;
+}
+
+export interface ArcTemplateRecommendation {
+  recommendedTemplate: string;
+  reason: string;
+}
+
+export async function convertToArc(
+  file: File,
+  sourceFormat: string = "auto",
+  pivotId: string = "fairagro_searchhub",
+  preview: boolean = false
+): Promise<ArcExportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const params = new URLSearchParams();
+  params.set("source_format", sourceFormat);
+  params.set("pivot_id", pivotId);
+  params.set("preview", preview.toString());
+
+  const response = await fetch(`/convert/arc-export?${params.toString()}`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "ARC export failed");
+  }
+
+  if (preview) {
+    return await response.json();
+  }
+
+  const arcContent = await response.text();
+  const validation = await validateArcFairagro(new File([arcContent], "temp.json"));
+
+  const contentDisposition = response.headers.get("Content-Disposition");
+  const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+  const filename = filenameMatch ? filenameMatch[1] : "arc-ro-crate.json";
+
+  return { arcContent, validation, filename };
+}
+
+export async function convertBatchToArc(
+  zipFile: File,
+  pivotId: string = "fairagro_searchhub",
+  preview: boolean = false
+): Promise<ArcBatchPreviewResult[] | Blob> {
+  const form = new FormData();
+  form.append("file", zipFile);
+  const params = new URLSearchParams();
+  params.set("pivot_id", pivotId);
+  params.set("batch", "true");
+  params.set("preview", preview.toString());
+
+  const response = await fetch(`/convert/arc-export?${params.toString()}`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Batch ARC export failed");
+  }
+
+  if (preview) {
+    return await response.json();
+  }
+
+  return await response.blob();
+}
+
+export async function getArcTemplateRecommendation(
+  file: File
+): Promise<{ recommendedTemplate: string; reason: string }> {
+  // Analyze file content to recommend appropriate template
+  const content = await file.text();
+  try {
+    const data = JSON.parse(content);
+    
+    // Simple heuristic-based recommendation
+    if (data.crop_species || data.organism) {
+      return {
+        recommendedTemplate: "fairagro_plant_phenotyping",
+        reason: "Detected crop/plant-related data"
+      };
+    }
+    
+    if (data.sequencing || data.dna || data.rna) {
+      return {
+        recommendedTemplate: "fairagro_genomics",
+        reason: "Detected genomics-related data"
+      };
+    }
+    
+    if (data.drone || data.sensor || data.measurementTechnique) {
+      return {
+        recommendedTemplate: "fairagro_sensor",
+        reason: "Detected sensor/measurement data"
+      };
+    }
+    
+    return {
+      recommendedTemplate: "fairagro_searchhub",
+      reason: "General FAIRagro template recommended"
+    };
+  } catch (e) {
+    return {
+      recommendedTemplate: "fairagro_searchhub",
+      reason: "Could not analyze file content, using default template"
+    };
+  }
 }

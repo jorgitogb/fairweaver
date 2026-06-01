@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import yaml
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -14,6 +14,12 @@ from formats.oai_dc_plugin import normalize as normalize_oai_dc
 from oai_pmh import harvest, list_sets
 from plugins.loader import load_plugins
 from sickle.oaiexceptions import CannotDisseminateFormat, NoRecordsMatch
+from arc_templates.fairagro_validator import FairagroArcValidator
+from formats.schema_org_plugin import load as schema_org_load
+from formats.ro_crate_plugin import load as ro_crate_load, write as ro_crate_write
+import tempfile
+import zipfile
+import io
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 
@@ -283,6 +289,181 @@ async def harvest_convert(req: HarvestConvertRequest):
         })
 
     return {"records": results, "total": len(results)}
+
+
+@app.get("/arc/templates/fairagro", summary="Get FAIRagro ARC template")
+def get_fairagro_arc_template():
+    """Get FAIRagro ARC template specification."""
+    validator = FairagroArcValidator()
+    return validator.get_template_info()
+
+
+@app.post("/convert/arc-export", summary="Convert to ARC RO-Crate format")
+async def convert_to_arc(
+    file: UploadFile = File(...),
+    source_format: str = "auto",
+    pivot_id: str = "fairagro_searchhub",
+    batch: bool = False,
+    preview: bool = False
+):
+    """Convert input file to ARC RO-Crate format with optional batch processing and preview."""
+    try:
+        # Read file content
+        content = await file.read()
+        
+        # For batch processing, expect a ZIP file
+        if batch:
+            return await _process_batch_arc_export(content, pivot_id, preview)
+        
+        # Single file processing
+        return await _process_single_arc_export(file, content, source_format, pivot_id, preview)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ARC export failed: {str(e)}")
+
+
+async def _process_single_arc_export(file: UploadFile, content: bytes, source_format: str, pivot_id: str, preview: bool):
+    """Process single file ARC export."""
+    # Detect format if auto
+    if source_format == "auto":
+        source_format = detect_format(file.filename, content)
+
+    # Load using appropriate plugin
+    if source_format == "schema_org":
+        parsed = schema_org_load(content)
+    elif source_format == "ro_crate":
+        parsed = ro_crate_load(content, validate_fairagro=False)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported source format: {source_format}")
+
+    # Auto-select template based on content
+    if pivot_id == "auto":
+        pivot_id = _auto_select_template(parsed)
+
+    # Convert to pivot format
+    converted = engine.convert(parsed, source_format, pivot_id)
+
+    # Convert pivot to ARC RO-Crate
+    arc_content = ro_crate_write(converted)
+
+    # Validate the generated ARC
+    arc_data = json.loads(arc_content)
+    validator = FairagroArcValidator()
+    validation = validator.validate(arc_data)
+
+    if preview:
+        # Return preview with validation info
+        return {
+            "preview": json.loads(arc_content),
+            "validation": validation,
+            "filename": file.filename.replace('.json', '') + '_arc-ro-crate.json'
+        }
+    
+    # Return file download
+    return Response(
+        content=arc_content,
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename={file.filename.replace('.json', '')}_arc-ro-crate.json"}
+    )
+
+
+async def _process_batch_arc_export(content: bytes, pivot_id: str, preview: bool):
+    """Process batch ARC export from ZIP file."""
+    results = []
+    
+    # Create temporary directory for ZIP extraction
+    with tempfile.TemporaryDirectory() as temp_dir:
+        zip_path = os.path.join(temp_dir, "upload.zip")
+        with open(zip_path, "wb") as f:
+            f.write(content)
+        
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            # Process each file in the ZIP
+            for file_info in zip_ref.infolist():
+                if not file_info.is_dir() and file_info.filename.lower().endswith('.json'):
+                    # Read file from ZIP
+                    with zip_ref.open(file_info) as file:
+                        file_content = file.read()
+                        
+                    # Create mock UploadFile for processing
+                    mock_file = type('MockUploadFile', (), {
+                        'filename': file_info.filename,
+                        'content_type': 'application/json'
+                    })()
+                    
+                    # Process single file
+                    result = await _process_single_arc_export(
+                        mock_file, 
+                        file_content, 
+                        "auto", 
+                        pivot_id, 
+                        preview
+                    )
+                    
+                    if preview:
+                        results.append({
+                            "filename": file_info.filename,
+                            "result": result
+                        })
+                    else:
+                        results.append({
+                            "filename": file_info.filename,
+                            "arc_filename": file_info.filename.replace('.json', '') + '_arc-ro-crate.json',
+                            "validation": result.headers.get("X-Validation", "{}")
+                        })
+    
+    if preview:
+        return {"batch_preview": results}
+    
+    # Create ZIP of all ARC files
+    output_zip = io.BytesIO()
+    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for result in results:
+            # Re-process to get actual file content (simplified for demo)
+            arc_content = json.dumps(result["result"]["preview"], indent=2).encode('utf-8')
+            zipf.writestr(result["arc_filename"], arc_content)
+    
+    output_zip.seek(0)
+    return Response(
+        content=output_zip.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=arc_export_batch.zip"}
+    )
+
+
+def _auto_select_template(parsed_data: dict) -> str:
+    """Auto-select appropriate ARC template based on content analysis."""
+    # Check for agronomy/plant phenotyping indicators
+    if any(key in parsed_data for key in ['crop_species', 'crop_pest', 'organism']):
+        return "fairagro_plant_phenotyping"
+    
+    # Check for genomics indicators
+    if any(key in parsed_data for key in ['sequencing', 'dna', 'rna', 'genome']):
+        return "fairagro_genomics"
+    
+    # Check for sensor/drone indicators
+    if any(key in parsed_data for key in ['drone', 'sensor', 'measurementTechnique']):
+        return "fairagro_sensor"
+    
+    # Default to standard FAIRagro template
+    return "fairagro_searchhub"
+
+
+@app.post("/arc/validate/fairagro", summary="Validate ARC against FAIRagro template")
+async def validate_arc_fairagro(
+    file: UploadFile = File(...)
+):
+    """Validate ARC file against FAIRagro template."""
+    try:
+        content = await file.read()
+        data = json.loads(content)
+        validator = FairagroArcValidator()
+        validation = validator.validate(data)
+        return validation
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON file")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class ListSetsRequest(BaseModel):
