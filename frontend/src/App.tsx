@@ -13,7 +13,10 @@ import UploadZone from "./components/UploadZone";
 import SimplePivotSelector from "./components/SimplePivotSelector";
 import ComparisonView from "./components/ComparisonView";
 import HarvestZone from "./components/HarvestZone";
-import { Loader2, Globe, Upload, Github, ChevronDown, ChevronUp } from "lucide-react";
+import ArcExportPanel from "./components/ArcExportPanel";
+import ArcBatchProcessor from "./components/ArcBatchProcessor";
+import ArcTemplateSelector from "./components/ArcTemplateSelector";
+import { Loader2, Globe, Upload, Github, ChevronDown, ChevronUp, Database, Package } from "lucide-react";
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -22,10 +25,12 @@ export default function App() {
   const [recommendations, setRecommendations] = useState<PivotRecommendation[]>(
     [],
   );
-  const [mode, setMode] = useState<"upload" | "harvest">("upload");
+  const [mode, setMode] = useState<"upload" | "harvest" | "arc">("upload");
   const [harvestResults, setHarvestResults] = useState<HarvestConvertRecord[] | null>(null);
   const [harvestError, setHarvestError] = useState<string | null>(null);
   const [expandedRecords, setExpandedRecords] = useState<Set<string>>(new Set());
+  const [arcBatchFile, setArcBatchFile] = useState<File | null>(null);
+  const [arcTemplate, setArcTemplate] = useState<string>("auto");
 
   const recommendMutation = useMutation({
     mutationFn: (f: File) => recommendPivot(f),
@@ -82,13 +87,15 @@ export default function App() {
     });
   };
 
-  const handleModeSwitch = (newMode: "upload" | "harvest") => {
+  const handleModeSwitch = (newMode: "upload" | "harvest" | "arc") => {
     setMode(newMode);
     setFile(null);
     setResult(null);
     setHarvestResults(null);
     setHarvestError(null);
     setRecommendations([]);
+    setArcBatchFile(null);
+    setArcTemplate("auto");
   };
 
   return (
@@ -143,16 +150,29 @@ export default function App() {
               <Globe className="w-4 h-4" />
               OAI-PMH Harvest
             </button>
+            <button
+              onClick={() => handleModeSwitch("arc")}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                mode === "arc"
+                  ? "bg-emerald-600 text-white"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              ARC Export
+            </button>
           </div>
           <p className="text-slate-500 max-w-xl mt-3">
             {mode === "upload"
               ? "Upload a metadata file, select an interoperability pivot (Bioschemas, AgroSchemas, Schema.org…), and get a FAIR-compliant JSON-LD output — with AI-assisted field suggestions."
-              : "Enter an OAI-PMH endpoint URL to harvest metadata records. Each record will be automatically mapped to the selected pivot and displayed below with field coverage, matched fields, and missing fields."
+              : mode === "harvest"
+              ? "Enter an OAI-PMH endpoint URL to harvest metadata records. Each record will be automatically mapped to the selected pivot and displayed below with field coverage, matched fields, and missing fields."
+              : "Convert your metadata to FAIR-compliant ARC RO-Crate format with automatic template selection and validation."
             }
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left column */}
           <div className="space-y-6">
             {mode === "upload" ? (
@@ -232,6 +252,40 @@ export default function App() {
                   </p>
                 )}
               </>
+            ) : mode === "arc" ? (
+              /* ARC Export mode */
+              <section>
+                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  1 · ARC Export Options
+                </h2>
+                <div className="space-y-6">
+                  <div className="border border-slate-200 rounded-xl p-4">
+                    <h3 className="font-medium text-slate-800 flex items-center gap-2">
+                      <Database className="w-4 h-4" />
+                      Single File Export
+                    </h3>
+                    <p className="text-sm text-slate-600 mt-2">
+                      Convert a single metadata file to ARC RO-Crate format.
+                    </p>
+                    <div className="mt-3">
+                      <ArcExportPanel />
+                    </div>
+                  </div>
+                  
+                  <div className="border border-slate-200 rounded-xl p-4">
+                    <h3 className="font-medium text-slate-800 flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      Batch Processing
+                    </h3>
+                    <p className="text-sm text-slate-600 mt-2">
+                      Process multiple datasets in a ZIP archive.
+                    </p>
+                    <div className="mt-3">
+                      <ArcBatchProcessor />
+                    </div>
+                  </div>
+                </div>
+              </section>
             ) : (
               /* Harvest mode */
               <section>
@@ -314,6 +368,8 @@ export default function App() {
               <div className="h-full flex items-center justify-center text-slate-300 text-sm text-center p-10 border-2 border-dashed border-slate-200 rounded-xl">
                 {mode === "upload"
                   ? "Output and AI suggestions will appear here after conversion"
+                  : mode === "arc"
+                  ? "Select an ARC export option and process to see results here"
                   : "Select a harvested record and convert it — the result will appear here"}
               </div>
             )}

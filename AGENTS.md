@@ -145,7 +145,7 @@ the component. Never use `any` for API response types.
 
 - **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub. Added `oai_dc_plugin.py` (10 fields), `oai_dc-fairagro_searchhub.yaml` mapping, `/harvest/convert` endpoint. Frontend shows accordion list of ComparisonViews (coverage %, matched/missing fields) per record. All 52 tests passing.
 - **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation. Created frontend components (ArcExportPanel, ArcBatchProcessor, ArcTemplateSelector) with complete TypeScript types and documentation.
-- **Stopped at:** Frontend components are implemented but not yet tested with real user workflows. Backend ARC export is fully functional and ready for production deployment.
+- **In Progress:** Frontend components integrated into main application. ArcExportPanel is accessible through the UI. ArcBatchProcessor and ArcTemplateSelector are ready for integration.
 - **Next:** Test the frontend components with various file types and edge cases. Verify integration with backend API endpoints and document test results before production deployment.
 
 ---
@@ -266,8 +266,9 @@ cd backend && uv run ruff check . && uv run ruff format .
 2. **Implement backend logic** in the appropriate layer (`mapping_engine.py`, a new plugin, or `ai_client.py`). Do not put business logic in `main.py`.
 3. **Write the API call** in `client.ts`.
 4. **Build the UI component.** Keep components focused — one responsibility per file.
-5. **Test the full flow** end-to-end: upload a real file, verify the output.
-6. **Commit** following the convention above.
+5. **Integrate into main application** by updating the main App.tsx component.
+6. **Test the full flow** end-to-end: upload a real file, verify the output.
+7. **Commit** following the convention above.
 
 ## How to Fix a Bug
 
@@ -296,6 +297,7 @@ cd backend && uv run ruff check . && uv run ruff format .
 - ❌ Do not commit `.env` files. Ever.
 - ❌ Do not remove the AI fallback pattern (graceful degradation).
 - ❌ Do not call `ai_client.py` functions directly from `main.py` — always go through `MappingEngine`.
+- ❌ Do not implement frontend components without first consulting the AGENTS.md documentation.
 
 ---
 

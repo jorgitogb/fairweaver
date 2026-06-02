@@ -86,7 +86,10 @@ fairweaver/
 │   │   │   ├── UploadZone.tsx
 │   │   │   ├── PivotSelector.tsx
 │   │   │   ├── MappingEditor.tsx
-│   │   │   └── SuggestionPanel.tsx
+│   │   │   ├── SuggestionPanel.tsx
+│   │   │   ├── ArcExportPanel.tsx
+│   │   │   ├── ArcBatchProcessor.tsx
+│   │   │   └── ArcTemplateSelector.tsx
 │   │   └── api/
 │   │       └── client.ts         ← typed API client (all fetch calls)
 │   ├── package.json
@@ -147,6 +150,14 @@ Interactive docs at `http://localhost:8000/docs`
 3. **Optional filters** — set spec, from date, until date
 4. **Harvest & convert** — fetch records and map to FAIRagro Search Hub pivot
 5. **Review results** — accordion list showing each record with coverage %, matched fields, and missing fields
+
+### 3. ARC Export Flow
+
+1. **Select ARC Export mode** — switch from Upload to ARC Export mode
+2. **Upload metadata** — provide Schema.org JSON metadata
+3. **Automatic template selection** — AI detects best ARC template
+4. **Preview/export** — view ARC structure or download RO-Crate file
+5. **Validation** — check ARC compliance and required entities/fields
 
 ---
 
