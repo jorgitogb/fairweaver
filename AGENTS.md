@@ -5,20 +5,124 @@ working on this codebase. Read it fully before making any change.
 
 ---
 
+## Engineering Operating System
+
+Every change follows **SDD + TDD**. No exceptions, no shortcuts.
+
+### Operating Principles (Checklist)
+
+- [ ] 1. Never start coding without a problem statement, expected behaviour, constraints, and acceptance criteria.
+- [ ] 2. Every change begins with a specification (see `## Specification Template`).
+- [ ] 3. Write a failing test first (TDD). See TDD workflow below.
+- [ ] 4. Implement the minimum code to pass the test. Refactor safely.
+- [ ] 5. Keep work atomic — one micro-task = one concern = one clear outcome.
+- [ ] 6. Respect code size limits (see below). State override reason when exceeding.
+- [ ] 7. After every change: validate (lint, typecheck, test, diff review).
+- [ ] 8. If a test fails twice → try a meaningfully different approach. Fail three times → stop, explain, ask for input.
+- [ ] 9. Every 3-5 steps: surface current state, risks, and next recommendation before proceeding.
+- [ ] 10. When proposing solutions, present options with tradeoffs and recommend one.
+- [ ] 11. Prefer simplicity, readability, testability over clever code.
+- [ ] 12. Document rationale and trade-offs in commit body, not code comments.
+- [ ] 13. Evaluate security, performance, and edge cases before implementation.
+- [ ] 14. Preserve existing architecture, conventions, and public contracts.
+- [ ] 15. Never ship an entire feature in one pass — break into milestones and micro-tasks.
+
+### Specification-First Rule
+
+No implementation begins without a spec. For small changes the spec is the issue/PR description;
+for anything non-trivial use the template in `## Specification Template`.
+
+### TDD Workflow
+
+```
+1. Understand the requirement → write the spec.
+2. Write a failing test that defines expected behaviour.
+3. Run the test — confirm it fails for the right reason.
+4. Write the minimum production code to make it pass.
+5. Run the test — confirm it passes.
+6. Refactor if needed — run tests again.
+7. Repeat for each micro-task.
+```
+
+**TDD scope by layer:**
+- **Backend (plugins, mapping_engine, main):** strict TDD — test first, implement second.
+- **Frontend (components, hooks):** strict TDD — unit tests (Vitest) or component tests before implementation.
+- **AI layer (ai_client.py, MappingEngine.generate_mapping_ai):** TDD on the rule-based fallback path (deterministic). AI-specific code uses contract tests (input/output schema validation) plus mocked LLM responses. The existing graceful-degradation pattern is the testable surface — never remove it.
+
+### Code Size Limits (Soft Cap)
+
+- Max **50 lines production code** and **30 lines test code** per step, unless:
+  - The change is mechanical/coordinated across files (e.g. rename across codebase), OR
+  - You explicitly state the override reason and the user approves.
+- When a step exceeds the cap: stop, explain what was completed, explain why, state next recommended step, wait for confirmation.
+
+### Failure Handling Protocol
+
+- **First failure:** analyse root cause, document it, try a different approach.
+- **Second failure:** try a meaningfully different strategy (different abstraction, different layer, different technique). Document what changed.
+- **Third failure:** stop implementation. Explain all three attempts and why they failed. Summarise findings. Present alternative architectural directions. Request human input before continuing.
+- Never retry the same approach expecting different results.
+
+### Context Verification Checkpoint
+
+After every 3-5 implementation steps, pause and surface:
+
+- **Current state:** what exists now?
+- **Remaining work:** what is left?
+- **Risks:** what concerns remain?
+- **Recommendation:** what should be done next?
+
+Then wait for confirmation before continuing.
+
+### Decision Framework
+
+When there are multiple viable approaches:
+
+1. Present all options.
+2. Explain tradeoffs for each (complexity, scalability, maintainability, risk, migration cost).
+3. Recommend one approach with justification.
+4. Let the user decide before proceeding.
+
+### Anti-Big-Bang Rule
+
+Forbidden:
+- Generating full applications or features in one pass.
+- Replacing large architecture sections without approval.
+- Modifying many files simultaneously without incremental checkpoints.
+- Solving unrelated problems in a single change.
+
+Prefer iterative delivery. Each step should be independently verifiable.
+
+### Refactoring Threshold
+
+When complexity increases, stop and evaluate:
+- Is duplication growing?
+- Is coupling increasing?
+- Are responsibilities unclear?
+- Is testability getting worse?
+
+If yes → propose refactoring before adding more functionality.
+
+---
+
 ## Quick Commands
 
 ```bash
-# Backend
+# Backend (Python 3.12+ required)
 cd backend && uv sync && uv run uvicorn main:app --reload
 # API:  http://localhost:8000
 # Docs: http://localhost:8000/docs
 
-# Frontend
+# Frontend (Node.js 20+)
 cd frontend && npm install && npm run dev
 # UI: http://localhost:5173
 
 # Typecheck frontend without building
 cd frontend && npm run typecheck
+
+# Run tests
+cd backend && python -m pytest tests/
+cd frontend && npm test
 
 # Full stack
 cp .env.example .env   # set OPENAI_API_KEY
@@ -42,7 +146,7 @@ FAIRweaver is a **monorepo** with two independent services that communicate only
 │  backend/  (FastAPI + Python 3.12)  │  port 8000
 │  main.py → mapping_engine.py        │
 │         → ai_client.py              │
-│         → plugins/loader.py         │
+│         → formats/*_plugin.py       │
 └─────────────────────────────────────┘
 ```
 
@@ -58,7 +162,7 @@ Do not replace them with ad-hoc code — extend them.
 
 ### 1. Strategy Pattern — Format Plugins
 
-**Where:** `backend/plugins/formats/*_plugin.py`
+**Where:** `backend/formats/*_plugin.py`
 
 Each format (ISA-JSON, DataCite, Darwin Core…) is a plugin that implements the same interface:
 
@@ -143,10 +247,10 @@ the component. Never use `any` for API response types.
 
 ## Current Work
 
-- **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub. Added `oai_dc_plugin.py` (10 fields), `oai_dc-fairagro_searchhub.yaml` mapping, `/harvest/convert` endpoint. Frontend shows accordion list of ComparisonViews (coverage %, matched/missing fields) per record. All 52 tests passing.
-- **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation. Created frontend components (ArcExportPanel, ArcBatchProcessor, ArcTemplateSelector) with complete TypeScript types and documentation.
-- **In Progress:** Frontend components integrated into main application. ArcExportPanel is accessible through the UI. ArcBatchProcessor and ArcTemplateSelector are ready for integration.
-- **Next:** Test the frontend components with various file types and edge cases. Verify integration with backend API endpoints and document test results before production deployment.
+- **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub
+- **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation
+- **In Progress:** Frontend components integrated into main application
+- **Next:** Test the frontend components with various file types and edge cases
 
 ---
 
@@ -262,27 +366,35 @@ cd backend && uv run ruff check . && uv run ruff format .
 
 ## How to Add a New Feature
 
-1. **Define the API contract first.** Add the endpoint to `main.py` (even as a stub returning `{}`) and the TypeScript interface to `client.ts`.
-2. **Implement backend logic** in the appropriate layer (`mapping_engine.py`, a new plugin, or `ai_client.py`). Do not put business logic in `main.py`.
-3. **Write the API call** in `client.ts`.
-4. **Build the UI component.** Keep components focused — one responsibility per file.
-5. **Integrate into main application** by updating the main App.tsx component.
-6. **Test the full flow** end-to-end: upload a real file, verify the output.
-7. **Commit** following the convention above.
+1. **Write a specification.** Use `## Specification Template` to define the goal, requirements, inputs/outputs, edge cases, acceptance criteria, and test strategy. For simple changes, the spec can be the issue description; for non-trivial work, write it out.
+2. **Write failing tests first (TDD).** Write tests that define the expected behaviour of the new feature. Run them — they must fail for the right reasons before you write any production code.
+3. **Split into micro-tasks.** Each micro-task solves one concern, touches one responsibility area, and has one clear outcome. Execute one at a time.
+4. **Define the API contract.** Add the endpoint to `main.py` (even as a stub returning `{}`) and the TypeScript interface to `client.ts`.
+5. **Implement backend logic** in the appropriate layer (`mapping_engine.py`, a new plugin, or `ai_client.py`). Do not put business logic in `main.py`.
+6. **Write the API call** in `client.ts`.
+7. **Build the UI component.** Keep components focused — one responsibility per file.
+8. **Integrate into main application** by updating the main App.tsx component.
+9. **Validate the full flow** end-to-end: upload a real file, verify the output. Run `ruff check`, `ruff format`, `npm run typecheck`, `npm test`.
+10. **Commit** following the convention above.
 
 ## How to Fix a Bug
 
-1. **Reproduce it first.** Identify the exact input that triggers the bug.
+1. **Reproduce it first.** Identify the exact input that triggers the bug. Document it — this is your regression test.
 2. **Locate the layer.** Is it in format detection? Mapping? Conversion? AI call? Isolate before touching code.
-3. **Fix the root cause**, not the symptom. Do not add `try/except` to hide a bug.
-4. **Add a note in the commit body** explaining what caused it and how the fix addresses it.
+3. **Write a failing regression test** that captures the bug's expected behaviour. Run it — confirm it fails for the right reason.
+4. **Fix the root cause**, not the symptom. Do not add `try/except` to hide a bug.
+5. **Verify the regression test passes.** Then run the full test suite to confirm no regressions.
+6. **Add a note in the commit body** explaining what caused it and how the fix addresses it.
+7. **Three-strike rule:** If you fail to fix a bug twice, try a meaningfully different approach. Fail three times → stop, explain all attempts, present alternatives, request human input.
 
 ## How to Refactor
 
 1. **No behaviour change.** A refactor must not change any API response, UI output, or log message.
-2. **One thing at a time.** Rename OR restructure OR extract — not all three in one commit.
-3. **Run typecheck and linting** after every refactor to confirm nothing broke silently.
-4. **Use `refactor` commit type** so the change is easy to skip when bisecting bugs.
+2. **Behaviour preservation contract.** Before refactoring: confirm all tests pass. After refactoring: confirm the same tests still pass. A refactor that breaks tests is not a refactor.
+3. **One thing at a time.** Rename OR restructure OR extract — not all three in one commit.
+4. **Coverage must not decrease.** Refactoring may improve test coverage but must never remove or weaken existing tests.
+5. **Run typecheck and linting** after every refactor to confirm nothing broke silently.
+6. **Use `refactor` commit type** so the change is easy to skip when bisecting bugs.
 
 ---
 
@@ -298,6 +410,10 @@ cd backend && uv run ruff check . && uv run ruff format .
 - ❌ Do not remove the AI fallback pattern (graceful degradation).
 - ❌ Do not call `ai_client.py` functions directly from `main.py` — always go through `MappingEngine`.
 - ❌ Do not implement frontend components without first consulting the AGENTS.md documentation.
+- ❌ Do not write production code before writing a failing test.
+- ❌ Do not skip specification even for "small" changes — the spec can be a one-line issue description.
+- ❌ Do not produce >50 lines of production code in one step without stating an override reason.
+- ❌ Do not silently retry the same failed approach more than twice — escalate after three failures.
 
 ---
 
@@ -337,7 +453,7 @@ Fallback: `isa_json`. Detection logic lives in `main.py → detect_format()`.
 | CORS error in dev            | Frontend not on port 5173                                             | Vite must run on 5173; proxy is configured for that port only                       |
 | TypeScript error on build    | Missing type in `client.ts`                                           | Add the interface before using it in a component                                    |
 | `uv sync` fails              | Python < 3.12                                                         | Check `python --version`; install 3.12+ via `uv python install 3.12`                |
-| `pyproject.toml` build error | Missing `[tool.hatch.build.targets.wheel]` packages config            | Ensure `packages = ["backend"]` is defined                                          |
+| `pyproject.toml` build error | Missing `[tool.hatch.build.targets.wheel]` packages config            | Ensure `packages = ["."]` is defined                                              |
 | AI call returns garbled YAML | Model not following instructions                                      | Lower `temperature` (use 0.1 for mapping gen); strip markdown fences before parsing |
 
 ---
@@ -355,3 +471,75 @@ uv pip install -e .              # editable install if needed
 
 Python 3.12+ is required. The codebase uses `str | None` union syntax, `match` statements,
 and `typing.TypeAlias` — none of which work on 3.11 or below.
+
+---
+
+## Specification Template
+
+Every non-trivial change starts here. Fill in all sections. For trivial changes (typo fix,
+YAML-only pivot addition), the spec can be the issue title + one-line acceptance criteria.
+
+```markdown
+### Goal
+What problem are we solving?
+
+### Business Value
+Why does this matter? What breaks if we don't do this?
+
+### Functional Requirements
+1. FR-1: <what the system must do>
+2. FR-2: ...
+
+### Non-Functional Requirements
+Performance, scalability, security, reliability, accessibility, maintainability.
+
+### Constraints
+Technical, architectural, organizational, dependency, or platform constraints.
+
+### Inputs / Outputs
+Explicit contracts, schemas, API behaviour, data flow.
+
+### Edge Cases
+- Empty / malformed inputs
+- Timeouts, retries, partial failures
+- Concurrent / race conditions
+- Backward compatibility impact
+
+### Acceptance Criteria
+1. [ ] Criterion 1 (concrete, measurable)
+2. [ ] Criterion 2
+3. [ ] Criterion 3
+
+### Risks
+Likely failure points and implementation hazards.
+
+### Dependencies
+Services, modules, APIs, infrastructure, or feature flags needed.
+
+### Test Strategy
+- Unit tests: what classes/functions and why
+- Integration tests: which endpoints or flows
+- E2E tests: which user journeys
+- Regression tests: what bug is captured
+- Contract tests: input/output schema validation (for AI layer)
+```
+
+### Example: Add Darwin Core CSV Format Plugin
+
+**Goal:** Users can upload Darwin Core CSV files and have them converted to JSON-LD pivot format.
+
+**Business Value:** Enables biodiversity researchers to use FAIRweaver with the most common biodiversity data format.
+
+**FR-1:** Plugin loads `.csv` files with Darwin Core header row and produces flat dict.
+**FR-2:** Plugin writes JSON-LD from pivot format back to Darwin Core CSV.
+**FR-3:** Auto-detection activates when file extension is `.csv`.
+
+**Edge Cases:** CSV with no header row → raise `ValueError` with clear message. CSV with extra columns beyond Darwin Core spec → ignore silently.
+
+**Acceptance Criteria:**
+1. [ ] `test_load_darwin_core_csv` passes with sample DwC file
+2. [ ] `test_write_darwin_core_csv` round-trips correctly
+3. [ ] `detect_format()` returns `darwin_core_csv` for `.csv` extension
+4. [ ] `ruff check` + `ruff format` clean
+
+**Test Strategy:** Unit tests for `load()` and `write()` functions. Round-trip test (load → write → load → compare). Integration test via `/convert` endpoint with Darwin Core CSV payload.
