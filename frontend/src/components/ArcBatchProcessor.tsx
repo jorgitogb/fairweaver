@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, Eye, Download, Loader2, AlertTriangle, CheckCircle, Zip } from "lucide-react";
+import { Eye, Download, Loader2, AlertTriangle, CheckCircle, FileArchive } from "lucide-react";
 import { convertBatchToArc } from "../api/client";
 
 interface ArcBatchProcessorProps {
@@ -49,10 +49,14 @@ export default function ArcBatchProcessor({ onBatchComplete }: ArcBatchProcessor
     setError(null);
     
     try {
-      const blob = await convertBatchToArc(zipFile, template, false);
+      const result = await convertBatchToArc(zipFile, template, false);
+      
+      if (!result || Array.isArray(result)) {
+        throw new Error("Unexpected preview result");
+      }
       
       // Create download link
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(result);
       const a = document.createElement("a");
       a.href = url;
       a.download = "arc_export_batch.zip";
@@ -82,7 +86,7 @@ export default function ArcBatchProcessor({ onBatchComplete }: ArcBatchProcessor
     <div className="space-y-6">
       {/* File Upload */}
       <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center">
-        <Zip className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+        <FileArchive className="w-12 h-12 text-slate-400 mx-auto mb-4" />
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Upload ZIP File with Multiple Datasets
         </label>
