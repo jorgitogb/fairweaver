@@ -1,102 +1,70 @@
 source_format: schema_org
-pivot: arc_ro_crate
+pivot: fairagro_searchhub
 version: "1.0.0"
 author: fairweaver-community
-description: Maps Schema.org JSON-LD to ARC RO-Crate format
+description: Maps Schema.org JSON-LD to FAIRagro Search Hub format
 
 field_rules:
-  # Investigation entity mapping
-  - source: "@id"
-    target: "@id"
-    block: investigation
-    required: true
-    confidence: 0.95
-
+  # citation block (required fields)
   - source: "name"
-    target: "name"
-    block: investigation
+    target: "citation.title"
+    block: citation
     required: true
     confidence: 0.9
 
   - source: "description"
-    target: "description"
-    block: investigation
+    target: "citation.dsDescription"
+    block: citation
     required: true
     confidence: 0.9
 
   - source: "creator"
-    target: "creator"
-    block: investigation
+    target: "citation.author"
+    block: citation
     required: true
     confidence: 0.85
     transform: parse_schema_org_person
 
   - source: "identifier"
-    target: "identifier"
-    block: investigation
+    target: "citation.otherId"
+    block: citation
     required: true
     confidence: 0.9
 
+  # generalExtended block (recommended fields)
   - source: "license"
-    target: "license"
-    block: investigation
+    target: "generalExtended.license"
+    block: generalExtended
     required: false
     confidence: 0.8
 
-  - source: "datePublished"
-    target: "datePublished"
-    block: investigation
-    required: false
-    confidence: 0.8
-
-  - source: "keywords"
-    target: "keywords"
-    block: investigation
-    required: false
-    confidence: 0.75
-
-  - source: "publisher"
-    target: "publisher"
-    block: investigation
-    required: false
-    confidence: 0.7
-
-  # Study entity mapping (if present in Schema.org)
-  - source: "hasPart"
-    target: "about"
-    block: study
-    required: false
-    confidence: 0.7
-    transform: extract_study_entities
-
-  # Assay entity mapping (if present in Schema.org)
-  - source: "measurementTechnique"
-    target: "measurementTechnique"
-    block: assay
-    required: false
-    confidence: 0.75
-
-  - source: "measurementMethod"
-    target: "measurementMethod"
-    block: assay
+  - source: "url"
+    target: "generalExtended.sourceDatasetURI"
+    block: generalExtended
     required: false
     confidence: 0.7
 
   # Additional metadata
-  - source: "url"
-    target: "url"
-    block: general
+  - source: "keywords"
+    target: "generalExtended.sourceRDI"
+    block: generalExtended
+    required: false
+    confidence: 0.6
+
+  - source: "datePublished"
+    target: "citation.productionDate"
+    block: citation
+    required: false
+    confidence: 0.6
+
+  - source: "publisher"
+    target: "citation.publisher"
+    block: citation
     required: false
     confidence: 0.6
 
   - source: "inLanguage"
-    target: "inLanguage"
-    block: general
-    required: false
-    confidence: 0.6
-
-  - source: "version"
-    target: "version"
-    block: general
+    target: "citation.language"
+    block: citation
     required: false
     confidence: 0.6

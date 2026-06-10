@@ -19,6 +19,9 @@ export default defineConfig({
       '/convert': 'http://localhost:8000',
       '/harvest': 'http://localhost:8000',
       '/list-sets': 'http://localhost:8000',
+      '/source-formats': 'http://localhost:8000',
+      '/template-fields': 'http://localhost:8000',
+      '/arc': 'http://localhost:8000',
     },
   },
 })

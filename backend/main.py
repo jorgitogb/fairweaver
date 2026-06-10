@@ -141,7 +141,7 @@ async def convert(
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Failed to parse file: {e}")
 
-    result = engine.convert_nested(parsed, source_format, pivot_id)
+    result = engine.convert(parsed, source_format, pivot_id)
     output = result.get("json_ld", result)
     return {
         "pivot_id": pivot_id,
@@ -291,11 +291,128 @@ async def harvest_convert(req: HarvestConvertRequest):
     return {"records": results, "total": len(results)}
 
 
-@app.get("/arc/templates/fairagro", summary="Get FAIRagro ARC template")
-def get_fairagro_arc_template():
-    """Get FAIRagro ARC template specification."""
-    validator = FairagroArcValidator()
-    return validator.get_template_info()
+@app.get("/source-formats/schema-org", summary="Get schema.org field definitions")
+def get_schema_org_fields():
+    """Get schema.org JSON-LD field definitions with descriptions for mapping."""
+    return {
+        "source_format": "schema_org",
+        "fields": [
+            {
+                "name": "@id",
+                "label": "Identifier",
+                "description": "Unique identifier for the dataset or investigation",
+                "required": True,
+                "examples": ["dataset-123", "https://doi.org/10.1234/example"]
+            },
+            {
+                "name": "name",
+                "label": "Name/Title",
+                "description": "Primary title or name of the dataset",
+                "required": True,
+                "examples": ["Climate Change Dataset", "Wheat Phenotyping Trial 2023"]
+            },
+            {
+                "name": "description",
+                "label": "Description",
+                "description": "Detailed description of the dataset content and purpose",
+                "required": True,
+                "examples": ["Long-term observations of wheat growth under drought conditions", "Genomic sequence data from Arabidopsis thaliana"]
+            },
+            {
+                "name": "creator",
+                "label": "Creator/Author",
+                "description": "Person or organization responsible for creating the dataset",
+                "required": False,
+                "examples": [{"@type": "Person", "name": "Jane Smith"}, {"@type": "Organization", "name": "Research Institute"}]
+            },
+            {
+                "name": "identifier",
+                "label": "Identifier",
+                "description": "Persistent identifier for the dataset (often same as @id)",
+                "required": False,
+                "examples": ["dataset-123", "DOI:10.1234/example"]
+            },
+            {
+                "name": "datePublished",
+                "label": "Publication Date",
+                "description": "Date when the dataset was published or made available",
+                "required": False,
+                "examples": ["2023-01-15", "2023-02-20T10:30:00Z"]
+            },
+            {
+                "name": "license",
+                "label": "License",
+                "description": "License governing usage and redistribution of the dataset",
+                "required": False,
+                "examples": ["CC-BY-4.0", "MIT", "Apache-2.0"]
+            },
+            {
+                "name": "keywords",
+                "label": "Keywords",
+                "description": "Keywords or tags describing the dataset content",
+                "required": False,
+                "examples": ["climate", "drought", "agriculture", "genomics"]
+            },
+            {
+                "name": "publisher",
+                "label": "Publisher",
+                "description": "Publisher or organization that made the dataset available",
+                "required": False,
+                "examples": ["Data Publishers Inc.", "University of Agricultural Research"]
+            },
+            {
+                "name": "url",
+                "label": "URL/Web Page",
+                "description": "URL where more information about the dataset can be found",
+                "required": False,
+                "examples": ["https://example.org/dataset/123", "https://doi.org/10.1234/example"]
+            },
+            {
+                "name": "inLanguage",
+                "label": "Language",
+                "description": "Language of the dataset content",
+                "required": False,
+                "examples": ["en", "en-US", "fr"]
+            },
+            {
+                "name": "version",
+                "label": "Version",
+                "description": "Version identifier of the dataset",
+                "required": False,
+                "examples": ["1.0", "2.1", "beta-3"]
+            }
+        ]
+    }
+
+
+@app.get("/template-fields/{template_id}", summary="Get template field structure for ARC conversion")
+def get_template_fields(template_id: str):
+    """Get template field structure (mandatory vs recommended) for ARC conversion."""
+    try:
+        # Load the FAIRagro template to extract field structure
+        validator = FairagroArcValidator()
+        
+        # Get the basic template info from existing method
+        template_info = validator.get_template_info()
+        
+        # Return comprehensive field structure for ARC conversion
+        return {
+            "template_id": template_info["template_id"],
+            "version": template_info["version"],
+            "name": template_info["name"],
+            "description": template_info["description"],
+            "specification": template_info["specification"],
+            "domains": validator.template.get("domains", []),
+            "required_fields": template_info["required_fields"],
+            "recommended_fields": validator.template.get("recommended_fields", {}),
+            "field_paths": validator.template.get("field_paths", {}),
+            "required_entities": template_info["required_entities"],
+            "arc_structure": template_info["arc_structure"],
+            "required_isa_files": template_info["required_isa_files"],
+            "validation_rules": validator.template.get("validation_rules", [])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load template fields: {str(e)}")
 
 
 @app.post("/convert/arc-export", summary="Convert to ARC RO-Crate format")
