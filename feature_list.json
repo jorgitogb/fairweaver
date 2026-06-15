@@ -1,0 +1,20 @@
+{
+  "project": "fairweaver",
+  "description": "Metadata Standards Playground - Schema.org to ARC/FAIRagro RO-Crate conversion with visual mapping editor",
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "require_approved_spec_to_implement": true,
+    "valid_status": ["pending", "spec_ready", "in_progress", "done", "blocked"],
+    "sdd_required_when": "feature has \"sdd\": true"
+  },
+  "features": [
+    {
+      "name": "schema-org-to-arc-playground",
+      "sdd": true,
+      "status": "done",
+      "description": "Core playground: Upload schema.org JSON-LD, map to ARC RO-Crate with FAIRagro template, show mapped/missing fields, export RO-Crate JSON",
+      "priority": 1
+    }
+  ]
+}

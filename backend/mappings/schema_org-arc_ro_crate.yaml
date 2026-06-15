@@ -2,69 +2,60 @@ source_format: schema_org
 pivot: fairagro_searchhub
 version: "1.0.0"
 author: fairweaver-community
-description: Maps Schema.org JSON-LD to FAIRagro Search Hub format
+description: Maps Schema.org JSON-LD to ARC RO-Crate Investigation fields
 
 field_rules:
-  # citation block (required fields)
   - source: "name"
-    target: "citation.title"
-    block: citation
+    target: "name"
     required: true
-    confidence: 0.9
+    confidence: 0.95
 
   - source: "description"
-    target: "citation.dsDescription"
-    block: citation
+    target: "description"
+    required: true
+    confidence: 0.95
+
+  - source: "identifier"
+    target: "identifier"
     required: true
     confidence: 0.9
 
   - source: "creator"
-    target: "citation.author"
-    block: citation
+    target: "creator"
     required: true
     confidence: 0.85
-    transform: parse_schema_org_person
 
-  - source: "identifier"
-    target: "citation.otherId"
-    block: citation
-    required: true
-    confidence: 0.9
-
-  # generalExtended block (recommended fields)
-  - source: "license"
-    target: "generalExtended.license"
-    block: generalExtended
+  - source: "datePublished"
+    target: "datePublished"
     required: false
     confidence: 0.8
 
-  - source: "url"
-    target: "generalExtended.sourceDatasetURI"
-    block: generalExtended
+  - source: "license"
+    target: "license"
+    required: false
+    confidence: 0.9
+
+  - source: "keywords"
+    target: "keywords"
+    required: false
+    confidence: 0.8
+
+  - source: "publisher"
+    target: "publisher"
     required: false
     confidence: 0.7
 
-  # Additional metadata
-  - source: "keywords"
-    target: "generalExtended.sourceRDI"
-    block: generalExtended
+  - source: "url"
+    target: "url"
     required: false
-    confidence: 0.6
-
-  - source: "datePublished"
-    target: "citation.productionDate"
-    block: citation
-    required: false
-    confidence: 0.6
-
-  - source: "publisher"
-    target: "citation.publisher"
-    block: citation
-    required: false
-    confidence: 0.6
+    confidence: 0.7
 
   - source: "inLanguage"
-    target: "citation.language"
-    block: citation
+    target: "inLanguage"
     required: false
-    confidence: 0.6
+    confidence: 0.7
+
+  - source: "version"
+    target: "version"
+    required: false
+    confidence: 0.7

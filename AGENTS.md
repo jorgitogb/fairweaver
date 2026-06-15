@@ -1,357 +1,103 @@
-# FAIRweaver — Agent Guide
+# AGENTS.md — Navigation map for AI agents
 
-This file is the authoritative reference for AI coding agents (Cursor, Copilot, Claude Code, etc.)
-working on this codebase. Read it fully before making any change.
-
----
-
-## Quick Commands
-
-```bash
-# Backend
-cd backend && uv sync && uv run uvicorn main:app --reload
-# API:  http://localhost:8000
-# Docs: http://localhost:8000/docs
-
-# Frontend
-cd frontend && npm install && npm run dev
-# UI: http://localhost:5173
-
-# Typecheck frontend without building
-cd frontend && npm run typecheck
-
-# Full stack
-cp .env.example .env   # set OPENAI_API_KEY
-docker compose up
-# Backend: http://localhost:8000  |  Frontend: http://localhost:8080
-```
+> This file is the entry point for any agent working in this repository.
+> It is NOT a rule bible — it is a map. Read only what you need when you need it.
 
 ---
 
-## Architecture Overview
+## Project identity
 
-FAIRweaver is a **monorepo** with two independent services that communicate only via REST:
-
-```
-┌─────────────────────────────────────┐
-│  frontend/  (React + Vite + TS)     │  port 5173 (dev) / 8080 (prod)
-│  All API calls via src/api/client.ts│
-└────────────────┬────────────────────┘
-                 │ HTTP/JSON
-┌────────────────▼────────────────────┐
-│  backend/  (FastAPI + Python 3.12)  │  port 8000
-│  main.py → mapping_engine.py        │
-│         → ai_client.py              │
-│         → plugins/loader.py         │
-└─────────────────────────────────────┘
-```
-
-**Rule:** Frontend never reads files directly. Backend never touches the DOM.
-Any new capability must be exposed as a REST endpoint first, then consumed by the UI.
+- **Name:** fairweaver
+- **Stack:** Node.js / React
 
 ---
 
-## Design Patterns in Use
+## 1. Before you start (mandatory)
 
-Understanding these patterns is essential before modifying or extending the codebase.
-Do not replace them with ad-hoc code — extend them.
+1. Run `./init.sh` and verify it ends without errors. If it fails, stop and fix the environment before touching code.
+2. Read `progress/current.md` to understand the state from the last session.
+3. Read `feature_list.json`. Every new feature with `"sdd": true` goes through Spec-Driven Development — see `docs/specs.md` and section 4 of this file.
+4. Read `docs/specs.md` before touching any spec or feature with `sdd: true`.
 
-### 1. Strategy Pattern — Format Plugins
+## 2. Repository map
 
-**Where:** `backend/plugins/formats/*_plugin.py`
+- `feature_list.json` — Task list by status. Source of truth: Linear. Sync changes to feature_list.json. Always read first.
+- `progress/current.md` — Active session state. Always read first.
+- `progress/history.md` — Append-only log of past sessions. Read for historical context.
+- `specs/<feature>/` — `requirements.md` + `design.md` + `tasks.md`. Read before implementing any `sdd: true` feature.
+- `docs/architecture.md` — What "good work" means in this project. Read before implementing.
+- `docs/conventions.md` — Style, naming, error handling rules. Read before writing code.
+- `docs/specs.md` — SDD protocol: EARS notation, the 3 files, human approval gate. Read before drafting or reviewing specs.
+- `docs/tdd.md` — TDD protocol: red-green-refactor, how tests relate to specs.
+- `docs/verification.md` — How to verify your work. Read before marking a task `done`.
+- `ground-rules.md` — Non-negotiable rules for this project.
+- `CHECKPOINTS.md` — Objective criteria for "correct final state".
+- `.opencode/agent/` — Agent definitions (leader, spec-author, implementer, reviewer).
+- `src/` — Application code.
+- `tests/` — Automated tests.
 
-Each format (ISA-JSON, DataCite, Darwin Core…) is a plugin that implements the same interface:
+## 3. Hard rules (non-negotiable)
 
-```python
-FORMAT_ID = "isa_json"          # unique identifier used in API calls
-LABEL     = "ISA-JSON"          # human-readable label for the UI
-EXTENSIONS = [".json"]          # for auto-detection
+- **One feature at a time.** Do not mix changes from multiple tasks in the same session.
+- **Never mark a task `done` without green tests.** Run `./init.sh` and verify the test block passes 100%.
+- **Never skip the spec phase.** Every feature with `"sdd": true` must pass through `spec_author` and get human approval before touching code.
+- **Never skip the human approval gate.** The leader stops the flow at `spec_ready` and waits.
+- **Document your work** in `progress/current.md` as you go, not at the end.
+- **Leave the repository clean** before closing the session (see section 5).
+- **If you don't know something, check `docs/`** before inventing an answer.
 
-def load(content: bytes) -> dict:
-    """Parse raw file bytes → flat dict for the mapping engine."""
-    ...
-
-def write(json_ld: dict) -> dict:
-    """Convert pivot JSON-LD → this format's output structure."""
-    ...
-```
-
-`plugins/loader.py` discovers all `*_plugin.py` files at startup using `importlib` — no registration
-needed. Adding a new format = adding one file. Never add format logic to `main.py` or
-`mapping_engine.py`.
-
-### 2. Registry Pattern — Pivot Profiles
-
-**Where:** `backend/pivot_registry.yaml` + `MappingEngine._load_registry()`
-
-Pivots (Bioschemas, AgroSchemas, Schema.org…) are data, not code. They live in a YAML registry
-that the engine reads at startup. To add a new pivot, edit the YAML — no Python changes needed.
-
-```yaml
-bioschemas_dataset:
-  label: "Bioschemas Dataset"
-  context_url: "https://bioschemas.org/profiles/Dataset/1.0-RELEASE"
-  domains: [genomics, biodiversity, general]
-  required_fields: [identifier, name, description, url, keywords, license]
-  recommended_fields: [creator, datePublished, publisher, version]
-```
-
-The engine scores input fields against `required_fields` + `recommended_fields` to produce
-a coverage percentage. This drives both the AI recommendation and the SuggestionPanel UI.
-
-### 3. Facade Pattern — MappingEngine
-
-**Where:** `backend/mapping_engine.py`
-
-`MappingEngine` is the single entry point for all conversion logic. `main.py` calls it;
-`ai_client.py` is called by it. Nothing else should call `ai_client.py` directly.
+## 4. Workflow (SDD)
 
 ```
-main.py (HTTP layer)
-    └── MappingEngine (domain logic)
-            ├── pivot registry
-            ├── YAML mapping files
-            ├── format plugin dispatch
-            └── ai_client (AI generation + RAG)
+pending → [spec_author] → spec_ready → HUMAN → in_progress → [implementer → reviewer] → done
 ```
 
-### 4. Graceful Degradation — AI Fallback
+1. The leader queries Linear via Linear MCP for the first issue with status `pending` and `"sdd": true`.
+2. The leader launches `spec_author`, which creates `specs/<name>/{requirements,design,tasks}.md` and marks status as `spec_ready`.
+3. **Pause.** The human reviews the spec in `specs/<name>/` and approves (or asks for changes).
+4. Once approved, the leader transitions the feature to `in_progress` (in the backend) and launches `implementer`.
+5. The implementer executes `tasks.md` one by one, marking them `[x]`.
+6. The reviewer verifies `R<n>` ↔ test traceability and complete tasks; approves or rejects.
+7. If approved, the feature is marked `done` and the summary moves to `progress/history.md`.
 
-**Where:** `mapping_engine.py → generate_mapping()`
+## 5. Session close (lifecycle)
 
-Every AI call is wrapped in `try/except`. If the GWDG API is unavailable, the engine falls back
-to rule-based field matching. This ensures the platform works even without an API key.
+Before ending:
 
-```python
-try:
-    mapping = generate_mapping_ai(...)   # GWDG API
-except Exception:
-    mapping = self._rule_based_mapping() # deterministic fallback
-```
+1. Run `./init.sh` — all green.
+2. If the task is finished: transition the issue to `Done` via Linear MCP, then update `feature_list.json`.
+3. Move the summary from `progress/current.md` to the end of `progress/history.md`.
+4. Empty `progress/current.md`, leaving only the template.
+5. No temporary files, no debug `print()`, no TODOs without context.
 
-Never remove this pattern. Never let an AI failure raise an HTTP 500.
+## 6. If you get stuck
 
-### 5. Typed API Contract — client.ts
+- Re-read the relevant section in `docs/`.
+- If the tool does not do what you expect, do NOT invent a workaround: document the blocker in `progress/current.md` and stop the session.
 
-**Where:** `frontend/src/api/client.ts`
+# OpenCode instructions
 
-All TypeScript interfaces that mirror the backend's JSON responses live here. When you add a new
-field to a backend response, add it to the interface in `client.ts` first, then consume it in
-the component. Never use `any` for API response types.
+> This file is appended to the generated `AGENTS.md` when the target CLI is opencode.
 
 ---
 
-## Current Work
+## OpenCode-specific notes
 
-- **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub. Added `oai_dc_plugin.py` (10 fields), `oai_dc-fairagro_searchhub.yaml` mapping, `/harvest/convert` endpoint. Frontend shows accordion list of ComparisonViews (coverage %, matched/missing fields) per record. All 52 tests passing.
-- **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation. Created frontend components (ArcExportPanel, ArcBatchProcessor, ArcTemplateSelector) with complete TypeScript types and documentation.
-- **In Progress:** Frontend components integrated into main application. ArcExportPanel is accessible through the UI. ArcBatchProcessor and ArcTemplateSelector are ready for integration.
-- **Next:** Test the frontend components with various file types and edge cases. Verify integration with backend API endpoints and document test results before production deployment.
+- Agent definitions live in `.opencode/agent/`. Each agent has a `.md` file with YAML frontmatter.
+- The `opencode.jsonc` in the project root declares all agents with their permissions.
+- Use `@leader`, `@spec-author`, `@implementer`, `@reviewer` to invoke agents directly.
+- The `build` agent is the default primary agent. Switch to `plan` for read-only analysis.
+- Agent permissions are enforced by opencode. The leader cannot edit `src/` or `tests/`.
+- Use `Tab` to cycle between primary agents during a session.
+- Use `session_child_first` / `session_child_cycle` / `session_parent` to navigate between parent and child sessions.
 
----
+## Session management
 
-## Commit Message Convention
+- `/wrap` — End session. Writes note: what was done, current progress. Closes child sessions.
+- `/resume` — Resume project from a previous session. Restores context from saved summary.
 
-Use [Conventional Commits](https://www.conventionalcommits.org/). Every commit title must follow:
+## Recommended tools
 
-```
-<type>(<scope>): <short description in imperative mood>
-```
-
-### Types
-
-| Type       | When to use                          |
-| ---------- | ------------------------------------ |
-| `feat`     | New capability visible to users      |
-| `fix`      | Bug fix                              |
-| `refactor` | Code change with no behaviour change |
-| `perf`     | Performance improvement              |
-| `test`     | Adding or fixing tests               |
-| `docs`     | Documentation only                   |
-| `chore`    | Tooling, deps, config (no prod code) |
-| `ci`       | CI/CD changes                        |
-
-### Scope
-
-Use the affected layer: `backend`, `frontend`, `plugin`, `pivot`, `mapping`, `docker`, `ai`
-
-### Examples
-
-```bash
-feat(plugin): add Darwin Core CSV loader
-fix(backend): handle empty field_rules in YAML mapping validator
-refactor(mapping-engine): extract _score_pivot_coverage into separate method
-perf(ai): cache embedding vectors in-memory to avoid redundant API calls
-docs(agents): add design pattern explanations
-chore(deps): bump openai to 1.52.0
-feat(frontend): add confidence score badge to PivotSelector cards
-fix(frontend): prevent double submit on convert button click
-feat(pivot): add MIAPPE pivot profile to registry
-test(plugin): add round-trip test for ISA-JSON loader and writer
-```
-
-### Rules for agents
-
-- One logical change per commit. Do not bundle a fix and a refactor in the same commit.
-- The description must complete the sentence _"If applied, this commit will…"_
-- No period at the end of the title.
-- Body (optional): explain _why_, not _what_. The diff shows what.
-
----
-
-## Branch Naming Convention
-
-```
-<type>/<short-slug>
-```
-
-```bash
-feat/darwin-core-plugin
-fix/yaml-validator-empty-rules
-refactor/mapping-engine-coverage-scoring
-docs/update-agents-guide
-chore/bump-openai-client
-```
-
-Always branch from `main`. Never commit directly to `main`.
-
----
-
-## Issue Title Convention
-
-```
-[type] Short description of the problem or feature
-```
-
-```
-[bug] Plugin not loading when FORMAT_ID contains uppercase letters
-[feature] Add RO-Crate JSON-LD format plugin
-[refactor] Split MappingEngine into smaller services
-[docs] Document YAML mapping schema fields
-[chore] Add pre-commit hook for ruff and tsc
-```
-
----
-
-## Code Style Rules
-
-### Python (backend)
-
-- Python 3.12+ only. Use modern syntax: `X | Y` union types, `match`, `TypeAlias`.
-- All public functions must have a docstring explaining _what_ and _why_, not _how_.
-- Type-annotate every function signature — inputs and return type.
-- Use `pathlib.Path` for all file paths, never `os.path`.
-- Raise `HTTPException` only in `main.py`. Raise plain `ValueError` / `RuntimeError` in engine/plugins.
-- Do not use `print()` for debugging — use `import logging; logger = logging.getLogger(__name__)`.
-- Format with `ruff format`, lint with `ruff check` before committing.
-
-```bash
-cd backend && uv run ruff check . && uv run ruff format .
-```
-
-### TypeScript (frontend)
-
-- No `any`. Use proper types or `unknown` with a type guard.
-- All API response types must be defined in `src/api/client.ts` and imported — never inlined.
-- Components must have a typed `Props` interface defined above the component function.
-- Use `const` by default. Use `let` only when reassignment is necessary.
-- Async state: always use TanStack Query (`useQuery` / `useMutation`) — never raw `useState` + `useEffect` for API data.
-- Run typecheck before committing: `npm run typecheck`.
-
----
-
-## How to Add a New Feature
-
-1. **Define the API contract first.** Add the endpoint to `main.py` (even as a stub returning `{}`) and the TypeScript interface to `client.ts`.
-2. **Implement backend logic** in the appropriate layer (`mapping_engine.py`, a new plugin, or `ai_client.py`). Do not put business logic in `main.py`.
-3. **Write the API call** in `client.ts`.
-4. **Build the UI component.** Keep components focused — one responsibility per file.
-5. **Integrate into main application** by updating the main App.tsx component.
-6. **Test the full flow** end-to-end: upload a real file, verify the output.
-7. **Commit** following the convention above.
-
-## How to Fix a Bug
-
-1. **Reproduce it first.** Identify the exact input that triggers the bug.
-2. **Locate the layer.** Is it in format detection? Mapping? Conversion? AI call? Isolate before touching code.
-3. **Fix the root cause**, not the symptom. Do not add `try/except` to hide a bug.
-4. **Add a note in the commit body** explaining what caused it and how the fix addresses it.
-
-## How to Refactor
-
-1. **No behaviour change.** A refactor must not change any API response, UI output, or log message.
-2. **One thing at a time.** Rename OR restructure OR extract — not all three in one commit.
-3. **Run typecheck and linting** after every refactor to confirm nothing broke silently.
-4. **Use `refactor` commit type** so the change is easy to skip when bisecting bugs.
-
----
-
-## What Agents Must NOT Do
-
-- ❌ Do not add new dependencies without checking the existing stack first.
-- ❌ Do not modify `pivot_registry.yaml` as part of a code refactor — pivots are data, not code.
-- ❌ Do not put AI logic in `main.py` or format logic in `mapping_engine.py`.
-- ❌ Do not use `any` in TypeScript.
-- ❌ Do not catch exceptions silently without at least logging them.
-- ❌ Do not hardcode model names — they come from environment variables.
-- ❌ Do not commit `.env` files. Ever.
-- ❌ Do not remove the AI fallback pattern (graceful degradation).
-- ❌ Do not call `ai_client.py` functions directly from `main.py` — always go through `MappingEngine`.
-- ❌ Do not implement frontend components without first consulting the AGENTS.md documentation.
-
----
-
-## Environment Variables
-
-| Variable              | Default                               | Purpose                                |
-| --------------------- | ------------------------------------- | -------------------------------------- |
-| `OPENAI_API_KEY`      | —                                     | GWDG Academic Cloud API key (required) |
-| `OPENAI_BASE_URL`     | `https://chat-ai.academiccloud.de/v1` | OpenAI-compatible endpoint             |
-| `OPENAI_MODEL`        | `meta-llama-3.1-8b-instruct`          | Model for AI calls                     |
-| `PIVOT_REGISTRY_PATH` | `/app/pivot_registry.yaml`            | Path to pivot registry                 |
-| `LOG_LEVEL`           | `info`                                | Logging verbosity                      |
-
----
-
-## File Detection Logic
-
-| Extension | Detected format   | Note                                                         |
-| --------- | ----------------- | ------------------------------------------------------------ |
-| `.json`   | `isa_json`        | Switches to `ro_crate` if content has `@type` and `ro-crate` |
-| `.xml`    | `datacite_xml`    |                                                              |
-| `.csv`    | `darwin_core_csv` |                                                              |
-| `.xlsx`   | `miappe_xlsx`     |                                                              |
-
-Fallback: `isa_json`. Detection logic lives in `main.py → detect_format()`.
-
----
-
-## Common Issues
-
-| Problem                      | Cause                                                                 | Fix                                                                                 |
-| ---------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Plugin not loading           | `FORMAT_ID` not defined at module level                               | Add `FORMAT_ID = "my_format"` as a module-level variable                            |
-| Mapping not applied          | File not in `backend/mappings/` or wrong `source_format`/`pivot` keys | Check YAML keys match registry and plugin `FORMAT_ID`                               |
-| Format detected wrongly      | Extension mismatch or ambiguous JSON content                          | Override via `source_format` query param in API call                                |
-| Missing fields not shown     | Pivot `required_fields` list empty                                    | Add fields to pivot entry in `pivot_registry.yaml`                                  |
-| CORS error in dev            | Frontend not on port 5173                                             | Vite must run on 5173; proxy is configured for that port only                       |
-| TypeScript error on build    | Missing type in `client.ts`                                           | Add the interface before using it in a component                                    |
-| `uv sync` fails              | Python < 3.12                                                         | Check `python --version`; install 3.12+ via `uv python install 3.12`                |
-| `pyproject.toml` build error | Missing `[tool.hatch.build.targets.wheel]` packages config            | Ensure `packages = ["backend"]` is defined                                          |
-| AI call returns garbled YAML | Model not following instructions                                      | Lower `temperature` (use 0.1 for mapping gen); strip markdown fences before parsing |
-
----
-
-## Python Environment Reference
-
-```bash
-cd backend
-uv sync                          # install all deps from pyproject.toml
-uv run uvicorn main:app --reload # run dev server
-uv run ruff check .              # lint
-uv run ruff format .             # format
-uv pip install -e .              # editable install if needed
-```
-
-Python 3.12+ is required. The codebase uses `str | None` union syntax, `match` statements,
-and `typing.TypeAlias` — none of which work on 3.11 or below.
+- **Context7** — Fetch live library/framework docs.
+  Add to `opencode.jsonc`: `"mcpServers": { "context7": { "command": "npx", "args": ["@opencontext7/mcp-server"] } }`
+- **Engram** — Persistent memory across sessions. Built into opencode.

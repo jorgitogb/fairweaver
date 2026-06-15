@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import yaml
-from fastapi import FastAPI, UploadFile, File, HTTPException, Response
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -418,10 +418,10 @@ def get_template_fields(template_id: str):
 @app.post("/convert/arc-export", summary="Convert to ARC RO-Crate format")
 async def convert_to_arc(
     file: UploadFile = File(...),
-    source_format: str = "auto",
-    pivot_id: str = "fairagro_searchhub",
-    batch: bool = False,
-    preview: bool = False
+    source_format: str = Form("auto"),
+    pivot_id: str = Form("fairagro_searchhub"),
+    batch: bool = Form(False),
+    preview: bool = Form(False)
 ):
     """Convert input file to ARC RO-Crate format with optional batch processing and preview."""
     try:
@@ -435,6 +435,10 @@ async def convert_to_arc(
         # Single file processing
         return await _process_single_arc_export(file, content, source_format, pivot_id, preview)
         
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ARC export failed: {str(e)}")
 
@@ -461,7 +465,7 @@ async def _process_single_arc_export(file: UploadFile, content: bytes, source_fo
     converted = engine.convert(parsed, source_format, pivot_id)
 
     # Convert pivot to ARC RO-Crate
-    arc_content = ro_crate_write(converted)
+    arc_content = ro_crate_write(converted["json_ld"])
 
     # Validate the generated ARC
     arc_data = json.loads(arc_content)

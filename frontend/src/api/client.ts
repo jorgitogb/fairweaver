@@ -261,6 +261,41 @@ export async function validateArcFairagro(
   });
 }
 
+export interface SourceFormat {
+  source_format: string;
+  fields: SourceField[];
+}
+
+export interface SourceField {
+  name: string;
+  label: string;
+  description: string;
+  required: boolean;
+  examples?: string[];
+}
+
+export async function getSourceFormats(): Promise<SourceFormat> {
+  return request("/source-formats/schema-org");
+}
+
+export interface TemplateField {
+  name: string;
+  label: string;
+  description: string;
+  required: boolean;
+  examples?: string[];
+  category?: "mandatory" | "recommended";
+}
+
+export interface TemplateFieldGroup {
+  category: "mandatory" | "recommended";
+  fields: TemplateField[];
+}
+
+export async function getTemplateFields(templateId: string): Promise<TemplateFieldGroup[]> {
+  return request(`/template-fields/${templateId}`);
+}
+
 export async function getFairagroArcTemplate(): Promise<{
   template_id: string;
   name: string;

@@ -6,13 +6,10 @@ dist/
 wheels/
 *.egg-info
 .venv/
-
 # Node
 node_modules/
-dist/
 dist-ssr/
 *.local
-
 # Logs
 logs/
 *.log
@@ -21,7 +18,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
 # Editors
 .vscode/
 !.vscode/extensions.json
@@ -32,8 +28,27 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
-
 # Environment
 .env
 .env.local
 .env.*.local
+# Dependencies
+# Build output
+# Testing
+coverage/
+.nyc_output/
+# Env
+# Editor
+*.swp
+*.swo
+*~
+.tmp
+tmp/
+**/.cache/
+**/.temp/
+# OS
+Thumbs.db
+# React-specific
+.env.development.local
+.env.test.local
+.env.production.local

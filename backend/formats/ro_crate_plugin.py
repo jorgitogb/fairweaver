@@ -198,8 +198,12 @@ def write(json_ld: dict) -> bytes:
 
     # Handle both flat and nested structures
     if "@context" in json_ld:
-        # Already in JSON-LD format, use as-is
-        investigation = json_ld
+        # Already in JSON-LD format, add ARC entity metadata
+        investigation = {k: v for k, v in json_ld.items() if k != "@context"}
+        if "@id" not in investigation:
+            investigation["@id"] = "#investigation"
+        if "additionalType" not in investigation:
+            investigation["additionalType"] = "Investigation"
     else:
         # Create Investigation entity from flat structure
         investigation = {
