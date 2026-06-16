@@ -130,7 +130,27 @@ export default function App() {
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🧬</span>
+            <svg viewBox="0 0 64 64" className="w-7 h-7" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="hleaf" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2E7D32"/>
+                  <stop offset="100%" stopColor="#66BB6A"/>
+                </linearGradient>
+                <linearGradient id="hdoc" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f8fafc"/>
+                  <stop offset="100%" stopColor="#e2e8f0"/>
+                </linearGradient>
+              </defs>
+              <path d="M16 8 L40 8 L48 16 L48 56 C48 58 46 60 44 60 L20 60 C18 60 16 58 16 56 Z" fill="url(#hdoc)" stroke="#94a3b8" strokeWidth="1.5"/>
+              <path d="M40 8 L40 16 L48 16 Z" fill="#cbd5e1" stroke="#94a3b8" strokeWidth="1.5" strokeLinejoin="round"/>
+              <ellipse cx="32" cy="48" rx="8" ry="2.5" fill="#5D4037"/>
+              <path d="M32 48 L32 20" stroke="#2E7D32" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+              <path d="M32 38 C29 35 24 35 22 38 C20 41 24 44 32 41 Z" fill="url(#hleaf)" opacity="0.85"/>
+              <path d="M32 33 C35 30 40 30 42 33 C44 36 40 39 32 36 Z" fill="url(#hleaf)" opacity="0.85"/>
+              <path d="M32 26 C29 23 24 23 22 26 C20 29 24 32 32 29 Z" fill="url(#hleaf)" opacity="0.85"/>
+              <path d="M32 22 C35 19 40 19 42 22 C44 25 40 28 32 25 Z" fill="url(#hleaf)" opacity="0.85"/>
+              <path d="M32 16 C31 11 32 8 33 9 C34 10 33 14 32 16 Z" fill="#66BB6A"/>
+            </svg>
             <span className="font-bold text-slate-800 tracking-tight">
               FAIRweaver
             </span>
