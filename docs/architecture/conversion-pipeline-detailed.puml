@@ -9,13 +9,15 @@ title FAIRagro Demo: Schema.org → ARC RO-Crate Pipeline (Detailed)
 Person(user, "Researcher", "Uploads Schema.org JSON-LD metadata")
 
 System_Boundary(frontend, "Frontend (React + Vite)") {
-    Container(ui, "FAIRweaver UI", "React, TypeScript, Tailwind", "UploadZone, ComplianceBadge, ComparisonView")
+    Container(ui, "FAIRweaver UI", "React, TypeScript, Tailwind", "UploadZone, PivotSelector, MappingEditor, SuggestionPanel")
+    Container(badge, "ComplianceBadge", "React Component", "Shows Basic / Intermediate / Full pill with score")
+    Container(viewer, "ArcCrateView", "React Component", "3-tab viewer: ARC RO-Crate / FAIRagro JSON-LD / Validation + OAI-PMH URL")
 }
 
 System_Boundary(backend, "FAIRweaver Backend (FastAPI)") {
-    Container(api, "API Layer", "FastAPI, Python 3.12", "/convert/arc-export, /compliance/classify, /pivots")
+    Container(api, "API Layer", "FastAPI, Python 3.12", "/convert/arc-export, /compliance/classify, /arc/validate/fairagro")
     
-    Container(plugins, "Format Plugins", "Python", "schema_org_plugin, ro_crate_plugin, schema_org_arc_plugin")
+    Container(plugins, "Format Plugins", "Python", "schema_org_plugin, ro_crate_plugin, schema_org_arc_plugin, darwin_core_csv_plugin, datacite_xml_plugin")
     
     ContainerDb(pivot_registry, "Pivot Registry", "YAML", "fairagro_searchhub, bioschemas_dataset, …")
     
@@ -25,12 +27,25 @@ System_Boundary(backend, "FAIRweaver Backend (FastAPI)") {
     
     Container(validator, "ARC Validator", "Python", "FairagroArcValidator — template compliance checking")
     
+    Container(compliance, "Compliance Classifier", "Python", "POST /compliance/classify — scores file against fairagro_template.yaml")
+    
+    Container(fairagro_export, "FAIRagro Export", "Python", "_arc_to_fairagro_jsonld() — extracts ARC root entity, reshapes to FAIRagro Core Metadata Spec")
+    
+    ContainerDb(arc_store, "ARC Record Store", "In-memory dict", "oai_identifier → {arc, fairagro_jsonld, raw_schema, set_spec}")
+    
+    Container(oai_pmh, "OAI-PMH Server", "FastAPI endpoint", "GET /oai-pmh — Identify, ListMetadataFormats, ListSets, ListRecords, GetRecord, ListIdentifiers")
+    
     Container(ai_client, "AI Client", "Python", "Rule-based fallback, AI mapping (if enabled)")
 }
 
 System_Ext(arctrl, "ARCtrl Library", "ARC creation & RO-Crate serialization")
 
-Rel(user, ui, "Drag & drop JSON file")
+System_Ext(harvester, "OAI-PMH Harvesters", "FAIRagro Search Hub, third-party aggregators")
+
+Rel(user, ui, "Drag & drop Schema.org JSON file")
+Rel(user, badge, "Sees compliance level")
+Rel(user, viewer, "Views ARC / FAIRagro / Validation tabs")
+
 Rel(ui, api, "HTTP POST /convert/arc-export, /compliance/classify")
 Rel(api, plugins, "schema_org_load() / schema_org_arc_write()")
 Rel(plugins, engine, "Flat dict of extracted fields")
@@ -40,6 +55,11 @@ Rel(engine, ai_client, "Fallback AI mapping if no YAML found")
 Rel(engine, plugins, "Convert via schema_org_arc_write()")
 Rel(plugins, arctrl, "ARC Investigation creation")
 Rel(engine, validator, "Validate against FAIRagro template")
-Rel(api, ui, "ARC JSON-LD + compliance result + validation")
+Rel(engine, compliance, "Classify compliance level")
+Rel(engine, fairagro_export, "Derive FAIRagro JSON-LD from ARC")
+Rel(fairagro_export, arc_store, "Store converted record")
+Rel(arc_store, oai_pmh, "Read arc_record_store dict")
+Rel(api, ui, "ARC JSON-LD + FAIRagro JSON-LD + compliance + validation")
+Rel(oai_pmh, harvester, "Serve ARC records (fairagro_arc format)")
 
 @enduml

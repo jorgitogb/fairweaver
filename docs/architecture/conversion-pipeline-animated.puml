@@ -1,29 +1,39 @@
 @startuml
 start
 
-title Schema.org to ARC - Step-by-step Flow
+title FAIRagro Demo: Schema.org to ARC — Step-by-step Flow
 
-:User uploads Schema.org JSON-LD file;
-:FAIRweaver detects format and\nanalyzes field coverage;
+:User uploads Schema.org\nJSON-LD file;
+:FAIRweaver detects format\nand extracts fields;
 
 note right
-  Three compliance levels:
-  Basic - required fields only
-  Intermediate - plus recommended fields
-  Full - publishable + reproducible
+  6 demo files included:
+  wheat-basic / wheat-intermediate / wheat-full
+  maize-basic / maize-intermediate / maize-full
 end note
 
-:Show compliance badge\n(Basic / Interm. / Full);
-
-:Load pivot registry\n(FAIRagro Search Hub);
-:Score fields against pivot profile;
+:Classify compliance level\nagainst FAIRagro template;
+:Show ComplianceBadge\n(Basic / Intermediate / Full);
 
 :Load YAML mapping file;
 :Apply field rules + transforms;
 :Create ARC Investigation via ARCtrl;
+:Return ARC RO-Crate JSON-LD;
 
-:Validate ARC against\nFAIRagro template;
-:Return ARC JSON-LD + validation result;
+:Derive FAIRagro JSON-LD\nfrom ARC root entity;
+
+:Store in arc_record_store\nwith OAI-PMH identifier;
+
+:Publish to OAI-PMH 2.0\n(fairagro_arc format);
+
+:Open ArcCrateView UI\n3 tabs: ARC / FAIRagro / Validation;
+
+note right
+  GetRecord URL copied
+  to clipboard for harvest
+end note
+
+:Download ARC or\nFAIRagro JSON-LD file;
 
 stop
 

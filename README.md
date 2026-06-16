@@ -72,11 +72,16 @@ fairweaver/
 │   ├── ai_client.py              ← GWDG API wrapper (mapping gen, suggestions, RAG)
 │   ├── pivot_registry.yaml       ← registered pivot profiles
 │   ├── mappings/                 ← community YAML mapping files (CC0)
-│   ├── plugins/
-│   │   ├── loader.py             ← auto-discovers format plugins at startup
-│   │   └── formats/
-│   │       ├── isa_json_plugin.py
-│   │       └── datacite_xml_plugin.py
+│   ├── arc_templates/            ← ARC validation templates + fairagro_validator.py
+│   ├── formats/                  ← format plugins (auto-discovered)
+│   │   ├── isa_json_plugin.py
+│   │   ├── datacite_xml_plugin.py
+│   │   ├── schema_org_plugin.py
+│   │   ├── ro_crate_plugin.py
+│   │   ├── darwin_core_csv_plugin.py
+│   │   ├── schema_org_arc_plugin.py
+│   │   └── oai_dc_plugin.py
+│   ├── plugins/loader.py         ← auto-discovers format plugins at startup
 │   ├── pyproject.toml            ← uv/hatchling config
 │   └── Dockerfile
 ├── frontend/
@@ -87,15 +92,30 @@ fairweaver/
 │   │   │   ├── PivotSelector.tsx
 │   │   │   ├── MappingEditor.tsx
 │   │   │   ├── SuggestionPanel.tsx
+│   │   │   ├── ComparisonView.tsx
 │   │   │   ├── ArcExportPanel.tsx
 │   │   │   ├── ArcBatchProcessor.tsx
-│   │   │   └── ArcTemplateSelector.tsx
-│   │   └── api/
-│   │       └── client.ts         ← typed API client (all fetch calls)
+│   │   │   ├── ArcTemplateSelector.tsx
+│   │   │   ├── ArcCrateView.tsx
+│   │   │   ├── ComplianceBadge.tsx
+│   │   │   ├── HarvestZone.tsx
+│   │   │   └── SimplePivotSelector.tsx
+│   │   ├── api/
+│   │   │   └── client.ts         ← typed API client (all fetch calls)
+│   │   └── App.tsx               ← main application with demo flow
 │   ├── package.json
-│   ├── vite.config.ts
+│   ├── vite.config.js
 │   ├── tsconfig.json
 │   └── Dockerfile
+├── sample-data/
+│   └── demo/                     ← 12 demo files (2 themes x 3 levels x 2 formats)
+│       ├── schema-org-{wheat,maize}-{basic,intermediate,full}.json
+│       ├── arc-ro-crate-{wheat,maize}-{basic,intermediate,full}.json
+│       └── generate_demo_data.py
+├── docs/
+│   ├── architecture/             ← PlantUML pipeline diagrams
+│   ├── demo/                     ← ARC composition & compliance docs
+│   └── demo-spec.md              ← FAIRagro demo suite specification
 ├── docker-compose.yml
 ├── .env.example
 ├── AGENTS.md                     ← guide for AI coding assistants
@@ -118,16 +138,23 @@ All available models: [docs.hpc.gwdg.de/services/chat-ai/models](https://docs.hp
 
 ## API endpoints
 
-| Method | Path                 | Description                                   |
-| ------ | -------------------- | --------------------------------------------- |
-| GET    | `/pivots`            | List registered pivot profiles                |
-| POST   | `/pivots/recommend`  | AI-recommend best pivot for an input file     |
-| GET    | `/mappings`          | List available YAML mappings                  |
-| POST   | `/mappings/generate` | AI-generate a YAML mapping draft              |
-| POST   | `/mappings/validate` | Validate a YAML mapping file                  |
-| POST   | `/convert`           | Convert input → pivot JSON-LD                 |
-| POST   | `/convert/chain`     | Bidirectional: source → pivot → target format |
-| POST   | `/harvest/convert`   | Harvest from OAI-PMH + convert to pivot JSON-LD |
+| Method | Path                        | Description                                    |
+| ------ | --------------------------- | ---------------------------------------------- |
+| GET    | `/pivots`                   | List registered pivot profiles                 |
+| POST   | `/pivots/recommend`         | AI-recommend best pivot for an input file      |
+| GET    | `/mappings`                 | List available YAML mappings                   |
+| POST   | `/mappings/generate`        | AI-generate a YAML mapping draft               |
+| POST   | `/mappings/validate`        | Validate a YAML mapping file                   |
+| POST   | `/convert`                  | Convert input → pivot JSON-LD                  |
+| POST   | `/convert/chain`            | Bidirectional: source → pivot → target format  |
+| POST   | `/convert/arc-export`       | Convert Schema.org → ARC RO-Crate              |
+| POST   | `/harvest/convert`          | Harvest from OAI-PMH + convert to pivot JSON-LD |
+| POST   | `/arc/validate/fairagro`    | Validate ARC against FAIRagro template         |
+| POST   | `/compliance/classify`      | Classify FAIRagro compliance level (basic/intermediate/full) |
+| GET    | `/oai-pmh`                  | OAI-PMH 2.0 server (fairagro_arc format)       |
+| POST   | `/list-sets`                | List OAI-PMH metadata sets                     |
+| GET    | `/source-formats/schema-org` | Schema.org field definitions                   |
+| GET    | `/template-fields/{id}`     | ARC template field structure                   |
 
 Interactive docs at `http://localhost:8000/docs`
 
@@ -153,17 +180,29 @@ Interactive docs at `http://localhost:8000/docs`
 
 ### 3. ARC Export Flow
 
-1. **Select ARC Export mode** — switch from Upload to ARC Export mode
-2. **Upload metadata** — provide Schema.org JSON metadata
-3. **Automatic template selection** — AI detects best ARC template
-4. **Preview/export** — view ARC structure or download RO-Crate file
-5. **Validation** — check ARC compliance and required entities/fields
+1. **Upload Schema.org JSON** via the ARC Export panel
+2. **Compliance badge** shown — Basic (red), Intermediate (amber), Full (green)
+3. **Convert & preview** — ARC RO-Crate JSON-LD with 3-tab viewer (ARC / FAIRagro JSON-LD / Validation)
+4. **FAIRagro JSON-LD** — auto-derived from ARC, formatted for Search Hub consumption
+5. **OAI-PMH serving** — converted records published automatically to `GET /oai-pmh` (fairagro_arc format)
+6. **Download** ARC RO-Crate or FAIRagro JSON-LD file
+
+### 4. FAIRagro Demo Suite
+
+The repo ships with 12 pre-built demo files (2 agricultural themes × 3 compliance levels × 2 formats):
+
+| Theme        | Compliance Levels        | Institution              |
+| ------------ | ------------------------ | ------------------------ |
+| Wheat 🌾     | Basic / Intermediate / Full | RPTU Kaiserslautern    |
+| Maize 🌽     | Basic / Intermediate / Full | IPK Gatersleben        |
+
+Start the backend and visit `http://localhost:8000/oai-pmh?verb=ListRecords&metadataPrefix=fairagro_arc` — 6 demo ARC records are served immediately. Upload the Schema.org demo files through the UI to see compliance badge + ArcCrateView output.
 
 ---
 
 ## Adding a format plugin
 
-Create `backend/plugins/formats/myformat_plugin.py`:
+Create `backend/formats/myformat_plugin.py`:
 
 ```python
 FORMAT_ID = "my_format"
@@ -200,11 +239,16 @@ my_consortium_schema:
 
 ## Roadmap (hackathon week · 07–11 Dec 2026)
 
-- [ ] RAG pipeline over YAML mapping corpus (embeddings via GWDG API)
-- [ ] Format plugins: RO-Crate, Darwin Core CSV, MIAPPE XLSX
+- [x] Format plugins: RO-Crate, Darwin Core CSV, schema.org, schema.org→ARC, OAI-DC
+- [x] Schema.org → ARC RO-Crate conversion with 3 compliance levels
+- [x] FAIRagro JSON-LD export from ARC RO-Crate
+- [x] OAI-PMH 2.0 server (fairagro_arc metadata format)
+- [x] Compliance badge + ArcCrateView 3-tab UI
+- [x] Demo suite: 12 files across 2 agricultural themes
 - [ ] YAML mapping editor in the UI
 - [ ] Custom pivot upload (JSON-LD context)
 - [ ] Validation against 10 real NFDI4Agri datasets
+- [ ] RAG pipeline over YAML mapping corpus (embeddings via GWDG API)
 - [ ] SSSOM export compatibility
 
 ---

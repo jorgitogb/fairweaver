@@ -1,19 +1,22 @@
 @startuml
-title Schema.org to FAIRagro ARC - Simplified Flow
+title FAIRagro Demo: Schema.org to ARC — Simplified Flow
 
 rectangle "Schema.org Input" as input
 rectangle "FAIRweaver Engine" as engine
-rectangle "ARC RO-Crate" as output
-rectangle "Compliance Check" as compliance
-rectangle "Basic" as basic
-rectangle "Intermediate" as inter
-rectangle "Full" as full
+rectangle "Compliance\nClassification" as compliance
+rectangle "ComplianceBadge UI\nBasic / Intermediate / Full" as badge
+rectangle "ARC RO-Crate\n(Canonical)" as arc
+rectangle "FAIRagro JSON-LD\n(Search Hub)" as fairagro
+rectangle "OAI-PMH 2.0 Server\n(fairagro_arc)" as oai
+rectangle "ArcCrateView UI\n3-tab viewer" as viewer
 
 input --> engine
 engine --> compliance
-engine --> output
-compliance --> basic
-compliance --> inter
-compliance --> full
+engine --> arc
+compliance --> badge
+arc --> fairagro : _arc_to_fairagro_jsonld()
+arc --> oai : arc_record_store
+arc --> viewer
+oai --> viewer : OAI-PMH harvest URL
 
 @enduml
