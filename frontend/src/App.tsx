@@ -1,74 +1,51 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
-  convertFile,
-  getSourceFormats,
-  getTemplateFields,
-  type ConvertResult,
-  type MissingField,
+  convertToArc,
+  classifyCompliance,
+  type ArcExportResult,
+  type ComplianceResult,
 } from "./api/client";
 import UploadZone from "./components/UploadZone";
-import PivotSelector from "./components/PivotSelector";
-import ComparisonView from "./components/ComparisonView";
-import MappingEditor from "./components/MappingEditor";
-import { Loader2, Upload, Github, Database } from "lucide-react";
+import ArcCrateView from "./components/ArcCrateView";
+import ComplianceBadge from "./components/ComplianceBadge";
+import { Loader2, Github, Database, Copy, Check, Eye } from "lucide-react";
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [templateId, setTemplateId] = useState<string>("fairagro_searchhub");
-  const [result, setResult] = useState<ConvertResult | null>(null);
-  const [templateRecommendation, setTemplateRecommendation] = useState<{ recommendedTemplate: string; reason: string } | null>(null);
-
-  const loadSourceFormats = useMutation({
-    mutationFn: () => getSourceFormats(),
-    onSuccess: () => {},
-    onError: (err) => {
-      console.error("Failed to load source formats:", err);
-    },
-  });
-
-  const loadTemplateFields = useMutation({
-    mutationFn: (templateId: string) => getTemplateFields(templateId),
-    onSuccess: () => {},
-    onError: (err) => {
-      console.error("Failed to load template fields:", err);
-    },
-  });
+  const [result, setResult] = useState<ArcExportResult | null>(null);
+  const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
+  const [oaiCopied, setOaiCopied] = useState(false);
 
   const convertMutation = useMutation({
     mutationFn: () => {
       if (!file) throw new Error("No file selected");
-      return convertFile(file, "auto", templateId);
+      return convertToArc(file, "auto", "fairagro_searchhub", true);
     },
     onSuccess: (data) => setResult(data),
+  });
+
+  const complianceMutation = useMutation({
+    mutationFn: (f: File) => classifyCompliance(f),
+    onSuccess: (data) => setComplianceResult(data),
+    onError: () => setComplianceResult(null),
   });
 
   const handleFileAccepted = (f: File) => {
     setFile(f);
     setResult(null);
-    setTemplateId("fairagro_searchhub");
-    setTemplateRecommendation(null);
-    
-    if (f.name.endsWith(".json")) {
-      loadSourceFormats.mutate();
-      loadTemplateFields.mutate("fairagro_searchhub");
-      
-      import("./api/client").then(({ getArcTemplateRecommendation }) => {
-        getArcTemplateRecommendation(f)
-          .then((rec) => {
-            setTemplateRecommendation(rec);
-            setTemplateId(rec.recommendedTemplate);
-          })
-          .catch(() => {});
-      });
-    }
+    setComplianceResult(null);
+
+    complianceMutation.mutate(f);
   };
 
-  const handleTemplateChange = (newTemplateId: string) => {
-    setTemplateId(newTemplateId);
-    if (newTemplateId !== "auto") {
-      loadTemplateFields.mutate(newTemplateId);
-    }
+  const oaiBaseUrl = `http://localhost:8000/oai-pmh`;
+  const oaiListRecords = `${oaiBaseUrl}?verb=ListRecords&metadataPrefix=fairagro_arc`;
+
+  const copyOaiUrl = async () => {
+    await navigator.clipboard.writeText(oaiListRecords);
+    setOaiCopied(true);
+    setTimeout(() => setOaiCopied(false), 2000);
   };
 
   return (
@@ -96,13 +73,14 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-8">
+      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
           <h1 className="text-xl font-semibold text-slate-800 mb-2">
-            Schema.org to ARC Playground
+            Schema.org to FAIRagro ARC RO-Crate
           </h1>
           <p className="text-slate-600 max-w-2xl">
-            Upload schema.org JSON-LD metadata and convert it to FAIR-compliant ARC RO-Crate format using FAIRagro templates. View field mappings and export ARC JSON.
+            Upload schema.org JSON-LD metadata and convert it to ARC RO-Crate format.
+            Generate FAIRagro-compliant JSON-LD for the Search Hub and expose metadata via OAI-PMH.
           </p>
         </div>
 
@@ -116,36 +94,29 @@ export default function App() {
                   </h2>
                   <UploadZone onFileAccepted={handleFileAccepted} />
                   {file && (
-                    <p className="mt-2 text-sm text-slate-600 flex items-center gap-1.5">
+                    <p className="mt-2 text-sm text-slate-600 flex items-center gap-2 flex-wrap">
                       📄 <span className="font-medium">{file.name}</span>
                       <span className="text-slate-400">
                         ({(file.size / 1024).toFixed(1)} KB)
                       </span>
+                      <ComplianceBadge
+                        result={complianceResult}
+                        loading={complianceMutation.isPending}
+                      />
                     </p>
                   )}
                 </section>
 
-                {file && (
-                  <section>
-<h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                       2 · Select FAIRagro template
-                       {templateRecommendation && (
-                         <span className="ml-2 text-xs text-emerald-600 font-normal normal-case">
-                           Recommended: {templateRecommendation.recommendedTemplate} ({templateRecommendation.reason})
-                         </span>
-                       )}
-                     </h2>
-                     <PivotSelector
-                       value={templateId}
-                       onChange={handleTemplateChange}
-                     />
-                  </section>
-                )}
-
-                {file && (
+                <section>
+                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    2 · Convert to ARC RO-Crate
+                  </h2>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Uses the FAIRagro template to produce ARC RO-Crate, FAIRagro-compliant JSON-LD, and OAI-PMH endpoint.
+                  </p>
                   <button
                     onClick={() => convertMutation.mutate()}
-                    disabled={convertMutation.isPending || !templateId}
+                    disabled={convertMutation.isPending}
                     className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
                   >
                     {convertMutation.isPending ? (
@@ -157,7 +128,7 @@ export default function App() {
                       "Convert to ARC RO-Crate →"
                     )}
                   </button>
-                )}
+                </section>
 
                 {convertMutation.isError && (
                   <p className="text-red-500 text-sm">
@@ -177,25 +148,50 @@ export default function App() {
 
           <div className="space-y-6 w-full">
             {result ? (
-              <section className="w-full">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                  3 · Results
-                </h2>
-                <ComparisonView
-                  fieldRules={result.field_rules}
-                  missingFields={result.missing_fields}
-                  output={result.output}
-                  confidence={result.confidence}
-                  mappingSource={result.mapping_source}
-                  model={result.model}
-                />
-              </section>
+              <>
+                <section className="w-full">
+                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    3 · Results
+                  </h2>
+                  <ArcCrateView
+                    preview={result.preview!}
+                    fairagroJsonld={result.fairagro_jsonld!}
+                    validation={result.validation}
+                    filename={result.filename}
+                    oaiIdentifier={result.oai_identifier!}
+                  />
+                </section>
+
+                <section className="border border-slate-200 rounded-xl p-4 bg-white">
+                  <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> OAI-PMH Endpoint
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Harvest all ARC RO-Crate records via OAI-PMH at:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-slate-100 border border-slate-200 rounded px-2 py-1 text-slate-600 truncate flex-1 font-mono">
+                      {oaiListRecords}
+                    </code>
+                    <button
+                      onClick={copyOaiUrl}
+                      className="shrink-0 flex items-center gap-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors"
+                    >
+                      {oaiCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2">
+                    Base URL: <code className="text-[10px] bg-slate-100 px-1 rounded">http://localhost:8000/oai-pmh</code>
+                  </p>
+                </section>
+              </>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-300 text-sm text-center p-10 border-2 border-dashed border-slate-200 rounded-xl">
                 <div>
                   <Database className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <p>
-                    Upload a schema.org JSON file and select a template to see the ARC conversion results
+                    Upload a schema.org JSON file to see the ARC RO-Crate conversion results,
+                    FAIRagro-compliant JSON-LD, and OAI-PMH access.
                   </p>
                 </div>
               </div>

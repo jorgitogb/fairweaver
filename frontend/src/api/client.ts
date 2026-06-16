@@ -309,8 +309,11 @@ export async function getFairagroArcTemplate(): Promise<{
 
 export interface ArcExportResult {
   arcContent?: string;
+  preview?: Record<string, unknown>;
+  fairagro_jsonld?: Record<string, unknown>;
   validation: ArcValidationResult;
   filename: string;
+  oai_identifier?: string;
 }
 
 export interface ArcBatchPreviewResult {
@@ -435,4 +438,34 @@ export async function getArcTemplateRecommendation(
       reason: "Could not analyze file content, using default template"
     };
   }
+}
+
+// ── Compliance Classification ──────────────────────────────────────────────
+
+export interface ComplianceBreakdown {
+  present: string[];
+  missing: string[];
+  score: number;
+}
+
+export interface ComplianceResult {
+  level: "basic" | "intermediate" | "full";
+  source_format: string;
+  breakdown: {
+    required: ComplianceBreakdown;
+    recommended: ComplianceBreakdown;
+    full: ComplianceBreakdown;
+  };
+  overall_score: number;
+}
+
+export async function classifyCompliance(
+  file: File
+): Promise<ComplianceResult> {
+  const form = new FormData();
+  form.append("file", file);
+  return request("/compliance/classify", {
+    method: "POST",
+    body: form,
+  });
 }

@@ -22,6 +22,7 @@ export default defineConfig({
       '/source-formats': 'http://localhost:8000',
       '/template-fields': 'http://localhost:8000',
       '/arc': 'http://localhost:8000',
+      '/compliance': 'http://localhost:8000',
     },
   },
 })
