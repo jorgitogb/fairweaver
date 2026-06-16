@@ -1,0 +1,19 @@
+@startuml
+title Schema.org to FAIRagro ARC - Simplified Flow
+
+rectangle "Schema.org Input" as input
+rectangle "FAIRweaver Engine" as engine
+rectangle "ARC RO-Crate" as output
+rectangle "Compliance Check" as compliance
+rectangle "Basic" as basic
+rectangle "Intermediate" as inter
+rectangle "Full" as full
+
+input --> engine
+engine --> compliance
+engine --> output
+compliance --> basic
+compliance --> inter
+compliance --> full
+
+@enduml

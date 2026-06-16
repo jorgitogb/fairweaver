@@ -1,10 +1,7 @@
-import json
-import os
 from typing import Any, List, Dict
 import yaml
 from pathlib import Path
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +31,6 @@ class FairagroArcValidator:
         errors = []
         warnings = []
         graph = arc_data.get("@graph", [])
-        entities = {e.get("@id"): e for e in graph if e.get("@id")}
 
         # 1. Validate ARC directory structure (if file system access available)
         self._validate_arc_structure(errors, warnings)

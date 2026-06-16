@@ -1,0 +1,30 @@
+@startuml
+start
+
+title Schema.org to ARC - Step-by-step Flow
+
+:User uploads Schema.org JSON-LD file;
+:FAIRweaver detects format and\nanalyzes field coverage;
+
+note right
+  Three compliance levels:
+  Basic - required fields only
+  Intermediate - plus recommended fields
+  Full - publishable + reproducible
+end note
+
+:Show compliance badge\n(Basic / Interm. / Full);
+
+:Load pivot registry\n(FAIRagro Search Hub);
+:Score fields against pivot profile;
+
+:Load YAML mapping file;
+:Apply field rules + transforms;
+:Create ARC Investigation via ARCtrl;
+
+:Validate ARC against\nFAIRagro template;
+:Return ARC JSON-LD + validation result;
+
+stop
+
+@enduml

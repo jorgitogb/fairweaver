@@ -1,0 +1,45 @@
+@startuml FAIRweaver Conversion Pipeline — Detailed
+!include <C4/C4_Container>
+!include <C4/C4_Context>
+
+LAYOUT_WITH_LEGEND()
+
+title FAIRagro Demo: Schema.org → ARC RO-Crate Pipeline (Detailed)
+
+Person(user, "Researcher", "Uploads Schema.org JSON-LD metadata")
+
+System_Boundary(frontend, "Frontend (React + Vite)") {
+    Container(ui, "FAIRweaver UI", "React, TypeScript, Tailwind", "UploadZone, ComplianceBadge, ComparisonView")
+}
+
+System_Boundary(backend, "FAIRweaver Backend (FastAPI)") {
+    Container(api, "API Layer", "FastAPI, Python 3.12", "/convert/arc-export, /compliance/classify, /pivots")
+    
+    Container(plugins, "Format Plugins", "Python", "schema_org_plugin, ro_crate_plugin, schema_org_arc_plugin")
+    
+    ContainerDb(pivot_registry, "Pivot Registry", "YAML", "fairagro_searchhub, bioschemas_dataset, …")
+    
+    ContainerDb(yaml_mappings, "YAML Mappings", "YAML", "schema_org-arc_ro_crate.yaml, arc_ro_crate-fairagro_searchhub.yaml")
+    
+    Container(engine, "Mapping Engine", "Python", "Recommend pivot → Load mapping → Convert → Validate")
+    
+    Container(validator, "ARC Validator", "Python", "FairagroArcValidator — template compliance checking")
+    
+    Container(ai_client, "AI Client", "Python", "Rule-based fallback, AI mapping (if enabled)")
+}
+
+System_Ext(arctrl, "ARCtrl Library", "ARC creation & RO-Crate serialization")
+
+Rel(user, ui, "Drag & drop JSON file")
+Rel(ui, api, "HTTP POST /convert/arc-export, /compliance/classify")
+Rel(api, plugins, "schema_org_load() / schema_org_arc_write()")
+Rel(plugins, engine, "Flat dict of extracted fields")
+Rel(engine, pivot_registry, "Score pivot field coverage")
+Rel(engine, yaml_mappings, "Load field_rules mapping")
+Rel(engine, ai_client, "Fallback AI mapping if no YAML found")
+Rel(engine, plugins, "Convert via schema_org_arc_write()")
+Rel(plugins, arctrl, "ARC Investigation creation")
+Rel(engine, validator, "Validate against FAIRagro template")
+Rel(api, ui, "ARC JSON-LD + compliance result + validation")
+
+@enduml

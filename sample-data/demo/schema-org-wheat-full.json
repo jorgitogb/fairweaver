@@ -1,0 +1,70 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://doi.org/10.5447/fairweaver/2024/wheat-drought-001",
+  "name": "Wheat Drought Phenotyping Field Trial 2024",
+  "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+  "creator": {
+    "@type": "Person",
+    "givenName": "Timo",
+    "familyName": "M\u00fchlhaus",
+    "name": "Timo M\u00fchlhaus",
+    "email": "timo.muehlhaus@rptu.de",
+    "affiliation": {
+      "@type": "Organization",
+      "name": "RPTU University of Kaiserslautern"
+    },
+    "identifier": {
+      "@type": "PropertyValue",
+      "propertyID": "orcid",
+      "value": "0000-0003-3925-6778"
+    }
+  },
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "datePublished": "2024-09-15",
+  "keywords": [
+    "wheat",
+    "drought stress",
+    "NDVI",
+    "phenotyping",
+    "field trial",
+    "Triticum aestivum",
+    "multispectral imaging"
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "RPTU University of Kaiserslautern, Plant Phenomics Group"
+  },
+  "url": "https://fairweaver.example.org/datasets/wheat-drought-2024",
+  "inLanguage": "en",
+  "version": "1.0",
+  "alternateName": "Wheat Drought Field Trial 2024",
+  "about": {
+    "@type": "Thing",
+    "name": "Triticum aestivum",
+    "sameAs": "http://purl.obolibrary.org/obo/NCBITaxon_4565"
+  },
+  "measurementTechnique": "Multispectral imaging",
+  "instrument": {
+    "@type": "Thing",
+    "name": "Micasense RedEdge-MX",
+    "description": "Multispectral sensor on DJI Matrice 300 RTK UAV",
+    "additionalType": "Sensor"
+  },
+  "funder": {
+    "@type": "Organization",
+    "name": "DFG \u2013 German Research Foundation"
+  },
+  "distribution": {
+    "@type": "DataDownload",
+    "contentUrl": "https://fairweaver.example.org/datasets/wheat-drought-2024/download",
+    "encodingFormat": "application/zip"
+  },
+  "citation": {
+    "@type": "ScholarlyArticle",
+    "name": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+    "identifier": "https://doi.org/10.1234/fake-doi/wheat-2024"
+  },
+  "crop_pest": "Zymoseptoria tritici",
+  "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_5284"
+}

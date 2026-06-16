@@ -1,0 +1,25 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://doi.org/10.5447/fairweaver/2024/maize-heat-001",
+  "name": "Maize Heat Stress Transcriptome RNA-Seq Dataset",
+  "description": "Transcriptome profiling of maize (Zea mays cv. B73) leaf tissue under heat stress (38 degree C day / 28 degree C night, 14h photoperiod) vs control (28 degree C day / 18 degree C night). Three biological replicates per condition. RNA extracted from 3rd fully expanded leaf at V6 stage. Stranded mRNA-seq libraries sequenced on Illumina NovaSeq 6000, 2x150bp PE, approximately 40M reads per sample. Heat stress responsive transcription factors and heat shock protein expression analyzed.",
+  "creator": {
+    "@type": "Person",
+    "givenName": "Uwe",
+    "familyName": "Scholz",
+    "name": "Uwe Scholz",
+    "email": "scholz@ipk-gatersleben.de",
+    "affiliation": {
+      "@type": "Organization",
+      "name": "IPK Gatersleben"
+    },
+    "identifier": {
+      "@type": "PropertyValue",
+      "propertyID": "orcid",
+      "value": "0000-0001-6113-3518"
+    }
+  },
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "datePublished": "2024-07-01"
+}
