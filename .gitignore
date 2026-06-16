@@ -37,3 +37,10 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Artifacts
+arc_output.json
+test_batch.zip
+
+# Generated docs
+IMPLEMENTATION_SUMMARY.md
