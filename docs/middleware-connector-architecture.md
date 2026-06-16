@@ -1,215 +1,140 @@
-# Middleware to Search Hub Connector — Architecture
+# Middleware Federation Service — Architecture
 
 ## Overview
 
-This document describes the architecture for connecting Research Data Infrastructures (RDIs) to the FAIRagro Search Hub through FAIRweaver as the transformation middleware. The connector harvests domain-specific metadata from RDIs, converts it to Agrischemas-compliant format, and exposes it for Search Hub ingestion.
+This document describes the Middleware Federation Service that harvests domain-specific dataset metadata from Research Data Infrastructures (RDIs), creates ARCs from the harvested metadata, and publishes them to GitLab DataHub for FAIRagro Search Hub ingestion.
 
-## Scope
+**Key insight:** Agrischemas is the aspirational internal entity model for ARCs, but it is in development and not yet adopted by any RDI. RDIs provide metadata in their own formats (Schema.org, INSPIRE, SQL, CSV). The middleware always converts to ARC as the canonical intermediary.
 
-- **In scope:** Architecture for harvesting from RDIs, transforming to Agrischemas, and serving to Search Hub
-- **Out of scope:** Implementation details (this is a design document for Slot 6 discussion)
+## Architecture
 
----
+```
+RDIs (various formats)
+  -> Middleware Federation Service
+    -> Harvest Adapter (OAI-PMH / REST / SQL)
+    -> Format Detector
+    -> Format Plugins (schema_org, inspire, darwin_core_csv, sql_reader)
+    -> ARC Builder (creates RO-Crate)
+    -> Push ARC to GitLab DataHub
 
-## Architecture Diagram (PlantUML)
+[Planned] OAI-PMH Service (separate, not part of FAIRweaver)
+  -> Reads ARC metadata from GitLab
+  -> Serves OAI-PMH 2.0 endpoint
 
-```plantuml
-@startuml
-!theme plain
-
-title Middleware to Search Hub Connector Architecture
-
-skinparam component {
-  BackgroundColor<<rdi>> #FEF3C7
-  BackgroundColor<<middleware>> #D1FAE5
-  BackgroundColor<<pivot>> #DBEAFE
-  BackgroundColor<<hub>> #FCE7F3
-  BorderColor #666
-}
-
-package "Research Data Infrastructures" <<rdi>> {
-  [IPK Gatersleben\nARC Repository] as IPK
-  [RPTU Kaiserslautern\nOAI-PMH Endpoint] as RPTU
-  [JKI Federal Research\nREST API] as JKI
-}
-
-package "FAIRweaver Middleware" <<middleware>> {
-  [Harvest Adapter\n(OAI-PMH / REST / ARC)] as HARVEST
-  [Format Detector\n(auto-detect source)] as DETECT
-  [Format Plugins\n(RO-Crate, ISA-JSON,\nOAI-DC, DataCite)] as PLUGINS
-  [Mapping Engine\n(AI + rule-based)] as ENGINE
-  [YAML Mapping Files\n(source→pivot)] as MAPPINGS
-  [Pivot Registry\n(Agrischemas, FAIRagro,\nBioschemas)] as REGISTRY
-}
-
-package "Pivot Layer" <<pivot>> {
-  [Agrischemas\nFieldTrialStudy] as AGRI_FT
-  [Agrischemas\nCropVariety] as AGRI_CV
-  [FAIRagro\nSearch Hub] as FAIR_SH
-}
-
-package "FAIRagro Search Hub" <<hub>> {
-  [Search Index\n& API] as SEARCH
-}
-
-' Connections
-IPK --> HARVEST : ARC export
-RPTU --> HARVEST : OAI-PMH
-JKI --> HARVEST : REST API
-
-HARVEST --> DETECT
-DETECT --> PLUGINS
-PLUGINS --> ENGINE
-ENGINE --> MAPPINGS
-ENGINE --> REGISTRY
-
-ENGINE --> AGRI_FT : convert()
-ENGINE --> AGRI_CV : convert()
-ENGINE --> FAIR_SH : convert_nested()
-
-AGRI_FT --> SEARCH : JSON-LD
-AGRI_CV --> SEARCH : JSON-LD
-FAIR_SH --> SEARCH : JSON-LD
-
-@enduml
+FAIRagro Search Hub
+  -> Harvests via OAI-PMH from planned service
 ```
 
-## Data Flow Diagram
+## RDI Sources
+
+| RDI | Protocol | Format | Notes |
+|-----|----------|--------|-------|
+| E!DAL-PGP | OAI-PMH | Schema.org JSON-LD | Plant genetics & phenotyping |
+| Bonares Repository | OAI-PMH | INSPIRE XML | Agricultural research data |
+| EDAPHOBASE | SQL | SQL Database | Soil & environmental data |
+| OpenAGRAR | REST API | Schema.org JSON-LD | Agricultural research data |
+
+## Middleware Components
+
+| Component | Purpose |
+|-----------|---------|
+| Harvest Adapter | Connects to RDIs via OAI-PMH, REST API, or SQL query |
+| Format Detector | Identifies source format (Schema.org, INSPIRE, CSV, SQL) |
+| Format Plugins | Parse source format into flat dict (schema_org, inspire, darwin_core_csv, sql_reader) |
+| ARC Builder | Maps flat dict to ARC entities (Investigation, Study, Assay, Factor, Protocol) |
+| Pivot Registry | Agrischemas profiles used as internal entity model (aspirational) |
+
+## Data Flow
 
 ```plantuml
 @startuml
 !theme plain
 
-title Data Flow: RDI → Middleware → Search Hub
+title Middleware: RDI -> ARC -> GitLab -> OAI-PMH -> Search Hub
 
-|#FEF3C7| RDI |
-|#D1FAE5| Middleware |
-|#DBEAFE| Pivot |
-|#FCE7F3| Search Hub |
-
-| RDI|
+|RDIs|
 start
-:ARC RO-Crate\nmetadata;
-:OAI-PMH\nDublin Core;
-:REST API\nJSON;
+:Schema.org JSON-LD
+(E!DAL-PGP, OpenAGRAR);
+:INSPIRE XML
+(Bonares);
+:SQL query
+(EDAPHOBASE);
 
-| Middleware|
-:Harvest records\nfrom RDI endpoint;
-:Detect source format\n(RO-Crate, XML, JSON);
-:Parse via format plugin\n→ flat dict;
+|Middleware|
+:Harvest metadata;
+:Detect source format;
+:Parse via format plugin;
+:Map fields to ARC entities;
+:Create ARC RO-Crate;
+:Validate against template;
 
-:Apply YAML mapping\n(source → pivot);
+|GitLab|
+:Push ARC to DataHub;
 
-if (Target pivot?) then (fairagro_searchhub)
-  :convert_nested()\nblock structure;
-  :FAIRagro JSON-LD\n(citation, crop, sensor);
-else (agrischemas_fieldtrial)
-  :convert()\nflat structure;
-  :Agrischemas JSON-LD\n(title, crop, startDate);
-else (agrischemas_cropvariety)
-  :convert()\nflat structure;
-  :Agrischemas JSON-LD\n(crop, name, variety);
-endif
+|[Planned] OAI-PMH Service|
+note right
+  Separate service, not part of FAIRweaver.
+  Reads ARC metadata from GitLab,
+  serves OAI-PMH 2.0 records.
+end note
+:Read ARC from GitLab;
+:Serve OAI-PMH 2.0 endpoint;
 
-| Search Hub|
-:Ingest JSON-LD;
+|Search Hub|
+:Harvest via OAI-PMH;
 :Index for discovery;
 stop
 
 @enduml
 ```
 
-## Component Interaction (Sequence)
+## ARC Structure (Domain-Specific Objects)
 
-```plantuml
-@startuml
-!theme plain
+ARCs created by the middleware contain domain-specific entities:
 
-title Sequence: Middleware Harvest and Transform
+| Entity | Agrischemas Target | Coverage |
+|--------|-------------------|----------|
+| Investigation | FieldTrialStudy | ~86% -- `location` missing |
+| Study | FieldTrialStudy | Fields map to trial metadata |
+| Assay | FieldTrialStudy | Experimental data |
+| Factor | FieldTrialStudy | Experimental conditions |
+| Investigation | CropVariety | ~88% -- `variety`, `registrationYear` missing |
+| Study | CropVariety | Variety context |
 
-actor User
-participant "Search Hub" as SH
-participant "FAIRweaver\nMiddleware" as MW
-participant "RDI\n(IPK/RPTU/JKI)" as RDI
-database "YAML\nMappings" as MAP
-database "Pivot\nRegistry" as REG
+**Note:** Agrischemas profiles (FieldTrialStudy, CropVariety) are aspirational. They define the modeling target for ARCs but are not yet adopted by RDIs. Coverage gaps represent divergence between current RDI metadata and the ideal Agrischemas model.
 
-User -> SH: "Search for wheat\nfield trials"
-SH -> MW: POST /middleware/convert\n{rdi_url, pivot_id: "agrischemas_fieldtrial"}
-MW -> RDI: GET /oai-pmh?verb=ListRecords\n(metadataPrefix=oai_dc)
-RDI --> MW: OAI-PMH records\n(Dublin Core XML)
-MW -> MW: Parse XML → flat dict\n(OAI-DC plugin)
-MW -> MAP: Load mapping\noai_dc → agrischemas_fieldtrial
-MAP --> MW: Field rules
-MW -> MW: Apply transforms\n(map fields)
-MW --> SH: Agrischemas JSON-LD\n{identifier, title, crop, ...}
-SH --> User: Results with\nAgrischemas metadata
+## GitLab DataHub Integration
 
-@enduml
-```
+- ARCs are pushed to GitLab with metadata: identifier, set_spec, sourceRDI
+- GitLab serves as the canonical storage layer for ARC RO-Crates
+- No direct RDI access from Search Hub -- all data flows through GitLab
 
-## RDI Types and Connectors
+## [Planned] OAI-PMH Service
 
-| RDI Type | Protocol | FAIRweaver Plugin | Notes |
-|----------|----------|-------------------|-------|
-| ARC Repository | ARC export (JSON-LD) | `ro_crate` | Direct ARC RO-Crate ingestion |
-| OAI-PMH Endpoint | OAI-PMH 2.0 | `oai_dc` | Standard metadata harvesting |
-| REST API | HTTP/JSON | `schema_org` | Schema.org JSON-LD endpoints |
-| ISA-Tab | ISA-Tab files | `isa_json` | ISA investigation files |
+- **Separate service**, not part of FAIRweaver
+- Reads ARC metadata from GitLab DataHub
+- Serves OAI-PMH 2.0 endpoint for Search Hub harvest
+- FAIRweaver has an OAI-PMH endpoint (`/oai-pmh`) for testing/demo purposes only -- this is NOT the production OAI-PMH service
 
-## Transformation Paths
+## Slot 6 Discussion Points
 
-```
-Path 1: ARC → Agrischemas (Field Trial)
-  RDI (ARC) → ro_crate plugin → agrischemas_fieldtrial mapping → JSON-LD
+1. **ARC modeling guidelines:** How should domain-specific objects be structured within ARCs to maximize future Agrischemas compliance?
 
-Path 2: ARC → Agrischemas (Crop Variety)
-  RDI (ARC) → ro_crate plugin → agrischemas_cropvariety mapping → JSON-LD
+2. **Coverage gaps:** What strategies can fill the gaps (location, variety, registrationYear) -- manual curation, inference from context, or RDI enrichment?
 
-Path 3: OAI-PMH → FAIRagro Search Hub
-  RDI (OAI-PMH) → oai_dc plugin → fairagro_searchhub mapping → JSON-LD
+3. **GitLab integration:** Should the middleware register ARCs in a specific GitLab group/project structure? What metadata should accompany each ARC?
 
-Path 4: Schema.org → FAIRagro Search Hub
-  RDI (REST) → schema_org plugin → fairagro_searchhub mapping → JSON-LD
-```
+4. **OAI-PMH service:** What group maintains it? What are the OAI-PMH sets and metadata formats?
 
-## Mapping Coverage
+5. **Scheduling:** Should the middleware periodically re-harvest from RDIs, or is on-demand sufficient?
 
-| Source → Target | Required Fields | Coverage | Notes |
-|-----------------|----------------|----------|-------|
-| ro_crate → agrischemas_fieldtrial | 6 required | 86% | `location` missing — must be supplied |
-| ro_crate → agrischemas_cropvariety | 3 required | 88% | `variety`, `registrationYear` missing |
-| ro_crate → fairagro_searchhub | 4 required (citation) | ~90% | Block structure with crop/sensor |
-| oai_dc → fairagro_searchhub | 4 required (citation) | ~80% | Limited crop/sensor from DC |
+6. **Versioning:** How should the middleware handle version changes in ARC templates or Agrischemas profiles?
 
-## Key Design Decisions
+## Related Diagrams
 
-1. **Pivot-based transformation:** All conversions go through the MappingEngine with YAML mapping files. No hard-coded transformation logic.
-
-2. **Graceful degradation:** If a mapping doesn't exist for a source→target pair, the AI fallback generates one (with lower confidence).
-
-3. **Block vs flat:** FAIRagro Search Hub uses block structure (`convert_nested`), Agrischemas uses flat structure (`convert`). The engine supports both.
-
-4. **Plugin extensibility:** New RDI types need only a new format plugin implementing `load()` and `write()`. No engine changes required.
-
-## Open Questions for Slot 6 Discussion
-
-1. **sourceRDI field:** How should the middleware populate the `generalExtended.sourceRDI` field in FAIRagro Search Hub output? Options:
-   - Auto-populate from the harvest URL
-   - Require RDI registration in a registry
-   - User-supplied at harvest time
-
-2. **Authentication:** How should the middleware authenticate with RDIs that require credentials?
-   - API key per RDI
-   - OAuth2 flow
-   - Mutual TLS
-
-3. **Scheduling:** Should the middleware periodically re-harvest from RDIs, or is on-demand sufficient?
-   - Cron-based re-harvest
-   - Webhook push from RDI
-   - On-demand only
-
-4. **Versioning:** How should the middleware handle version changes in Agrischemas profiles?
-   - Pin to specific version in mapping
-   - Auto-detect latest compatible version
-   - User selects version at harvest time
+- `middleware-federation-architecture.puml` -- Component-level architecture with planned OAI-PMH
+- `middleware-harvest-flow.puml` -- Step-by-step activity diagram with OAI-PMH service
+- `arc-to-agrischemas-modeling.puml` -- Domain-specific entity mapping with coverage gaps
+- `conversion-pipeline-simple.puml` -- FAIRweaver demo tool (manual simulation of middleware)
+- `conversion-pipeline-detailed.puml` -- FAIRweaver demo tool (C4 detailed view)

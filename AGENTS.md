@@ -252,6 +252,7 @@ the component. Never use `any` for API response types.
 
 - **Completed:** OAI-PMH harvest & convert flow for FAIRagro Search Hub
 - **Completed:** ARC export system with Schema.org to ARC conversion, auto-template selection, batch processing, and validation
+- **Completed:** Slot 6 architecture diagrams — Middleware federation service (RDI→Middleware→GitLab→SearchHub), RDI sources (E!DAL-PGP, Bonares, EDAPHOBASE, OpenAGRAR), Agrischemas as aspirational model, domain-specific entity mapping with coverage gaps
 - **In Progress:** Frontend components integrated into main application
 - **Next:** Test the frontend components with various file types and edge cases
 

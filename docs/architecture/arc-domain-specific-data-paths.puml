@@ -1,0 +1,82 @@
+@startuml Slot 6: Domain-Specific Data Paths — ARC to Agrischemas
+!theme plain
+
+title Domain-Specific Data Paths — ARC RO-Crate to Agrischemas Mapping
+
+skinparam component {
+  BackgroundColor<<arc>> #FEF3C7
+  BackgroundColor<<agri>> #DBEAFE
+  BackgroundColor<<gap>> #FEE2E2
+  BackgroundColor<<fa>> #FCE7F3
+  BorderColor #666
+}
+
+package "ARC Entity Fields (Source)" <<arc>> {
+  [Investigation\n.name\n.description\n.identifier\n.license\n.datePublished\n.creator\n.keywords\n.publisher\n.funder\n.alternative_titles] as INV
+
+  [Study\n.name\n.description\n.studyDesignType\n.studyDesignDescriptors\n.crop_species\n.crop_species_uri\n.crop_pest\n.crop_pest_uri\n.studyPersonnel] as STUDY
+
+  [Assay\n.name\n.description\n.measurementTechnique\n.measurementMethod\n.assayCategory\n.assayType\n.instrument] as ASSAY
+}
+
+package "Agrischemas: FieldTrialStudy" <<agri>> {
+  [identifier\nname\ndescription\nstartDate\nendDate\ncrop\nlocation\ngrowingSeason\nexperimentalDesign\ntrait\ngermplasm\ncontact\nlicense\ndatasetDoi] as FT
+}
+
+package "Agrischemas: CropVariety" <<agri>> {
+  [identifier\nname\ncrop\nvariety\nbreeder\nregistrationYear\ncountryOfOrigin\ntraits] as CV
+}
+
+package "FAIRagro: Citation Block" <<fa>> {
+  [citation.title\n citation.dsDescription\n citation.author\n citation.otherId\n citation.productionDate\n citation.alternativeTitle] as CITE
+}
+
+package "FAIRagro: Crop Block" <<fa>> {
+  [crop.crop.cropSpecies\n crop.crop.cropSpeciesURI\n crop.crop.cropPest\n crop.crop.cropPestURI] as CROP
+}
+
+package "FAIRagro: Sensor Block" <<fa>> {
+  [sensor.sensor.sensorType\n sensor.sensor.sensorPlatformType\n sensor.sensor.sensorPlatformManufacturerName\n sensor.sensor.sensorPlatformModelName] as SENSOR
+}
+
+package "Coverage Gaps" <<gap>> {
+  [startDate - MISSING\nendDate - MISSING\nlocation - MISSING\ngrowingSeason - MISSING\ntrait - MISSING\ngermplasm - MISSING\nvariety - MISSING\nregistrationYear - MISSING\ncountryOfOrigin - MISSING] as GAPS
+}
+
+' Investigation mappings
+INV --> CITE : name -> title\nidentifier -> otherId\ncreator -> author
+INV --> FT : name -> name\ndescription -> description\nidentifier -> identifier
+
+' Study mappings
+STUDY --> FT : studyDesignType -> experimentalDesign\ncrop_species -> crop (partial)
+STUDY --> CROP : crop_species -> cropSpecies\ncrop_pest -> cropPest
+
+' Assay mappings
+ASSAY --> SENSOR : measurementTechnique -> sensorType\nmeasurementMethod -> sensorPlatformType
+
+' FieldTrialStudy coverage
+FT --> GAPS : startDate, location,\nendDate, growingSeason\nnot in ARC
+
+' CropVariety coverage
+CV --> GAPS : variety, registrationYear\ncountryOfOrigin not in ARC
+
+note bottom of FT
+  FieldTrialStudy coverage: ~86%
+  startDate, location MISSING
+end note
+
+note bottom of CV
+  CropVariety coverage: ~88%
+  variety, registrationYear,
+  countryOfOrigin MISSING
+end note
+
+note bottom of GAPS
+  These gaps represent the
+  divergence between current
+  RDI metadata (Schema.org,
+  INSPIRE, SQL) and the ideal
+  Agrischemas model.
+end note
+
+@enduml

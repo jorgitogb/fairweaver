@@ -1,0 +1,80 @@
+@startuml Slot 6: Middleware Federation Architecture
+!theme plain
+
+title Middleware Federation Service — RDI to GitLab to Search Hub
+
+skinparam component {
+  BackgroundColor<<rdi>> #FEF3C7
+  BackgroundColor<<middleware>> #D1FAE5
+  BackgroundColor<<storage>> #DBEAFE
+  BackgroundColor<<planned>> #E9D5FF
+  BackgroundColor<<hub>> #FCE7F3
+  BorderColor #666
+}
+
+package "Research Data Infrastructures" <<rdi>> {
+  [E!DAL-PGP\nSchema.org JSON-LD] as EDAL
+  [Bonares Repository\nINSPIRE XML] as BONARES
+  [EDAPHOBASE\nSQL Database] as EDAPHO
+  [OpenAGRAR\nSchema.org JSON-LD] as OPENAGRAR
+}
+
+package "Middleware Federation Service" <<middleware>> {
+  [Harvest Adapter\n(OAI-PMH / REST / SQL)] as HARVEST
+  [Format Detector\n(Schema.org / INSPIRE\n/ CSV / SQL)] as DETECT
+  [Format Plugins\n(schema_org, inspire,\ndarwin_core_csv,\nsql_reader)] as PLUGINS
+  [ARC Builder\n(create RO-Crate)] as BUILDER
+  [Pivot Registry\n(Agrischemas profiles\n- aspirational)] as PIVOT
+}
+
+package "Storage Layer" <<storage>> {
+  [GitLab DataHub\nARC repository] as GITLAB
+}
+
+package "[Planned] OAI-PMH Service" <<planned>> {
+  [OAI-PMH 2.0 Endpoint\nreads ARC from GitLab] as OAI
+}
+
+package "FAIRagro Search Hub" <<hub>> {
+  [Search Index\n& API] as SEARCH
+}
+
+' RDI connections
+EDAL --> HARVEST : Schema.org JSON-LD
+BONARES --> HARVEST : INSPIRE XML
+EDAPHO --> HARVEST : SQL query
+OPENAGRAR --> HARVEST : Schema.org JSON-LD
+
+' Middleware internal flow
+HARVEST --> DETECT : raw metadata
+DETECT --> PLUGINS : detected format
+PLUGINS --> BUILDER : flat dict
+BUILDER --> PIVOT : model entities
+BUILDER --> GITLAB : push ARC RO-Crate
+
+' Planned OAI-PMH Service
+GITLAB --> OAI : ARC metadata
+
+' Search Hub harvests via OAI-PMH
+OAI --> SEARCH : OAI-PMH 2.0\nharvest protocol
+
+note right of OAI
+  Planned service (separate).
+  Not part of FAIRweaver.
+  Reads ARCs from GitLab,
+  serves OAI-PMH 2.0 records.
+end note
+
+note right of SEARCH
+  Search Hub harvests via OAI-PMH.
+  No direct GitLab access.
+end note
+
+note bottom of PIVOT
+  Agrischemas is aspirational:
+  in development, not yet adopted
+  by RDIs. Used as internal
+  entity model within ARCs.
+end note
+
+@enduml

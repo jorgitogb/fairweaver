@@ -1,0 +1,69 @@
+@startuml Slot 6: ARC-to-Agrischemas Domain-Specific Mapping
+!theme plain
+
+title Slot 6: ARC-based Middleware — Domain-Specific Object Exchange
+
+skinparam component {
+  BackgroundColor<<arc>> #FEF3C7
+  BackgroundColor<<agrischemas>> #DBEAFE
+  BackgroundColor<<gap>> #FEE2E2
+  BorderColor #666
+}
+
+package "ARC RO-Crate Entities (Domain-Specific)" <<arc>> {
+  [Investigation\nisa:Investigation] as INV
+  [Study\nisa:Study] as STUDY
+  [Assay\nisa:Assay] as ASSAY
+  [Factor] as FACTOR
+  [Protocol] as PROTOCOL
+  [Source / Sample / Material] as MAT
+}
+
+package "Agrischemas Profiles (Aspirational)" <<agrischemas>> {
+  [FieldTrialStudy\nagrischemas:FieldTrialStudy] as FT
+  [CropVariety\nagrischemas:CropVariety] as CV
+}
+
+package "Mapping Coverage" <<gap>> {
+  [title -> title\nexact match] as M1
+  [description -> description\nexact match] as M2
+  [startDate -> startDate\nexact match] as M3
+  [contacts.name -> contact\ntransform] as M4
+  [study.design -> experimentalDesign\nsemantic] as M5
+  [??? -> location\nMISSING - must be supplied] as GAP1
+  [??? -> crop\nsemantic gap - derive from study] as GAP2
+  [??? -> variety\nMISSING in CropVariety] as GAP3
+  [??? -> registrationYear\nMISSING in CropVariety] as GAP4
+}
+
+' ARC -> Agrischemas mapping
+INV --> FT : Investigation\nmaps to Study context
+STUDY --> FT : Study fields\nmap to trial metadata
+ASSAY --> FT : Assay provides\nexperimental data
+FACTOR --> FT : Factors define\nexperimental conditions
+
+INV --> CV : Investigation context
+STUDY --> CV : Study provides\nvariety context
+
+' Coverage flows
+M1 ..> FT : title
+M2 ..> FT : description
+M3 ..> FT : startDate
+M4 ..> FT : contact
+M5 ..> FT : experimentalDesign
+GAP1 ..> FT : location needed
+GAP2 ..> FT : crop inference needed
+GAP3 ..> CV : variety needed
+GAP4 ..> CV : registrationYear needed
+
+note bottom of FT
+  Agrischemas is aspirational:
+  in development, not yet adopted
+  by RDIs. RDI metadata currently
+  comes as Schema.org, INSPIRE,
+  CSV, SQL — not Agrischemas.
+  These profiles define the
+  modeling target for ARCs.
+end note
+
+@enduml

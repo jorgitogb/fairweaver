@@ -19,7 +19,7 @@ System_Boundary(backend, "FAIRweaver Backend (FastAPI)") {
     
     Container(plugins, "Format Plugins", "Python", "schema_org_plugin, ro_crate_plugin, schema_org_arc_plugin, darwin_core_csv_plugin, datacite_xml_plugin")
     
-    ContainerDb(pivot_registry, "Pivot Registry", "YAML", "fairagro_searchhub, bioschemas_dataset, …")
+    ContainerDb(pivot_registry, "Pivot Registry", "YAML", "fairagro_searchhub, bioschemas_dataset, agrischemas_fieldtrial, agrischemas_cropvariety")
     
     ContainerDb(yaml_mappings, "YAML Mappings", "YAML", "schema_org-arc_ro_crate.yaml, arc_ro_crate-fairagro_searchhub.yaml")
     
@@ -33,7 +33,7 @@ System_Boundary(backend, "FAIRweaver Backend (FastAPI)") {
     
     ContainerDb(arc_store, "ARC Record Store", "In-memory dict", "oai_identifier → {arc, fairagro_jsonld, raw_schema, set_spec}")
     
-    Container(oai_pmh, "OAI-PMH Server", "FastAPI endpoint", "GET /oai-pmh — Identify, ListMetadataFormats, ListSets, ListRecords, GetRecord, ListIdentifiers")
+    Container(oai_pmh, "OAI-PMH Server", "FastAPI endpoint", "GET /oai-pmh — Identify, ListMetadataFormats, ListSets, ListRecords, GetRecord, ListIdentifiers (testing/demo only)")
     
     Container(ai_client, "AI Client", "Python", "Rule-based fallback, AI mapping (if enabled)")
 }

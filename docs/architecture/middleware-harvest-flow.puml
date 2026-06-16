@@ -1,0 +1,55 @@
+@startuml
+start
+
+title Middleware Federation Service — Automated Harvest Flow
+
+partition "Harvest from RDIs" {
+  if (RDI type?) then (E!DAL-PGP)
+    :OAI-PMH harvest
+    Schema.org JSON-LD;
+  elseif (Bonares) then
+    :OAI-PMH harvest
+    INSPIRE XML;
+  elseif (EDAPHOBASE) then
+    :SQL query
+    SELECT from datasets;
+  else (OpenAGRAR)
+    :REST API
+    Schema.org JSON-LD;
+  endif
+}
+
+partition "Middleware Processing" {
+  :Detect source format;
+  :Parse via format plugin
+  flat dict;
+
+  :Map fields to ARC entities;
+
+  :Create ARC RO-Crate;
+  :Validate against template;
+}
+
+partition "Publish to GitLab" {
+  :Push ARC to GitLab DataHub;
+}
+
+partition "[Planned] OAI-PMH Service" {
+  note right
+    Separate service, not part of FAIRweaver.
+    Reads ARC metadata from GitLab,
+    serves OAI-PMH 2.0 records.
+  end note
+  :Read ARC from GitLab DataHub;
+  :Serve OAI-PMH 2.0 endpoint;
+}
+
+partition "FAIRagro Search Hub" {
+  :Search Hub harvests via OAI-PMH;
+  :Index for discovery;
+  :Serve via Search API;
+}
+
+stop
+
+@enduml

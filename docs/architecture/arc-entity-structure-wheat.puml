@@ -1,0 +1,78 @@
+@startuml Slot 6: ARC Entity Structure — Wheat Field Trial Example
+!theme plain
+
+title ARC RO-Crate Entity Structure — Example: Wheat Drought Phenotyping Trial
+
+skinparam component {
+  BackgroundColor<<inv>> #FEF3C7
+  BackgroundColor<<study>> #D1FAE5
+  BackgroundColor<<assay>> #DBEAFE
+  BackgroundColor<<person>> #E9D5FF
+  BackgroundColor<<sensor>> #FCE7F3
+  BackgroundColor<<file>> #FEE2E2
+  BorderColor #666
+}
+
+package "ARC Root (#./)" <<inv>> {
+  [Dataset\nname: Wheat Drought Phenotyping Field Trial 2024\nlicense: CC-BY 4.0\ndatePublished: 2024-09-15] as ROOT
+}
+
+package "Investigation (#Investigation_wheat)" <<inv>> {
+  [Dataset additionalType: Investigation\nname: Wheat Drought Phenotyping Field Trial 2024\nidentifier: 10.5447/fairweaver/2024/wheat-drought-001\nlicense: CC-BY 4.0\ndatePublished: 2024-09-15\nkeywords: wheat, drought stress, NDVI, phenotyping\npublisher: RPTU Kaiserslautern\nfunder: DGF\nalternative_titles: Wheat Drought Field Trial 2024] as INV
+}
+
+package "Study (#Study_wheat)" <<study>> {
+  [Dataset additionalType: Study\nname: Wheat Field Trial\nstudyDesignType: Randomized complete block design\nstudyDesignDescriptors: wheat, drought stress, NDVI\ncrop_species: Triticum aestivum\ncrop_species_uri: NCBITaxon_4565\ncrop_pest: Zymoseptoria tritici\ncrop_pest_uri: NCBITaxon_5284] as STUDY
+}
+
+package "Assay (#Assay_wheat)" <<assay>> {
+  [Dataset additionalType: Assay\nname: Wheat Multispectral imaging\nmeasurementTechnique: Multispectral imaging\nassayCategory: measurement\nassayType: imaging_assay] as ASSAY
+}
+
+package "Instrument (#Instrument_wheat)" <<sensor>> {
+  [Sensor\nname: Micasense RedEdge-MX\nMultispectral sensor on\nDJI Matrice 300 RTK UAV] as INSTR
+}
+
+package "Person (#Muhlhaus_Timo)" <<person>> {
+  [Person\nlastName: Muhlhaus\nfirstName: Timo] as PERSON1
+}
+
+package "Person (#Maus_Oliver)" <<person>> {
+  [Person\nlastName: Maus\nfirstName: Oliver] as PERSON2
+}
+
+package "File (assays/wheat/dataset/)" <<file>> {
+  [sample1.tiff\ntype: File\nencodingFormat: image/tiff] as FILE1
+  [sample2.tiff\ntype: File\nencodingFormat: image/tiff] as FILE2
+}
+
+' Relationships
+ROOT --> INV : hasPart
+ROOT --> PERSON1 : creator
+ROOT --> PERSON2 : creator
+INV --> STUDY : hasPart
+INV --> PERSON1 : creator
+INV --> PERSON2 : creator
+INV --> PERSON1 : investigationContacts
+STUDY --> ASSAY : hasPart
+STUDY --> PERSON1 : studyPersonnel
+ASSAY --> INSTR : instrument
+ASSAY --> STUDY : about
+FILE1 ..> ASSAY : part of
+FILE2 ..> ASSAY : part of
+
+note bottom of STUDY
+  Domain-specific fields:
+  crop_species, crop_species_uri,
+  crop_pest, crop_pest_uri
+  (stored directly on Study)
+end note
+
+note bottom of ASSAY
+  Measurement fields:
+  measurementTechnique,
+  measurementMethod,
+  assayCategory, assayType
+end note
+
+@enduml
