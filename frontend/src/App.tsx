@@ -11,7 +11,7 @@ import {
 import UploadZone from "./components/UploadZone";
 import ArcCrateView from "./components/ArcCrateView";
 import ComplianceBadge from "./components/ComplianceBadge";
-import { Loader2, Github, Database, Copy, Check, Eye, ArrowDownUp } from "lucide-react";
+import { Loader2, Github, Database, ArrowDownUp } from "lucide-react";
 
 const PIVOT_OPTIONS = [
   { id: "fairagro_searchhub", label: "FAIRagro Search Hub", category: "FAIRagro" },
@@ -73,7 +73,7 @@ export default function App() {
   const [arcResult, setArcResult] = useState<ArcExportResult | null>(null);
   const [pivotResult, setPivotResult] = useState<ConvertResult | null>(null);
   const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
-  const [oaiCopied, setOaiCopied] = useState(false);
+
   const [selectedPivot, setSelectedPivot] = useState("fairagro_searchhub");
 
   const arcMutation = useMutation({
@@ -116,14 +116,7 @@ export default function App() {
     complianceMutation.mutate(f);
   }, [complianceMutation]);
 
-  const oaiBaseUrl = `http://localhost:8000/oai-pmh`;
-  const oaiListRecords = `${oaiBaseUrl}?verb=ListRecords&metadataPrefix=fairagro_arc`;
 
-  const copyOaiUrl = async () => {
-    await navigator.clipboard.writeText(oaiListRecords);
-    setOaiCopied(true);
-    setTimeout(() => setOaiCopied(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50">
@@ -282,28 +275,7 @@ export default function App() {
                   />
                 </section>
 
-                <section className="border border-slate-200 rounded-xl p-4 bg-white">
-                  <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-1">
-                    <Eye className="w-3 h-3" /> OAI-PMH Endpoint
-                  </h3>
-                  <p className="text-xs text-slate-500 mb-2">
-                    Harvest all ARC RO-Crate records via OAI-PMH at:
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs bg-slate-100 border border-slate-200 rounded px-2 py-1 text-slate-600 truncate flex-1 font-mono">
-                      {oaiListRecords}
-                    </code>
-                    <button
-                      onClick={copyOaiUrl}
-                      className="shrink-0 flex items-center gap-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors"
-                    >
-                      {oaiCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-2">
-                    Base URL: <code className="text-[10px] bg-slate-100 px-1 rounded">http://localhost:8000/oai-pmh</code>
-                  </p>
-                </section>
+
               </>
             ) : pivotResult ? (
               <section className="w-full">

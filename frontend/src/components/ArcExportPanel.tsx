@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, Eye, Download, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Upload, Eye, Download, Loader2, AlertTriangle } from "lucide-react";
 import { convertToArc, getArcTemplateRecommendation } from "../api/client";
 
 interface ArcExportPanelProps {
@@ -27,7 +27,7 @@ export default function ArcExportPanel({ onExportComplete }: ArcExportPanelProps
       // Auto-recommend template
       getArcTemplateRecommendation(selectedFile)
         .then((result) => {
-          setRecommendedTemplate(result);
+          setRecommendedTemplate({ template: result.recommendedTemplate, reason: result.reason });
           if (template === "auto") {
             setTemplate(result.recommendedTemplate);
           }
@@ -64,7 +64,7 @@ export default function ArcExportPanel({ onExportComplete }: ArcExportPanelProps
       const result = await convertToArc(file, "schema_org", template, false);
       
       // Create download link
-      const blob = new Blob([result.arcContent], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(result.preview)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

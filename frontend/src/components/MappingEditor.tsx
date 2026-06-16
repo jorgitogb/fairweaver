@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Download, Upload, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+import { Save, Upload, RefreshCw, AlertTriangle } from "lucide-react";
 
 type Tab = "yaml" | "preview";
 
@@ -29,7 +29,7 @@ interface Props {
   onMappingChange?: (mapping: FieldRule[]) => void;
 }
 
-export default function MappingEditor({ output, confidence, fieldRules, onMappingChange }: Props) {
+export default function MappingEditor({ output: _output, confidence, fieldRules, onMappingChange: _onMappingChange }: Props) {
   const [tab, setTab] = useState<Tab>("yaml");
   const [yamlContent, setYamlContent] = useState<string>("");
   const [isValidYaml, setIsValidYaml] = useState<boolean>(true);

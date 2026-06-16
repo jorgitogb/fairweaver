@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Download, ArrowRight, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Download, ArrowRight, AlertTriangle } from "lucide-react";
 import type { FieldRule, MissingField } from "../api/client";
 
 type Tab = "comparison" | "output";

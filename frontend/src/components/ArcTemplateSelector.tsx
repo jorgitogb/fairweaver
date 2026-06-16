@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layers, Check, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { getArcTemplateRecommendation } from "../api/client";
 
 interface ArcTemplateSelectorProps {
@@ -20,7 +20,7 @@ export default function ArcTemplateSelector({ file, value, onChange }: ArcTempla
       try {
         setLoading(true);
         const result = await getArcTemplateRecommendation(file);
-        setRecommendation(result);
+        setRecommendation({ template: result.recommendedTemplate, reason: result.reason });
         // Auto-select if current value is "auto"
         if (value === "auto") {
           onChange(result.recommendedTemplate);
