@@ -337,3 +337,54 @@ class TestSchemaOrgToARCConversion:
 
         validation = data["validation"]
         assert isinstance(validation, dict)
+
+    def test_schema_org_to_arc_conversion_rich_input_validation_passes(self):
+        """Test rich Schema.org input (maize-full) produces Assay with all required ARC fields."""
+        content = json.dumps({
+            "@context": "https://schema.org/",
+            "@type": "Dataset",
+            "@id": "https://doi.org/10.5447/fairweaver/2024/maize-heat-001",
+            "name": "Maize Heat Stress Transcriptome RNA-Seq Dataset",
+            "description": "Transcriptome profiling of maize leaf tissue under heat stress",
+            "creator": {"@type": "Person", "givenName": "Uwe", "familyName": "Scholz",
+                        "name": "Uwe Scholz", "email": "scholz@ipk-gatersleben.de",
+                        "affiliation": {"@type": "Organization", "name": "IPK Gatersleben"}},
+            "license": "https://creativecommons.org/licenses/by/4.0/",
+            "datePublished": "2024-07-01",
+            "measurementTechnique": "RNA-Seq transcriptomics",
+            "instrument": {"@type": "Thing", "name": "Illumina NovaSeq 6000",
+                           "additionalType": "SequencingPlatform"},
+            "citation": {"@type": "ScholarlyArticle",
+                          "name": "Transcriptome analysis of heat-stressed maize",
+                          "identifier": "https://doi.org/10.1234/fake-doi/maize-2024"},
+            "funder": "BMBF",
+        })
+
+        resp = client.post(
+            "/convert/arc-export?preview=true",
+            files={"file": ("maize-full.json", content.encode(), "application/json")},
+            data={"source_format": "auto", "pivot_id": "fairagro_searchhub"}
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "preview" in data
+        assert "validation" in data
+
+        # — Assay must have the 3 previously-missing fields —
+        graph = data["preview"]["@graph"]
+        assay = next((e for e in graph if e.get("additionalType") == "Assay"), {})
+        assert assay.get("measurementMethod") == "RNA-Seq transcriptomics"
+        assert assay.get("technologyType") == "SequencingPlatform"
+        assert assay.get("technologyPlatform") == "Illumina NovaSeq 6000"
+
+        # — Graph must include isa.investigation.xlsx entity —
+        has_investigation_file = any(e.get("@id") == "isa.investigation.xlsx" for e in graph)
+        assert has_investigation_file, "Graph must contain isa.investigation.xlsx entity"
+
+        # — Validation must NOT mention these 4 specific errors —
+        validation_errors = " ".join(data["validation"].get("errors", []))
+        assert "measurementMethod" not in validation_errors
+        assert "technologyType" not in validation_errors
+        assert "technologyPlatform" not in validation_errors
+        assert "isa.investigation.xlsx" not in validation_errors

@@ -907,6 +907,8 @@ def _fallback_convert_to_arc(source: dict) -> dict:
 
     # ── Assay ──
     assay_id = "#Assay_1"
+    instr = source.get("instrument")
+    instr_info = instr if isinstance(instr, dict) else {}
     assay = {
         "@id": assay_id,
         "@type": "Dataset",
@@ -914,9 +916,11 @@ def _fallback_convert_to_arc(source: dict) -> dict:
         "name": "Assay for " + source.get("name", "Dataset"),
         "description": source.get("description", ""),
         "measurementTechnique": source.get("measurementTechnique", ""),
+        "measurementMethod": source.get("measurementTechnique", ""),
+        "technologyType": instr_info.get("additionalType", source.get("measurementTechnique", "")),
+        "technologyPlatform": instr_info.get("name", ""),
         "about": [{"@id": study_id}],
     }
-    instr = source.get("instrument")
     if isinstance(instr, dict) and instr.get("name"):
         instr_id = "#Instrument_1"
         assay["instrument"] = [{"@id": instr_id}]
@@ -928,6 +932,14 @@ def _fallback_convert_to_arc(source: dict) -> dict:
         })
     graph.append(assay)
     study["hasPart"].append({"@id": assay_id})
+
+    # Required DataPLANT ARC metadata file entity
+    graph.append({
+        "@id": "isa.investigation.xlsx",
+        "@type": "File",
+        "name": "ISA Investigation Metadata",
+        "description": "Required ISA investigation metadata file for DataPLANT ARC compliance",
+    })
 
     return {
         "@context": ["https://w3id.org/ro/crate/1.1/context", {"@vocab": "https://schema.org/"}],
