@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Download, CheckCircle, AlertTriangle, XCircle, Copy, Check, Eye } from "lucide-react";
 import type { ArcValidationResult } from "../api/client";
+import ArcEntityTree from "./ArcEntityTree";
+import type { GraphEntity } from "./ArcEntityTree";
 
-type Tab = "arc" | "fairagro" | "validation";
+type Tab = "arc" | "fairagro" | "validation" | "entities";
 
 interface Props {
   preview: Record<string, unknown>;
@@ -65,7 +67,7 @@ export default function ArcCrateView({
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200">
-        {(["arc", "fairagro", "validation"] as Tab[]).map((t) => (
+        {(["arc", "fairagro", "validation", "entities"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -78,6 +80,7 @@ export default function ArcCrateView({
             {t === "arc" && "ARC RO-Crate"}
             {t === "fairagro" && "FAIRagro JSON-LD"}
             {t === "validation" && "Validation"}
+            {t === "entities" && "Entities"}
           </button>
         ))}
       </div>
@@ -125,6 +128,10 @@ export default function ArcCrateView({
             <p className="text-[10px] text-slate-400">
               Template: {validation.template_id} v{validation.template_version}
             </p>
+          </div>
+        ) : tab === "entities" ? (
+          <div className="max-h-96 overflow-y-auto">
+            <ArcEntityTree graph={((preview as Record<string, unknown>)?.["@graph"] || []) as GraphEntity[]} />
           </div>
         ) : (
           <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 text-emerald-300 font-mono whitespace-pre">

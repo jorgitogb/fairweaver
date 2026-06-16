@@ -1,0 +1,211 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    {
+      "@vocab": "https://schema.org/"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": "https://w3id.org/ro/crate/1.1",
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "Wheat Drought Phenotyping Field Trial 2024",
+      "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+      "datePublished": "2024-09-15",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "creator": [
+        {
+          "@id": "#M\u00fchlhaus_Timo"
+        },
+        {
+          "@id": "#Maus_Oliver"
+        }
+      ]
+    },
+    {
+      "@id": "#M\u00fchlhaus_Timo",
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "M\u00fchlhaus",
+      "name": "Timo M\u00fchlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      },
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      }
+    },
+    {
+      "@id": "#Maus_Oliver",
+      "@type": "Person",
+      "givenName": "Oliver",
+      "familyName": "Maus",
+      "name": "Oliver Maus",
+      "email": "maus@nfdi4plants.org",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0002-8241-5300"
+      },
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      }
+    },
+    {
+      "@id": "#Organization_RPTU_University_of_Kaiserslautern_Plant_Phenomics_Group",
+      "@type": "Organization",
+      "name": "RPTU University of Kaiserslautern, Plant Phenomics Group"
+    },
+    {
+      "@id": "#Investigation_wheat",
+      "@type": "Dataset",
+      "additionalType": "Investigation",
+      "name": "Wheat Drought Phenotyping Field Trial 2024",
+      "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+      "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "datePublished": "2024-09-15",
+      "creator": [
+        {
+          "@id": "#M\u00fchlhaus_Timo"
+        },
+        {
+          "@id": "#Maus_Oliver"
+        }
+      ],
+      "hasPart": [
+        {
+          "@id": "#Study_wheat"
+        }
+      ],
+      "keywords": [
+        "wheat",
+        "drought stress",
+        "NDVI",
+        "phenotyping",
+        "field trial",
+        "Triticum aestivum",
+        "multispectral imaging"
+      ],
+      "publisher": {
+        "@id": "#Organization_RPTU_University_of_Kaiserslautern_Plant_Phenomics_Group"
+      },
+      "funder": "DFG \u2013 German Research Foundation",
+      "alternative_titles": [
+        "Wheat Drought Field Trial 2024"
+      ],
+      "investigationContacts": [
+        {
+          "@id": "#M\u00fchlhaus_Timo"
+        }
+      ],
+      "investigationPublications": [
+        {
+          "@id": "#Publication_wheat"
+        }
+      ]
+    },
+    {
+      "@id": "#Publication_wheat",
+      "@type": "ScholarlyArticle",
+      "name": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+      "identifier": "https://doi.org/10.1234/fake-doi/wheat-2024",
+      "author": [
+        {
+          "@id": "#M\u00fchlhaus_Timo"
+        },
+        {
+          "@id": "#Maus_Oliver"
+        }
+      ]
+    },
+    {
+      "@id": "#Study_wheat",
+      "@type": "Dataset",
+      "additionalType": "Study",
+      "name": "Wheat Field Trial",
+      "description": "Field study: Wheat Drought Phenotyping Field Trial 2024",
+      "hasPart": [
+        {
+          "@id": "#Assay_wheat"
+        }
+      ],
+      "studyDesignDescriptors": [
+        "wheat",
+        "drought stress",
+        "NDVI",
+        "phenotyping",
+        "field trial",
+        "Triticum aestivum",
+        "multispectral imaging"
+      ],
+      "studyDesignType": "Randomized complete block design",
+      "studyPersonnel": [
+        {
+          "@id": "#M\u00fchlhaus_Timo"
+        }
+      ],
+      "crop_species": "Triticum aestivum",
+      "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
+      "crop_pest": "Zymoseptoria tritici",
+      "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_5284"
+    },
+    {
+      "@id": "#Instrument_wheat",
+      "@type": "Sensor",
+      "name": "Micasense RedEdge-MX",
+      "description": "Multispectral sensor on DJI Matrice 300 RTK UAV"
+    },
+    {
+      "@id": "#Assay_wheat",
+      "@type": "Dataset",
+      "additionalType": "Assay",
+      "name": "Wheat Multispectral imaging",
+      "description": "Multispectral imaging assay for Wheat Drought Phenotyping Field Trial 2024",
+      "measurementTechnique": "Multispectral imaging",
+      "about": [
+        {
+          "@id": "#Study_wheat"
+        }
+      ],
+      "assayCategory": "measurement",
+      "assayType": "imaging_assay",
+      "instrument": [
+        {
+          "@id": "#Instrument_wheat"
+        }
+      ]
+    },
+    {
+      "@id": "assays/wheat/dataset/sample1.tiff",
+      "@type": "File",
+      "name": "Sample 1 - wheat",
+      "encodingFormat": "image/tiff"
+    },
+    {
+      "@id": "assays/wheat/dataset/sample2.tiff",
+      "@type": "File",
+      "name": "Sample 2 - wheat",
+      "encodingFormat": "image/tiff"
+    },
+    {
+      "@id": "assays/wheat/dataset/sample3.tiff",
+      "@type": "File",
+      "name": "Sample 3 - wheat",
+      "encodingFormat": "image/tiff"
+    }
+  ]
+}

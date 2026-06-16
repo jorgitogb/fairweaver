@@ -7,16 +7,12 @@ const ACCEPTED: Record<string, string[]> = {
   "application/xml": [".xml"],
   "text/xml": [".xml"],
   "text/csv": [".csv"],
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
-    ".xlsx",
-  ],
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-  ".json": "ISA-JSON / RO-Crate",
-  ".xml": "DataCite XML",
+  ".json": "Schema.org / ARC RO-Crate / ISA-JSON",
+  ".xml": "DataCite XML / OAI-PMH DC",
   ".csv": "Darwin Core CSV",
-  ".xlsx": "MIAPPE XLSX",
 };
 
 interface Props {
@@ -65,7 +61,7 @@ export default function UploadZone({
           <p className="text-slate-600 font-medium mb-1">
             Drag & drop a metadata file, or click to browse
           </p>
-          <p className="text-slate-400 text-sm">Max 10 MB</p>
+          <p className="text-slate-400 text-sm">Schema.org, ARC RO-Crate, ISA-JSON, DataCite, OAI-PMH, Darwin Core · Max 10 MB</p>
         </>
       )}
       <div className="mt-4 flex flex-wrap justify-center gap-2">

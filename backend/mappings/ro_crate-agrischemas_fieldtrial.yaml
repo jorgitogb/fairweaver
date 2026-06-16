@@ -1,0 +1,83 @@
+source_format: ro_crate
+pivot: agrischemas_fieldtrial
+version: "0.1.0"
+author: fairweaver-community
+description: Maps ARC RO-Crate metadata to AgroSchemas FieldTrialStudy profile
+
+field_rules:
+  - source: identifier
+    target: identifier
+    required: true
+    confidence: 0.95
+    transform: null
+
+  - source: name
+    target: title
+    required: true
+    confidence: 0.95
+    transform: null
+
+  - source: description
+    target: description
+    required: true
+    confidence: 0.9
+    transform: null
+
+  - source: datePublished
+    target: startDate
+    required: true
+    confidence: 0.8
+    transform: null
+    note: "datePublished used as proxy for field trial start date"
+
+  - source: crop_species
+    target: crop
+    required: true
+    confidence: 0.85
+    transform: null
+
+  - source: crop_species_uri
+    target: cropUri
+    required: false
+    confidence: 0.8
+    transform: null
+
+  - source: creator
+    target: contact
+    required: false
+    confidence: 0.8
+    transform: parse_person
+
+  - source: license
+    target: license
+    required: false
+    confidence: 0.9
+    transform: null
+
+  - source: alternative_titles
+    target: growingSeason
+    required: false
+    confidence: 0.5
+    transform: null
+    note: "proxy mapping; no direct ARC field for growing season"
+
+  - source: crop_pest
+    target: trait
+    required: false
+    confidence: 0.65
+    transform: null
+    note: "crop pest as proxy for observed traits"
+
+  - source: crop_species
+    target: germplasm
+    required: false
+    confidence: 0.6
+    transform: null
+    note: "crop species name used as germplasm identifier"
+
+  - source: identifier
+    target: datasetDoi
+    required: false
+    confidence: 0.5
+    transform: null
+    note: "identifier used as DOI proxy when doi.org prefix present"

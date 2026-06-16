@@ -1,29 +1,102 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   convertToArc,
+  convertFile,
   classifyCompliance,
   type ArcExportResult,
+  type ConvertResult,
   type ComplianceResult,
 } from "./api/client";
 import UploadZone from "./components/UploadZone";
 import ArcCrateView from "./components/ArcCrateView";
 import ComplianceBadge from "./components/ComplianceBadge";
-import { Loader2, Github, Database, Copy, Check, Eye } from "lucide-react";
+import { Loader2, Github, Database, Copy, Check, Eye, ArrowDownUp } from "lucide-react";
+
+const PIVOT_OPTIONS = [
+  { id: "fairagro_searchhub", label: "FAIRagro Search Hub", category: "FAIRagro" },
+  { id: "agrischemas_fieldtrial", label: "AgroSchemas Field Trial", category: "AgroSchemas" },
+  { id: "agrischemas_cropvariety", label: "AgroSchemas Crop Variety", category: "AgroSchemas" },
+  { id: "bioschemas_dataset", label: "Bioschemas Dataset", category: "Bioschemas" },
+];
+
+const isFairagroPivot = (id: string) => id === "fairagro_searchhub";
+
+async function detectSourceFormat(file: File): Promise<string> {
+  const text = await file.text();
+  try {
+    const data = JSON.parse(text);
+    const ctx = data["@context"];
+    const ctxStr = Array.isArray(ctx) ? ctx.join(" ") : String(ctx ?? "");
+    if ("@graph" in data || ctxStr.includes("ro-crate") || ctxStr.includes("ro/crate")) {
+      return "ro_crate";
+    }
+    if (ctxStr.includes("schema.org")) return "schema_org";
+  } catch {}
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext === "xml") return "datacite_xml";
+  if (ext === "csv") return "darwin_core_csv";
+  if (ext === "xlsx") return "miappe_xlsx";
+  return "isa_json";
+}
+
+function getButtonLabel(sourceFormat: string, pivotId: string): string {
+  if (sourceFormat === "ro_crate") {
+    if (isFairagroPivot(pivotId)) return "Generate FAIRagro JSON-LD →";
+    return `Convert to ${PIVOT_OPTIONS.find((p) => p.id === pivotId)?.label ?? pivotId} →`;
+  }
+  if (isFairagroPivot(pivotId)) return "Convert to ARC RO-Crate →";
+  return `Convert to ${PIVOT_OPTIONS.find((p) => p.id === pivotId)?.label ?? pivotId} →`;
+}
+
+function getStepLabel(sourceFormat: string, pivotId: string): string {
+  if (sourceFormat === "ro_crate") {
+    if (isFairagroPivot(pivotId)) return "2 · Generate FAIRagro JSON-LD";
+    return `2 · Convert to ${PIVOT_OPTIONS.find((p) => p.id === pivotId)?.label ?? pivotId}`;
+  }
+  if (isFairagroPivot(pivotId)) return "2 · Convert to ARC RO-Crate";
+  return `2 · Convert to ${PIVOT_OPTIONS.find((p) => p.id === pivotId)?.label ?? pivotId}`;
+}
+
+function getDescription(sourceFormat: string, pivotId: string): string {
+  if (sourceFormat === "ro_crate") {
+    if (isFairagroPivot(pivotId)) return "Source is already ARC RO-Crate. Generate FAIRagro-compliant JSON-LD and expose via OAI-PMH.";
+    return "Source is already ARC RO-Crate. Transform to target pivot format.";
+  }
+  if (isFairagroPivot(pivotId)) return "Convert to ARC RO-Crate, generate FAIRagro-compliant JSON-LD, and expose metadata via OAI-PMH.";
+  return "Convert input metadata to target pivot format.";
+}
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<ArcExportResult | null>(null);
+  const [sourceFormat, setSourceFormat] = useState<string>("schema_org");
+  const [arcResult, setArcResult] = useState<ArcExportResult | null>(null);
+  const [pivotResult, setPivotResult] = useState<ConvertResult | null>(null);
   const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
   const [oaiCopied, setOaiCopied] = useState(false);
+  const [selectedPivot, setSelectedPivot] = useState("fairagro_searchhub");
 
-  const convertMutation = useMutation({
+  const arcMutation = useMutation({
     mutationFn: () => {
       if (!file) throw new Error("No file selected");
-      return convertToArc(file, "auto", "fairagro_searchhub", true);
+      return convertToArc(file, "auto", selectedPivot, true);
     },
-    onSuccess: (data) => setResult(data),
+    onSuccess: (data) => { setArcResult(data); setPivotResult(null); },
   });
+
+  const pivotMutation = useMutation({
+    mutationFn: () => {
+      if (!file) throw new Error("No file selected");
+      return convertFile(file, sourceFormat, selectedPivot);
+    },
+    onSuccess: (data) => { setPivotResult(data); setArcResult(null); },
+  });
+
+  const convertMutation = (() => {
+    if (sourceFormat === "ro_crate") return pivotMutation;
+    if (isFairagroPivot(selectedPivot)) return arcMutation;
+    return pivotMutation;
+  })();
 
   const complianceMutation = useMutation({
     mutationFn: (f: File) => classifyCompliance(f),
@@ -31,13 +104,17 @@ export default function App() {
     onError: () => setComplianceResult(null),
   });
 
-  const handleFileAccepted = (f: File) => {
+  const handleFileAccepted = useCallback(async (f: File) => {
     setFile(f);
-    setResult(null);
+    setArcResult(null);
+    setPivotResult(null);
     setComplianceResult(null);
 
+    const fmt = await detectSourceFormat(f);
+    setSourceFormat(fmt);
+
     complianceMutation.mutate(f);
-  };
+  }, [complianceMutation]);
 
   const oaiBaseUrl = `http://localhost:8000/oai-pmh`;
   const oaiListRecords = `${oaiBaseUrl}?verb=ListRecords&metadataPrefix=fairagro_arc`;
@@ -76,11 +153,11 @@ export default function App() {
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
         <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
           <h1 className="text-xl font-semibold text-slate-800 mb-2">
-            Schema.org to FAIRagro ARC RO-Crate
+            FAIRweaver — Metadata Interoperability
           </h1>
           <p className="text-slate-600 max-w-2xl">
-            Upload schema.org JSON-LD metadata and convert it to ARC RO-Crate format.
-            Generate FAIRagro-compliant JSON-LD for the Search Hub and expose metadata via OAI-PMH.
+            Upload metadata in any format (Schema.org, ARC RO-Crate, DataCite, Darwin Core) and convert
+            to the target pivot: FAIRagro Search Hub, AgroSchemas, or Bioschemas.
           </p>
         </div>
 
@@ -99,6 +176,13 @@ export default function App() {
                       <span className="text-slate-400">
                         ({(file.size / 1024).toFixed(1)} KB)
                       </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
+                        {sourceFormat === "ro_crate" ? "ARC RO-Crate" :
+                         sourceFormat === "schema_org" ? "Schema.org" :
+                         sourceFormat === "datacite_xml" ? "DataCite XML" :
+                         sourceFormat === "darwin_core_csv" ? "Darwin Core CSV" :
+                         sourceFormat}
+                      </span>
                       <ComplianceBadge
                         result={complianceResult}
                         loading={complianceMutation.isPending}
@@ -109,11 +193,27 @@ export default function App() {
 
                 <section>
                   <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    2 · Convert to ARC RO-Crate
+                    {getStepLabel(sourceFormat, selectedPivot)}
                   </h2>
                   <p className="text-xs text-slate-500 mb-3">
-                    Uses the FAIRagro template to produce ARC RO-Crate, FAIRagro-compliant JSON-LD, and OAI-PMH endpoint.
+                    {getDescription(sourceFormat, selectedPivot)}
                   </p>
+                  <div className="mb-3">
+                    <label className="text-xs font-medium text-slate-600 flex items-center gap-1 mb-1.5">
+                      <ArrowDownUp className="w-3 h-3" /> Target pivot
+                    </label>
+                    <select
+                      value={selectedPivot}
+                      onChange={(e) => setSelectedPivot(e.target.value)}
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400"
+                    >
+                      {PIVOT_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <button
                     onClick={() => convertMutation.mutate()}
                     disabled={convertMutation.isPending}
@@ -125,7 +225,7 @@ export default function App() {
                         Converting…
                       </>
                     ) : (
-                      "Convert to ARC RO-Crate →"
+                      getButtonLabel(sourceFormat, selectedPivot)
                     )}
                   </button>
                 </section>
@@ -147,18 +247,18 @@ export default function App() {
           </div>
 
           <div className="space-y-6 w-full">
-            {result ? (
+            {arcResult ? (
               <>
                 <section className="w-full">
                   <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                     3 · Results
                   </h2>
                   <ArcCrateView
-                    preview={result.preview!}
-                    fairagroJsonld={result.fairagro_jsonld!}
-                    validation={result.validation}
-                    filename={result.filename}
-                    oaiIdentifier={result.oai_identifier!}
+                    preview={arcResult.preview!}
+                    fairagroJsonld={arcResult.fairagro_jsonld!}
+                    validation={arcResult.validation}
+                    filename={arcResult.filename}
+                    oaiIdentifier={arcResult.oai_identifier!}
                   />
                 </section>
 
@@ -185,13 +285,55 @@ export default function App() {
                   </p>
                 </section>
               </>
+            ) : pivotResult ? (
+              <section className="w-full">
+                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  3 · Pivot Conversion Result
+                </h2>
+                <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-700">
+                        {PIVOT_OPTIONS.find((p) => p.id === selectedPivot)?.label}
+                      </span>
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                        {Math.round((pivotResult.confidence || 0) * 100)}% coverage
+                      </span>
+                    </div>
+                  </div>
+                  <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 text-emerald-300 font-mono whitespace-pre">
+                    {JSON.stringify(pivotResult.output, null, 2)}
+                  </pre>
+                  {pivotResult.missing_fields.length > 0 && (
+                    <div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
+                      <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                        Missing Fields ({pivotResult.missing_fields.length})
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {pivotResult.missing_fields.map((mf) => (
+                          <span
+                            key={mf.field}
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              mf.level === "minimum"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {mf.field}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-300 text-sm text-center p-10 border-2 border-dashed border-slate-200 rounded-xl">
                 <div>
                   <Database className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <p>
-                    Upload a schema.org JSON file to see the ARC RO-Crate conversion results,
-                    FAIRagro-compliant JSON-LD, and OAI-PMH access.
+                    Upload a metadata file (Schema.org, ARC RO-Crate, DataCite XML, Darwin Core CSV)
+                    to convert it to your target pivot format.
                   </p>
                 </div>
               </div>

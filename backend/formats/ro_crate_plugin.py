@@ -105,6 +105,23 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
                             if uri:
                                 crop_pest_uris.append(uri)
 
+    # Fallback: extract crop/sensor directly from Study entities
+    # when LabProcess traversal yields nothing (e.g. simpler ARC structures)
+    if not crop_species:
+        for study in studies:
+            cs = _string_value(study.get("crop_species"))
+            if cs:
+                crop_species.append(cs)
+            cs_uri = _string_value(study.get("crop_species_uri"))
+            if cs_uri:
+                crop_species_uris.append(cs_uri)
+            cp = _string_value(study.get("crop_pest"))
+            if cp:
+                crop_pests.append(cp)
+            cp_uri = _string_value(study.get("crop_pest_uri"))
+            if cp_uri:
+                crop_pest_uris.append(cp_uri)
+
     if crop_species:
         result["crop_species"] = crop_species[0]  # first crop
     if crop_species_uris:
