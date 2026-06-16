@@ -7,8 +7,8 @@
       "mode": "primary",
       "permission": {
         "edit": "allow",
-        "bash": "allow",
-      },
+        "bash": "allow"
+      }
     },
     "leader": {
       "description": "Orchestrator. Decomposes tasks and launches sub-agents. NEVER writes code.",
@@ -17,10 +17,10 @@
       "permission": {
         "edit": {
           "src/**": "deny",
-          "tests/**": "deny",
+          "tests/**": "deny"
         },
-        "bash": "ask",
-      },
+        "bash": "ask"
+      }
     },
     "spec-author": {
       "description": "Writes specifications: requirements (EARS), design, and tasks.",
@@ -29,10 +29,10 @@
       "permission": {
         "edit": {
           "src/**": "deny",
-          "tests/**": "deny",
+          "tests/**": "deny"
         },
-        "bash": "deny",
-      },
+        "bash": "deny"
+      }
     },
     "implementer": {
       "description": "Writes code and tests following red-green-refactor.",
@@ -40,8 +40,8 @@
       "prompt": "{file:./.opencode/agent/implementer.md}",
       "permission": {
         "edit": "allow",
-        "bash": "allow",
-      },
+        "bash": "allow"
+      }
     },
     "reviewer": {
       "description": "Validates traceability and task completion. Produces review reports.",
@@ -50,10 +50,10 @@
       "permission": {
         "edit": {
           "src/**": "deny",
-          "tests/**": "deny",
+          "tests/**": "deny"
         },
-        "bash": "deny",
-      },
+        "bash": "deny"
+      }
     },
     "security-auditor": {
       "description": "Performs security audits and identifies vulnerabilities.",
@@ -61,8 +61,8 @@
       "prompt": "{file:./.opencode/agent/security-auditor.md}",
       "permission": {
         "edit": "deny",
-        "bash": "deny",
-      },
+        "bash": "deny"
+      }
     },
     "doc-writer": {
       "description": "Writes and maintains project documentation.",
@@ -71,10 +71,10 @@
       "permission": {
         "edit": {
           "src/**": "deny",
-          "tests/**": "deny",
+          "tests/**": "deny"
         },
-        "bash": "deny",
-      },
+        "bash": "deny"
+      }
     },
     "perf-analyzer": {
       "description": "Analyzes performance implications and suggests optimizations.",
@@ -82,12 +82,12 @@
       "prompt": "{file:./.opencode/agent/perf-analyzer.md}",
       "permission": {
         "edit": "deny",
-        "bash": "deny",
-      },
-    },
+        "bash": "deny"
+      }
+    }
   },
   "permission": {
     "edit": "ask",
-    "bash": "ask",
-  },
+    "bash": "ask"
+  }
 }

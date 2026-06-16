@@ -45,6 +45,7 @@ for anything non-trivial use the template in `## Specification Template`.
 ```
 
 **TDD scope by layer:**
+
 - **Backend (plugins, mapping_engine, main):** strict TDD — test first, implement second.
 - **Frontend (components, hooks):** strict TDD — unit tests (Vitest) or component tests before implementation.
 - **AI layer (ai_client.py, MappingEngine.generate_mapping_ai):** TDD on the rule-based fallback path (deterministic). AI-specific code uses contract tests (input/output schema validation) plus mocked LLM responses. The existing graceful-degradation pattern is the testable surface — never remove it.
@@ -86,6 +87,7 @@ When there are multiple viable approaches:
 ### Anti-Big-Bang Rule
 
 Forbidden:
+
 - Generating full applications or features in one pass.
 - Replacing large architecture sections without approval.
 - Modifying many files simultaneously without incremental checkpoints.
@@ -96,6 +98,7 @@ Prefer iterative delivery. Each step should be independently verifiable.
 ### Refactoring Threshold
 
 When complexity increases, stop and evaluate:
+
 - Is duplication growing?
 - Is coupling increasing?
 - Are responsibilities unclear?
@@ -537,6 +540,7 @@ Services, modules, APIs, infrastructure, or feature flags needed.
 **Edge Cases:** CSV with no header row → raise `ValueError` with clear message. CSV with extra columns beyond Darwin Core spec → ignore silently.
 
 **Acceptance Criteria:**
+
 1. [ ] `test_load_darwin_core_csv` passes with sample DwC file
 2. [ ] `test_write_darwin_core_csv` round-trips correctly
 3. [ ] `detect_format()` returns `darwin_core_csv` for `.csv` extension
