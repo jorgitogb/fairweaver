@@ -32,6 +32,7 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+
 # Dependencies
 # Build output
 # Testing
@@ -52,3 +53,10 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Artifacts
+arc_output.json
+test_batch.zip
+
+# Generated docs
+IMPLEMENTATION_SUMMARY.md

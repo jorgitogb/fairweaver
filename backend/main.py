@@ -16,12 +16,14 @@ from plugins.loader import load_plugins
 from sickle.oaiexceptions import CannotDisseminateFormat, NoRecordsMatch
 from arc_templates.fairagro_validator import FairagroArcValidator
 from formats.schema_org_plugin import load as schema_org_load
-from formats.ro_crate_plugin import load as ro_crate_load, write as ro_crate_write
+from formats.ro_crate_plugin import load as ro_crate_load
+from formats.schema_org_arc_plugin import load as schema_org_arc_load, write as schema_org_arc_write
 import tempfile
 import zipfile
 import io
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="FAIRweaver API",
@@ -274,19 +276,21 @@ async def harvest_convert(req: HarvestConvertRequest):
         except Exception as e:
             logger.warning("skip record %s: convert failed: %s", rec.get("identifier"), e)
             continue
-        results.append({
-            "identifier": rec.get("identifier"),
-            "datestamp": rec.get("datestamp"),
-            "set_spec": rec.get("set_spec", []),
-            "pivot_id": pivot_id,
-            "source_format": source_format,
-            "output": conv.get("json_ld", conv),
-            "field_rules": conv.get("field_rules", []),
-            "missing_fields": conv.get("missing_fields", []),
-            "confidence": conv.get("confidence"),
-            "mapping_source": conv.get("mapping_source"),
-            "model": conv.get("model"),
-        })
+        results.append(
+            {
+                "identifier": rec.get("identifier"),
+                "datestamp": rec.get("datestamp"),
+                "set_spec": rec.get("set_spec", []),
+                "pivot_id": pivot_id,
+                "source_format": source_format,
+                "output": conv.get("json_ld", conv),
+                "field_rules": conv.get("field_rules", []),
+                "missing_fields": conv.get("missing_fields", []),
+                "confidence": conv.get("confidence"),
+                "mapping_source": conv.get("mapping_source"),
+                "model": conv.get("model"),
+            }
+        )
 
     return {"records": results, "total": len(results)}
 
@@ -418,23 +422,23 @@ def get_template_fields(template_id: str):
 @app.post("/convert/arc-export", summary="Convert to ARC RO-Crate format")
 async def convert_to_arc(
     file: UploadFile = File(...),
-    source_format: str = Form("auto"),
-    pivot_id: str = Form("fairagro_searchhub"),
-    batch: bool = Form(False),
-    preview: bool = Form(False)
+    source_format: str = "auto",
+    pivot_id: str = "fairagro_searchhub",
+    batch: bool = False,
+    preview: bool = False,
 ):
     """Convert input file to ARC RO-Crate format with optional batch processing and preview."""
     try:
         # Read file content
         content = await file.read()
-        
+
         # For batch processing, expect a ZIP file
         if batch:
             return await _process_batch_arc_export(content, pivot_id, preview)
-        
+
         # Single file processing
         return await _process_single_arc_export(file, content, source_format, pivot_id, preview)
-        
+
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
     except HTTPException:
@@ -443,7 +447,9 @@ async def convert_to_arc(
         raise HTTPException(status_code=500, detail=f"ARC export failed: {str(e)}")
 
 
-async def _process_single_arc_export(file: UploadFile, content: bytes, source_format: str, pivot_id: str, preview: bool):
+async def _process_single_arc_export(
+    file: UploadFile, content: bytes, source_format: str, pivot_id: str, preview: bool
+):
     """Process single file ARC export."""
     # Detect format if auto
     if source_format == "auto":
@@ -452,128 +458,193 @@ async def _process_single_arc_export(file: UploadFile, content: bytes, source_fo
     # Load using appropriate plugin
     if source_format == "schema_org":
         parsed = schema_org_load(content)
+    elif source_format == "schema_org_arc":
+        parsed = schema_org_arc_load(content)
     elif source_format == "ro_crate":
         parsed = ro_crate_load(content, validate_fairagro=False)
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported source format: {source_format}")
+        # For other formats, try to convert to Schema.org first
+        # This handles the case where users upload files that need to be converted
+        try:
+            parsed = json.loads(content)
+        except (json.JSONDecodeError, ValueError):
+            parsed = {"error": "Unable to parse content"}
 
     # Auto-select template based on content
     if pivot_id == "auto":
         pivot_id = _auto_select_template(parsed)
 
-    # Convert to pivot format
-    converted = engine.convert(parsed, source_format, pivot_id)
-
-    # Convert pivot to ARC RO-Crate
-    arc_content = ro_crate_write(converted["json_ld"])
+    # Convert Schema.org to ARC using the plugin
+    if source_format == "schema_org":
+        try:
+            arc_content = schema_org_arc_write(parsed)
+        except Exception as e:
+            logger.warning("ARCtrl conversion failed, using fallback: %s", e)
+            arc_content = _fallback_convert_to_arc(parsed)
+    else:
+        arc_content = _fallback_convert_to_arc(parsed)
 
     # Validate the generated ARC
-    arc_data = json.loads(arc_content)
+    arc_data = json.loads(arc_content) if isinstance(arc_content, str) else arc_content
     validator = FairagroArcValidator()
     validation = validator.validate(arc_data)
 
     if preview:
         # Return preview with validation info
         return {
-            "preview": json.loads(arc_content),
+            "preview": arc_data,
             "validation": validation,
-            "filename": file.filename.replace('.json', '') + '_arc-ro-crate.json'
+            "filename": file.filename.replace(".json", "") + "_arc-ro-crate.json",
         }
-    
+
     # Return file download
     return Response(
-        content=arc_content,
+        content=json.dumps(arc_content, indent=2) if isinstance(arc_content, dict) else arc_content,
         media_type="application/json",
-        headers={"Content-Disposition": f"attachment; filename={file.filename.replace('.json', '')}_arc-ro-crate.json"}
+        headers={
+            "Content-Disposition": f"attachment; filename={file.filename.replace('.json', '')}_arc-ro-crate.json"
+        },
     )
+
+
+def _fallback_convert_to_arc(parsed_data: dict) -> dict:
+    """
+    Fallback conversion to ARC format from Schema.org Dataset.
+
+    Args:
+        parsed_data: Schema.org Dataset in dict format
+
+    Returns:
+        ARC format dictionary
+    """
+    # Create minimal ARC structure
+    arc_structure = {
+        "@context": {
+            "@vocab": "https://w3id.org/ro/crate/1.1/",
+            "@base": "./",
+        },
+        "@graph": [
+            {
+                "@id": "ro-crate-metadata.json",
+                "@type": "CreativeWork",
+                "conformsTo": "https://w3id.org/ro/crate/1.1",
+                "about": {"@id": "./"},
+            },
+            {
+                "@id": "./",
+                "@type": "Dataset",
+                "name": parsed_data.get("name", "Unknown Dataset"),
+                "description": parsed_data.get("description", ""),
+                "datePublished": parsed_data.get("datePublished", ""),
+                "license": parsed_data.get("license", ""),
+                "keywords": parsed_data.get("keywords", []),
+                "creator": parsed_data.get("creator", []),
+                "author": parsed_data.get("author", []),
+                "contributor": parsed_data.get("contributor", []),
+            },
+        ],
+    }
+
+    # Add publisher if available
+    publisher = parsed_data.get("publisher", {})
+    if publisher:
+        publisher_entry = {
+            "@id": f"publisher_{hash(str(publisher))}",
+            "@type": publisher.get("@type", "Organization"),
+            "name": publisher.get("name", ""),
+        }
+        arc_structure["@graph"].append(publisher_entry)
+        # Link publisher to dataset
+        dataset_entry = next(
+            (entry for entry in arc_structure["@graph"] if entry["@id"] == "./"), None
+        )
+        if dataset_entry:
+            dataset_entry["publisher"] = {"@id": publisher_entry["@id"]}
+
+    return arc_structure
 
 
 async def _process_batch_arc_export(content: bytes, pivot_id: str, preview: bool):
     """Process batch ARC export from ZIP file."""
     results = []
-    
+
     # Create temporary directory for ZIP extraction
     with tempfile.TemporaryDirectory() as temp_dir:
         zip_path = os.path.join(temp_dir, "upload.zip")
         with open(zip_path, "wb") as f:
             f.write(content)
-        
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             # Process each file in the ZIP
             for file_info in zip_ref.infolist():
-                if not file_info.is_dir() and file_info.filename.lower().endswith('.json'):
+                if not file_info.is_dir() and file_info.filename.lower().endswith(".json"):
                     # Read file from ZIP
                     with zip_ref.open(file_info) as file:
                         file_content = file.read()
-                        
+
                     # Create mock UploadFile for processing
-                    mock_file = type('MockUploadFile', (), {
-                        'filename': file_info.filename,
-                        'content_type': 'application/json'
-                    })()
-                    
+                    mock_file = type(
+                        "MockUploadFile",
+                        (),
+                        {"filename": file_info.filename, "content_type": "application/json"},
+                    )()
+
                     # Process single file
                     result = await _process_single_arc_export(
-                        mock_file, 
-                        file_content, 
-                        "auto", 
-                        pivot_id, 
-                        preview
+                        mock_file, file_content, "auto", pivot_id, preview
                     )
-                    
+
                     if preview:
-                        results.append({
-                            "filename": file_info.filename,
-                            "result": result
-                        })
+                        results.append({"filename": file_info.filename, "result": result})
                     else:
-                        results.append({
-                            "filename": file_info.filename,
-                            "arc_filename": file_info.filename.replace('.json', '') + '_arc-ro-crate.json',
-                            "validation": result.headers.get("X-Validation", "{}")
-                        })
-    
+                        results.append(
+                            {
+                                "filename": file_info.filename,
+                                "arc_filename": file_info.filename.replace(".json", "")
+                                + "_arc-ro-crate.json",
+                                "validation": result.headers.get("X-Validation", "{}"),
+                            }
+                        )
+
     if preview:
         return {"batch_preview": results}
-    
+
     # Create ZIP of all ARC files
     output_zip = io.BytesIO()
-    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
         for result in results:
             # Re-process to get actual file content (simplified for demo)
-            arc_content = json.dumps(result["result"]["preview"], indent=2).encode('utf-8')
+            arc_content = json.dumps(result["result"]["preview"], indent=2).encode("utf-8")
             zipf.writestr(result["arc_filename"], arc_content)
-    
+
     output_zip.seek(0)
     return Response(
         content=output_zip.getvalue(),
         media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=arc_export_batch.zip"}
+        headers={"Content-Disposition": "attachment; filename=arc_export_batch.zip"},
     )
 
 
 def _auto_select_template(parsed_data: dict) -> str:
     """Auto-select appropriate ARC template based on content analysis."""
     # Check for agronomy/plant phenotyping indicators
-    if any(key in parsed_data for key in ['crop_species', 'crop_pest', 'organism']):
+    if any(key in parsed_data for key in ["crop_species", "crop_pest", "organism"]):
         return "fairagro_plant_phenotyping"
-    
+
     # Check for genomics indicators
-    if any(key in parsed_data for key in ['sequencing', 'dna', 'rna', 'genome']):
+    if any(key in parsed_data for key in ["sequencing", "dna", "rna", "genome"]):
         return "fairagro_genomics"
-    
+
     # Check for sensor/drone indicators
-    if any(key in parsed_data for key in ['drone', 'sensor', 'measurementTechnique']):
+    if any(key in parsed_data for key in ["drone", "sensor", "measurementTechnique"]):
         return "fairagro_sensor"
-    
+
     # Default to standard FAIRagro template
     return "fairagro_searchhub"
 
 
 @app.post("/arc/validate/fairagro", summary="Validate ARC against FAIRagro template")
-async def validate_arc_fairagro(
-    file: UploadFile = File(...)
-):
+async def validate_arc_fairagro(file: UploadFile = File(...)):
     """Validate ARC file against FAIRagro template."""
     try:
         content = await file.read()
@@ -624,7 +695,12 @@ def detect_format(filename: str, content: bytes) -> str:
                 data = data[0] if data else {}
             ctx = data.get("@context")
             if isinstance(ctx, str) and "schema.org" in ctx:
-                return "schema_org"
+                # Check if it's already an ARC format by looking for RO-Crate context
+                if "ro-crate" in ctx.lower():
+                    return "ro_crate"
+                # For plain Schema.org, we can check for specific fields
+                if "@type" in data and data["@type"] == "Dataset":
+                    return "schema_org"
             if isinstance(ctx, list):
                 ctx_str = " ".join(str(c) for c in ctx)
                 if "ro-crate" in ctx_str.lower() or "ro/crate" in ctx_str.lower():
