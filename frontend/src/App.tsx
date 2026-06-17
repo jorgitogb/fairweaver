@@ -93,7 +93,6 @@ export default function App() {
   });
 
   const convertMutation = (() => {
-    if (sourceFormat === "ro_crate") return pivotMutation;
     if (isFairagroPivot(selectedPivot)) return arcMutation;
     return pivotMutation;
   })();
@@ -113,7 +112,9 @@ export default function App() {
     const fmt = await detectSourceFormat(f);
     setSourceFormat(fmt);
 
-    complianceMutation.mutate(f);
+    if (fmt !== "ro_crate") {
+      complianceMutation.mutate(f);
+    }
   }, [complianceMutation]);
 
 
@@ -196,10 +197,12 @@ export default function App() {
                          sourceFormat === "darwin_core_csv" ? "Darwin Core CSV" :
                          sourceFormat}
                       </span>
-                      <ComplianceBadge
-                        result={complianceResult}
-                        loading={complianceMutation.isPending}
-                      />
+                      {sourceFormat !== "ro_crate" && (
+                        <ComplianceBadge
+                          result={complianceResult}
+                          loading={complianceMutation.isPending}
+                        />
+                      )}
                     </p>
                   )}
                 </section>

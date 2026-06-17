@@ -49,7 +49,9 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://chat-ai.academiccloud.de
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
 
 # ── In-memory ARC record store for OAI-PMH serving ──────────────────────────
-arc_record_store: dict[str, dict] = {}  # oai_identifier → {arc: dict, raw_schema: dict, set_spec: str}
+arc_record_store: dict[
+    str, dict
+] = {}  # oai_identifier → {arc: dict, raw_schema: dict, set_spec: str}
 
 
 def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
@@ -78,7 +80,10 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
                 if isinstance(affil, dict) and affil.get("@id"):
                     org = next((e for e in graph if e.get("@id") == affil["@id"]), None)
                     if org:
-                        entry["affiliation"] = {"@type": "Organization", "name": org.get("name", "")}
+                        entry["affiliation"] = {
+                            "@type": "Organization",
+                            "name": org.get("name", ""),
+                        }
                 authors.append(entry)
 
     # Build keywords as DefinedTerm array
@@ -94,12 +99,18 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
     raw_id = root.get("identifier", "")
     identifiers = []
     if raw_id:
-        prop_id = "https://registry.identifiers.org/registry/doi" if raw_id.startswith("10.") or "doi" in raw_id.lower() else "https://schema.org/url"
-        identifiers.append({
-            "@type": "PropertyValue",
-            "value": raw_id,
-            "propertyID": prop_id,
-        })
+        prop_id = (
+            "https://registry.identifiers.org/registry/doi"
+            if raw_id.startswith("10.") or "doi" in raw_id.lower()
+            else "https://schema.org/url"
+        )
+        identifiers.append(
+            {
+                "@type": "PropertyValue",
+                "value": raw_id,
+                "propertyID": prop_id,
+            }
+        )
 
     result = {
         "@context": {"@language": "en", "@vocab": "https://schema.org/"},
@@ -110,13 +121,15 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
         "license": root.get("license", ""),
         "url": root.get("url", ""),
         "keywords": keywords,
-        "about": [{
-            "@type": "DefinedTerm",
-            "name": "agricultural sciences",
-            "url": "http://aims.fao.org/aos/agrovoc/c_49876",
-            "termCode": "c_49876",
-            "inDefinedTermSet": "http://aims.fao.org/aos/agrovoc",
-        }],
+        "about": [
+            {
+                "@type": "DefinedTerm",
+                "name": "agricultural sciences",
+                "url": "http://aims.fao.org/aos/agrovoc/c_49876",
+                "termCode": "c_49876",
+                "inDefinedTermSet": "http://aims.fao.org/aos/agrovoc",
+            }
+        ],
         "includedInDataCatalog": {
             "@type": "DataCatalog",
             "name": "FAIRweaver Demo",
@@ -202,7 +215,14 @@ DEMO_DATASETS = [
             "identifier": "wheat-omics-full-003",
             "license": "https://spdx.org/licenses/CC-BY-4.0.html",
             "datePublished": "2024-09-20",
-            "keywords": ["wheat", "heat stress", "drought", "multi-omics", "transcriptomics", "metabolomics"],
+            "keywords": [
+                "wheat",
+                "heat stress",
+                "drought",
+                "multi-omics",
+                "transcriptomics",
+                "metabolomics",
+            ],
             "measurementTechnique": "mass spectrometry",
             "funder": "DFG",
             "publisher": {"@type": "Organization", "name": "University of Hohenheim"},
@@ -276,10 +296,21 @@ DEMO_DATASETS = [
             "identifier": "maize-sensor-full-003",
             "license": "https://spdx.org/licenses/CC-BY-4.0.html",
             "datePublished": "2024-11-05",
-            "keywords": ["maize", "UAV", "multispectral", "sensor", "phenotyping", "precision agriculture"],
+            "keywords": [
+                "maize",
+                "UAV",
+                "multispectral",
+                "sensor",
+                "phenotyping",
+                "precision agriculture",
+            ],
             "measurementTechnique": "multispectral imaging",
             "funder": "BMBF",
-            "instrument": {"@type": "Thing", "name": "DJI Phantom 4 Multispectral", "description": "UAV-mounted multispectral sensor"},
+            "instrument": {
+                "@type": "Thing",
+                "name": "DJI Phantom 4 Multispectral",
+                "description": "UAV-mounted multispectral sensor",
+            },
             "publisher": {"@type": "Organization", "name": "Julius Kühn Institute"},
             "url": "https://example.org/datasets/maize-sensor-full-003",
             "version": "3.0",
@@ -569,99 +600,107 @@ def get_schema_org_fields():
                 "label": "Identifier",
                 "description": "Unique identifier for the dataset or investigation",
                 "required": True,
-                "examples": ["dataset-123", "https://doi.org/10.1234/example"]
+                "examples": ["dataset-123", "https://doi.org/10.1234/example"],
             },
             {
                 "name": "name",
                 "label": "Name/Title",
                 "description": "Primary title or name of the dataset",
                 "required": True,
-                "examples": ["Climate Change Dataset", "Wheat Phenotyping Trial 2023"]
+                "examples": ["Climate Change Dataset", "Wheat Phenotyping Trial 2023"],
             },
             {
                 "name": "description",
                 "label": "Description",
                 "description": "Detailed description of the dataset content and purpose",
                 "required": True,
-                "examples": ["Long-term observations of wheat growth under drought conditions", "Genomic sequence data from Arabidopsis thaliana"]
+                "examples": [
+                    "Long-term observations of wheat growth under drought conditions",
+                    "Genomic sequence data from Arabidopsis thaliana",
+                ],
             },
             {
                 "name": "creator",
                 "label": "Creator/Author",
                 "description": "Person or organization responsible for creating the dataset",
                 "required": False,
-                "examples": [{"@type": "Person", "name": "Jane Smith"}, {"@type": "Organization", "name": "Research Institute"}]
+                "examples": [
+                    {"@type": "Person", "name": "Jane Smith"},
+                    {"@type": "Organization", "name": "Research Institute"},
+                ],
             },
             {
                 "name": "identifier",
                 "label": "Identifier",
                 "description": "Persistent identifier for the dataset (often same as @id)",
                 "required": False,
-                "examples": ["dataset-123", "DOI:10.1234/example"]
+                "examples": ["dataset-123", "DOI:10.1234/example"],
             },
             {
                 "name": "datePublished",
                 "label": "Publication Date",
                 "description": "Date when the dataset was published or made available",
                 "required": False,
-                "examples": ["2023-01-15", "2023-02-20T10:30:00Z"]
+                "examples": ["2023-01-15", "2023-02-20T10:30:00Z"],
             },
             {
                 "name": "license",
                 "label": "License",
                 "description": "License governing usage and redistribution of the dataset",
                 "required": False,
-                "examples": ["CC-BY-4.0", "MIT", "Apache-2.0"]
+                "examples": ["CC-BY-4.0", "MIT", "Apache-2.0"],
             },
             {
                 "name": "keywords",
                 "label": "Keywords",
                 "description": "Keywords or tags describing the dataset content",
                 "required": False,
-                "examples": ["climate", "drought", "agriculture", "genomics"]
+                "examples": ["climate", "drought", "agriculture", "genomics"],
             },
             {
                 "name": "publisher",
                 "label": "Publisher",
                 "description": "Publisher or organization that made the dataset available",
                 "required": False,
-                "examples": ["Data Publishers Inc.", "University of Agricultural Research"]
+                "examples": ["Data Publishers Inc.", "University of Agricultural Research"],
             },
             {
                 "name": "url",
                 "label": "URL/Web Page",
                 "description": "URL where more information about the dataset can be found",
                 "required": False,
-                "examples": ["https://example.org/dataset/123", "https://doi.org/10.1234/example"]
+                "examples": ["https://example.org/dataset/123", "https://doi.org/10.1234/example"],
             },
             {
                 "name": "inLanguage",
                 "label": "Language",
                 "description": "Language of the dataset content",
                 "required": False,
-                "examples": ["en", "en-US", "fr"]
+                "examples": ["en", "en-US", "fr"],
             },
             {
                 "name": "version",
                 "label": "Version",
                 "description": "Version identifier of the dataset",
                 "required": False,
-                "examples": ["1.0", "2.1", "beta-3"]
-            }
-        ]
+                "examples": ["1.0", "2.1", "beta-3"],
+            },
+        ],
     }
 
 
-@app.get("/template-fields/{template_id}", summary="Get template field structure for ARC conversion")
+@app.get(
+    "/template-fields/{template_id}", summary="Get template field structure for ARC conversion"
+)
 def get_template_fields(template_id: str):
     """Get template field structure (mandatory vs recommended) for ARC conversion."""
     try:
         # Load the FAIRagro template to extract field structure
         validator = FairagroArcValidator()
-        
+
         # Get the basic template info from existing method
         template_info = validator.get_template_info()
-        
+
         # Return comprehensive field structure for ARC conversion
         return {
             "template_id": template_info["template_id"],
@@ -676,7 +715,7 @@ def get_template_fields(template_id: str):
             "required_entities": template_info["required_entities"],
             "arc_structure": template_info["arc_structure"],
             "required_isa_files": template_info["required_isa_files"],
-            "validation_rules": validator.template.get("validation_rules", [])
+            "validation_rules": validator.template.get("validation_rules", []),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load template fields: {str(e)}")
@@ -726,12 +765,12 @@ async def _process_single_arc_export(
     elif source_format == "ro_crate":
         parsed = ro_crate_load(content, validate_fairagro=False)
     else:
-        # For other formats, try to convert to Schema.org first
-        # This handles the case where users upload files that need to be converted
-        try:
-            parsed = json.loads(content)
-        except (json.JSONDecodeError, ValueError):
-            parsed = {"error": "Unable to parse content"}
+        # Unsupported format for arc-export (e.g. oai_dc, csv, xlsx)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Format '{source_format}' is not supported for ARC export. "
+            f"Supported formats: schema_org, ro_crate",
+        )
 
     # Auto-select template based on content
     if pivot_id == "auto":
@@ -800,21 +839,34 @@ def _fallback_convert_to_arc(source: dict) -> dict:
     graph = []
 
     # RO-Crate metadata descriptor
-    graph.append({
-        "@id": "ro-crate-metadata.json",
-        "@type": "CreativeWork",
-        "conformsTo": "https://w3id.org/ro/crate/1.1",
-        "about": {"@id": "./"},
-    })
+    graph.append(
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "conformsTo": "https://w3id.org/ro/crate/1.1",
+            "about": {"@id": "./"},
+        }
+    )
 
     # Determine available field groups
-    has_recommended = any(k in source for k in ("keywords", "publisher", "url", "version", "inLanguage", "alternateName"))
-    has_full = any(k in source for k in ("measurementTechnique", "about", "instrument", "funder", "distribution"))
+    has_recommended = any(
+        k in source
+        for k in ("keywords", "publisher", "url", "version", "inLanguage", "alternateName")
+    )
+    has_full = any(
+        k in source
+        for k in ("measurementTechnique", "about", "instrument", "funder", "distribution")
+    )
 
     # Helper: extract person ID
     def _person_id(p):
         if isinstance(p, dict):
-            return "#" + p.get("familyName", "Person") + "_" + p.get("givenName", "Unknown").replace(" ", "_")
+            return (
+                "#"
+                + p.get("familyName", "Person")
+                + "_"
+                + p.get("givenName", "Unknown").replace(" ", "_")
+            )
         return "#Person"
 
     # ── Root / Investigation ──
@@ -834,14 +886,16 @@ def _fallback_convert_to_arc(source: dict) -> dict:
     if creator and isinstance(creator, dict):
         pid = _person_id(creator)
         inv["creator"] = [{"@id": pid}]
-        graph.append({
-            "@id": pid,
-            "@type": "Person",
-            "givenName": creator.get("givenName", ""),
-            "familyName": creator.get("familyName", ""),
-            "name": creator.get("name", ""),
-            "email": creator.get("email", ""),
-        })
+        graph.append(
+            {
+                "@id": pid,
+                "@type": "Person",
+                "givenName": creator.get("givenName", ""),
+                "familyName": creator.get("familyName", ""),
+                "name": creator.get("name", ""),
+                "email": creator.get("email", ""),
+            }
+        )
         if "affiliation" in creator:
             aff = creator["affiliation"]
             if isinstance(aff, dict) and aff.get("name"):
@@ -867,18 +921,25 @@ def _fallback_convert_to_arc(source: dict) -> dict:
             inv["alternative_titles"] = [source["alternateName"]]
     if has_full:
         funder_val = source.get("funder")
-        inv["funder"] = funder_val if isinstance(funder_val, str) else (funder_val.get("name", "") if isinstance(funder_val, dict) else "")
+        inv["funder"] = (
+            funder_val
+            if isinstance(funder_val, str)
+            else (funder_val.get("name", "") if isinstance(funder_val, dict) else "")
+        )
         if creator and isinstance(creator, dict):
             inv["investigationContacts"] = [{"@id": pid}]
         citation = source.get("citation")
         if isinstance(citation, dict) and citation.get("identifier"):
             pub_id = "#Publication_1"
             inv["investigationPublications"] = [{"@id": pub_id}]
-            graph.append({
-                "@id": pub_id, "@type": "ScholarlyArticle",
-                "name": citation.get("name", ""),
-                "identifier": citation.get("identifier", ""),
-            })
+            graph.append(
+                {
+                    "@id": pub_id,
+                    "@type": "ScholarlyArticle",
+                    "name": citation.get("name", ""),
+                    "identifier": citation.get("identifier", ""),
+                }
+            )
     graph.append(inv)
 
     # ── Study ──
@@ -924,22 +985,26 @@ def _fallback_convert_to_arc(source: dict) -> dict:
     if isinstance(instr, dict) and instr.get("name"):
         instr_id = "#Instrument_1"
         assay["instrument"] = [{"@id": instr_id}]
-        graph.append({
-            "@id": instr_id,
-            "@type": instr.get("additionalType", "Thing"),
-            "name": instr["name"],
-            "description": instr.get("description", ""),
-        })
+        graph.append(
+            {
+                "@id": instr_id,
+                "@type": instr.get("additionalType", "Thing"),
+                "name": instr["name"],
+                "description": instr.get("description", ""),
+            }
+        )
     graph.append(assay)
     study["hasPart"].append({"@id": assay_id})
 
     # Required DataPLANT ARC metadata file entity
-    graph.append({
-        "@id": "isa.investigation.xlsx",
-        "@type": "File",
-        "name": "ISA Investigation Metadata",
-        "description": "Required ISA investigation metadata file for DataPLANT ARC compliance",
-    })
+    graph.append(
+        {
+            "@id": "isa.investigation.xlsx",
+            "@type": "File",
+            "name": "ISA Investigation Metadata",
+            "description": "Required ISA investigation metadata file for DataPLANT ARC compliance",
+        }
+    )
 
     return {
         "@context": ["https://w3id.org/ro/crate/1.1/context", {"@vocab": "https://schema.org/"}],
@@ -1058,7 +1123,9 @@ async def list_oai_sets(req: ListSetsRequest):
 
 
 def _oai_xml_escape(text: str) -> str:
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    return (
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    )
 
 
 def _oai_response(verb: str, content: str) -> str:
@@ -1066,7 +1133,7 @@ def _oai_response(verb: str, content: str) -> str:
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-  <responseDate>{__import__('datetime').datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')}</responseDate>
+  <responseDate>{__import__("datetime").datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}</responseDate>
   <request verb="{verb}">{_oai_xml_escape(_oai_base_url)}</request>
 {content}
 </OAI-PMH>"""
@@ -1100,7 +1167,7 @@ def _oai_error(code: str, message: str) -> str:
 <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-  <responseDate>{__import__('datetime').datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')}</responseDate>
+  <responseDate>{__import__("datetime").datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}</responseDate>
   <request>{_oai_xml_escape(_oai_base_url)}</request>
   <error code="{code}">{_oai_xml_escape(message)}</error>
 </OAI-PMH>"""
@@ -1145,7 +1212,9 @@ async def oai_pmh_server(
       <metadataNamespace>https://fairagro.net/oai/fairagro_arc</metadataNamespace>
     </metadataFormat>
   </ListMetadataFormats>"""
-        return Response(content=_oai_response("ListMetadataFormats", content), media_type="application/xml")
+        return Response(
+            content=_oai_response("ListMetadataFormats", content), media_type="application/xml"
+        )
 
     if verb == "ListSets":
         sets_seen = set()
@@ -1171,7 +1240,9 @@ async def oai_pmh_server(
     if verb in ("ListRecords", "ListIdentifiers"):
         if metadataPrefix != "fairagro_arc":
             return Response(
-                content=_oai_error("cannotDisseminateFormat", f"Format '{metadataPrefix}' not supported"),
+                content=_oai_error(
+                    "cannotDisseminateFormat", f"Format '{metadataPrefix}' not supported"
+                ),
                 media_type="application/xml",
                 status_code=400,
             )
@@ -1207,7 +1278,9 @@ async def oai_pmh_server(
             )
         if metadataPrefix != "fairagro_arc":
             return Response(
-                content=_oai_error("cannotDisseminateFormat", f"Format '{metadataPrefix}' not supported"),
+                content=_oai_error(
+                    "cannotDisseminateFormat", f"Format '{metadataPrefix}' not supported"
+                ),
                 media_type="application/xml",
                 status_code=400,
             )
@@ -1252,7 +1325,9 @@ def _schema_org_to_fairagro_keys(data: dict) -> set:
     # Schema.org → FAIRagro semantic mappings
     if "about.name" in flat:
         keys.add("crop_species")
-    if "about.sameAs" in flat or ("about" in flat and isinstance(data.get("about"), dict) and data["about"].get("@id")):
+    if "about.sameAs" in flat or (
+        "about" in flat and isinstance(data.get("about"), dict) and data["about"].get("@id")
+    ):
         keys.add("crop_species_uri")
     if "instrument.name" in flat:
         keys.add("sensorType")
@@ -1282,17 +1357,31 @@ async def classify_compliance(file: UploadFile = File(...)):
 
     # FAIRagro template field groups
     basic_fields = {
-        "name", "description", "creator", "identifier",
-        "license", "datePublished",
+        "name",
+        "description",
+        "creator",
+        "identifier",
+        "license",
+        "datePublished",
     }
     recommended_fields = {
-        "keywords", "publisher", "url", "inLanguage", "version",
-        "investigationIdentifier", "alternative_titles",
+        "keywords",
+        "publisher",
+        "url",
+        "inLanguage",
+        "version",
+        "investigationIdentifier",
+        "alternative_titles",
     }
     full_fields = {
         "measurementTechnique",
-        "crop_species", "crop_species_uri", "crop_pest", "crop_pest_uri",
-        "sensorType", "funder", "distribution",
+        "crop_species",
+        "crop_species_uri",
+        "crop_pest",
+        "crop_pest_uri",
+        "sensorType",
+        "funder",
+        "distribution",
         "investigationPublications",
     }
 

@@ -1,0 +1,1536 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    {
+      "Sample": "https://bioschemas.org/Sample",
+      "additionalProperty": "http://schema.org/additionalProperty",
+      "intendedUse": "https://bioschemas.org/intendedUse",
+      "computationalTool": "https://bioschemas.org/computationalTool",
+      "labEquipment": "https://bioschemas.org/labEquipment",
+      "reagent": "https://bioschemas.org/reagent",
+      "LabProtocol": "https://bioschemas.org/LabProtocol",
+      "executesLabProtocol": "https://bioschemas.org/executesLabProtocol",
+      "parameterValue": "https://bioschemas.org/parameterValue",
+      "LabProcess": "https://bioschemas.org/LabProcess",
+      "measurementMethod": "http://schema.org/measurementMethod"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "#Organization_Leibniz_Institute_of_Plant_Genetics_and_Crop_Plant_Research_(IPK)_Gatersleben",
+      "@type": "Organization",
+      "name": "Leibniz Institute of Plant Genetics and Crop Plant Research (IPK) Gatersleben"
+    },
+    {
+      "@id": "https://bioregistry.io/EFO:EFO_0009737",
+      "@type": "DefinedTerm",
+      "name": "data curator",
+      "termCode": "https://bioregistry.io/EFO:EFO_0009737"
+    },
+    {
+      "@id": "http://orcid.org/0000-0002-9735-9946",
+      "@type": "Person",
+      "givenName": "Norman",
+      "affiliation": {
+        "@id": "#Organization_Leibniz_Institute_of_Plant_Genetics_and_Crop_Plant_Research_(IPK)_Gatersleben"
+      },
+      "email": "philipp@ipk-gatersleben.de",
+      "familyName": "Philipp",
+      "jobTitle": {
+        "@id": "https://bioregistry.io/EFO:EFO_0009737"
+      },
+      "address": "Corrensstrasse 3, 06466 Stadt Seeland, OT Gatersleben, Germany"
+    },
+    {
+      "@id": "#CharacteristicValue_Organism_Triticum_aestivum",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Organism",
+      "value": "Triticum aestivum",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0041",
+      "valueReference": "http://purl.obolibrary.org/obo/NCBITAXON_4565",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 10",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/10",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/10",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_United_States",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "United States",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_Group",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material Group",
+      "columnIndex": "4"
+    },
+    {
+      "@id": "#Source_Plant_1",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_1",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/10"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_United_States"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Material_Material_1",
+      "@type": "Sample",
+      "additionalType": "Material",
+      "name": "Material_1"
+    },
+    {
+      "@id": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000164",
+      "@type": "DefinedTerm",
+      "name": "plant growth protocol",
+      "termCode": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000164"
+    },
+    {
+      "@id": "#Protocol_Growth",
+      "@type": "LabProtocol",
+      "intendedUse": {
+        "@id": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000164"
+      }
+    },
+    {
+      "@id": "#ParameterValue_sowing_date_22.10.1945",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "sowing date",
+      "value": "22.10.1945",
+      "propertyID": "http://purl.obolibrary.org/obo/C_16208",
+      "columnIndex": "5"
+    },
+    {
+      "@id": "#Process_Growth_0",
+      "@type": "LabProcess",
+      "name": "Growth_0",
+      "object": {
+        "@id": "#Source_Plant_1"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_100",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 100",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/100",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/100",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_Sweden",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "Sweden",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_2",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_2",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_100"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/100"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_Sweden"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_1",
+      "@type": "LabProcess",
+      "name": "Growth_1",
+      "object": {
+        "@id": "#Source_Plant_2"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1000",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/1000",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_Germany",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "Germany",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_3",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_3",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_100"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1000"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_Germany"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_2",
+      "@type": "LabProcess",
+      "name": "Growth_2",
+      "object": {
+        "@id": "#Source_Plant_3"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10003",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 10003",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/9975",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/9975",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_French_Republic",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "French Republic",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_4",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_4",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10003"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/9975"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_French_Republic"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_3",
+      "@type": "LabProcess",
+      "name": "Growth_3",
+      "object": {
+        "@id": "#Source_Plant_4"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1001",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 1001",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1001",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/1001",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_The_Netherlands",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "The Netherlands",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_5",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_5",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1001"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1001"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_The_Netherlands"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_4",
+      "@type": "LabProcess",
+      "name": "Growth_4",
+      "object": {
+        "@id": "#Source_Plant_5"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1002",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 1002",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1002",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/1002",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#Source_Plant_6",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_6",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1002"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1002"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_Germany"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_5",
+      "@type": "LabProcess",
+      "name": "Growth_5",
+      "object": {
+        "@id": "#Source_Plant_6"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10026",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 10026",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/9998",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/9998",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_[Former]_Union_of_Soviet_Socialist_Republics",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "[Former] Union of Soviet Socialist Republics",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_7",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_7",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10026"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/9998"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_[Former]_Union_of_Soviet_Socialist_Republics"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_6",
+      "@type": "LabProcess",
+      "name": "Growth_6",
+      "object": {
+        "@id": "#Source_Plant_7"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1003",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 1003",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1003",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/1003",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#Source_Plant_8",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_8",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1003"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1003"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_Germany"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_7",
+      "@type": "LabProcess",
+      "name": "Growth_7",
+      "object": {
+        "@id": "#Source_Plant_8"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10049",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 10049",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/10021",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/10021",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_Origin_Country_United_Kingdom",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Origin Country",
+      "value": "United Kingdom",
+      "valueReference": "https://bioregistry.io/NCIT:C17234",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Source_Plant_9",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_9",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_10049"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/10021"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_United_Kingdom"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_8",
+      "@type": "LabProcess",
+      "name": "Growth_8",
+      "object": {
+        "@id": "#Source_Plant_9"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1005",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source ID (Holding institute/stock centre, accession)",
+      "value": "TRI 1005",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0050",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1005",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Material source DOI",
+      "value": "10.25642/IPK/GBIS/1005",
+      "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0051",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#Source_Plant_10",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Plant_10",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism_Triticum_aestivum"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_ID_(Holding_institute/stock_centre,_accession)_TRI_1005"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_source_DOI_10.25642/IPK/GBIS/1005"
+        },
+        {
+          "@id": "#CharacteristicValue_Origin_Country_French_Republic"
+        },
+        {
+          "@id": "#CharacteristicValue_Material_Group"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Growth_9",
+      "@type": "LabProcess",
+      "name": "Growth_9",
+      "object": {
+        "@id": "#Source_Plant_10"
+      },
+      "result": {
+        "@id": "#Material_Material_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Growth"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_sowing_date_22.10.1945"
+      }
+    },
+    {
+      "@id": "studies/s_winter_wheat/",
+      "@type": "Dataset",
+      "additionalType": "Study",
+      "identifier": "s_winter_wheat",
+      "dateModified": "2025-06-19T13:32:22.1906871",
+      "hasPart": [],
+      "about": [
+        {
+          "@id": "#Process_Growth_0"
+        },
+        {
+          "@id": "#Process_Growth_1"
+        },
+        {
+          "@id": "#Process_Growth_2"
+        },
+        {
+          "@id": "#Process_Growth_3"
+        },
+        {
+          "@id": "#Process_Growth_4"
+        },
+        {
+          "@id": "#Process_Growth_5"
+        },
+        {
+          "@id": "#Process_Growth_6"
+        },
+        {
+          "@id": "#Process_Growth_7"
+        },
+        {
+          "@id": "#Process_Growth_8"
+        },
+        {
+          "@id": "#Process_Growth_9"
+        }
+      ]
+    },
+    {
+      "@id": "assays/a_winter_wheat/dataset/",
+      "@type": "File",
+      "name": "assays/a_winter_wheat/dataset/"
+    },
+    {
+      "@id": "https://bioregistry.io/NCIT:C45255",
+      "@type": "DefinedTerm",
+      "name": "Integer",
+      "termCode": "https://bioregistry.io/NCIT:C45255"
+    },
+    {
+      "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2",
+      "@type": "File",
+      "name": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2",
+      "encodingFormat": "text/csv",
+      "usageInfo": "https://datatracker.ietf.org/doc/html/rfc7111",
+      "about": {
+        "@id": "#Descriptor_assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+      },
+      "pattern": {
+        "@id": "https://bioregistry.io/NCIT:C45255"
+      }
+    },
+    {
+      "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=3",
+      "@type": "File",
+      "name": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=3",
+      "encodingFormat": "text/csv",
+      "usageInfo": "https://datatracker.ietf.org/doc/html/rfc7111"
+    },
+    {
+      "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv",
+      "@type": "File",
+      "name": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv",
+      "encodingFormat": "text/csv",
+      "hasPart": [
+        {
+          "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+        },
+        {
+          "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+        },
+        {
+          "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=3"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Material_1",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Material_1"
+    },
+    {
+      "@id": "#Sample_Harvested_1",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Harvested_1"
+    },
+    {
+      "@id": "https://bioregistry.io/NCIT:C37963",
+      "@type": "DefinedTerm",
+      "name": "Harvest Procedure",
+      "termCode": "https://bioregistry.io/NCIT:C37963"
+    },
+    {
+      "@id": "#Protocol_Harvest",
+      "@type": "LabProtocol",
+      "intendedUse": [
+        {
+          "@id": "#OA_"
+        },
+        {
+          "@id": "https://bioregistry.io/NCIT:C37963"
+        }
+      ]
+    },
+    {
+      "@id": "#ParameterValue_Year_1946",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "Year",
+      "value": "1946",
+      "propertyID": "https://bioregistry.io/NCIT:C29848",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#Process_Harvest_0",
+      "@type": "LabProcess",
+      "name": "Harvest_0",
+      "object": {
+        "@id": "#Sample_Material_1"
+      },
+      "result": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year_1946"
+      }
+    },
+    {
+      "@id": "#Sample_Material_2",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Material_2"
+    },
+    {
+      "@id": "#Sample_Harvested_2",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Harvested_2"
+    },
+    {
+      "@id": "#Process_Harvest_1",
+      "@type": "LabProcess",
+      "name": "Harvest_1",
+      "object": {
+        "@id": "#Sample_Material_2"
+      },
+      "result": {
+        "@id": "#Sample_Harvested_2"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year_1946"
+      }
+    },
+    {
+      "@id": "#Sample_",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": ""
+    },
+    {
+      "@id": "#OA_",
+      "@type": "DefinedTerm",
+      "name": ""
+    },
+    {
+      "@id": "#ParameterValue_Year",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "Year",
+      "propertyID": "https://bioregistry.io/NCIT:C29848",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#Process_Harvest_2",
+      "@type": "LabProcess",
+      "name": "Harvest_2",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_3",
+      "@type": "LabProcess",
+      "name": "Harvest_3",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_4",
+      "@type": "LabProcess",
+      "name": "Harvest_4",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_5",
+      "@type": "LabProcess",
+      "name": "Harvest_5",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_6",
+      "@type": "LabProcess",
+      "name": "Harvest_6",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_7",
+      "@type": "LabProcess",
+      "name": "Harvest_7",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_8",
+      "@type": "LabProcess",
+      "name": "Harvest_8",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "#Process_Harvest_9",
+      "@type": "LabProcess",
+      "name": "Harvest_9",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Harvest"
+      },
+      "parameterValue": {
+        "@id": "#ParameterValue_Year"
+      }
+    },
+    {
+      "@id": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000224",
+      "@type": "DefinedTerm",
+      "name": "phenotyping",
+      "termCode": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000224"
+    },
+    {
+      "@id": "#Protocol_Phenotyping",
+      "@type": "LabProtocol",
+      "intendedUse": [
+        {
+          "@id": "#OA_"
+        },
+        {
+          "@id": "http://purl.org/nfdi4plants/ontology/dpbo/DPBO_1000224"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Phenotyping_0",
+      "@type": "LabProcess",
+      "name": "Phenotyping_0",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_1",
+      "@type": "LabProcess",
+      "name": "Phenotyping_1",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=3"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_2",
+      "@type": "LabProcess",
+      "name": "Phenotyping_2",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_3",
+      "@type": "LabProcess",
+      "name": "Phenotyping_3",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_4",
+      "@type": "LabProcess",
+      "name": "Phenotyping_4",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_5",
+      "@type": "LabProcess",
+      "name": "Phenotyping_5",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_6",
+      "@type": "LabProcess",
+      "name": "Phenotyping_6",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_7",
+      "@type": "LabProcess",
+      "name": "Phenotyping_7",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_8",
+      "@type": "LabProcess",
+      "name": "Phenotyping_8",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Process_Phenotyping_9",
+      "@type": "LabProcess",
+      "name": "Phenotyping_9",
+      "object": {
+        "@id": "#Sample_"
+      },
+      "result": {
+        "@id": "assays/a_winter_wheat/dataset/"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Phenotyping"
+      }
+    },
+    {
+      "@id": "#Sample_Regenerated_1",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Regenerated_1"
+    },
+    {
+      "@id": "#OA_Seed_Regeneration",
+      "@type": "DefinedTerm",
+      "name": "Seed Regeneration"
+    },
+    {
+      "@id": "#Protocol_Seed_Regeneration",
+      "@type": "LabProtocol",
+      "description": [
+        "",
+        "Yearly genbank seed regeneration"
+      ],
+      "intendedUse": [
+        {
+          "@id": "#OA_"
+        },
+        {
+          "@id": "#OA_Seed_Regeneration"
+        }
+      ]
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_0",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_0",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_Regenerated_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_1",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_1",
+      "object": {
+        "@id": "#Sample_Harvested_2"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Sample_Harvested_3",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Harvested_3"
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_2",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_2",
+      "object": {
+        "@id": "#Sample_Harvested_3"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_3",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_3",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_4",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_4",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_5",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_5",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_6",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_6",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_7",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_7",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_8",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_8",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Process_Seed_Regeneration_9",
+      "@type": "LabProcess",
+      "name": "Seed Regeneration_9",
+      "object": {
+        "@id": "#Sample_Harvested_1"
+      },
+      "result": {
+        "@id": "#Sample_"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_Seed_Regeneration"
+      }
+    },
+    {
+      "@id": "#Descriptor_assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2",
+      "@type": "PropertyValue",
+      "name": "FragmentDescriptor",
+      "value": "plant height",
+      "propertyID": "https://github.com/nfdi4plants/ARC-specification/blob/dev/ISA-XLSX.md#datamap-table-sheets",
+      "unitCode": "https://bioregistry.io/UO:0000015",
+      "unitText": "centimeter",
+      "valueReference": "https://bioregistry.io/TO:0000207",
+      "subjectOf": {
+        "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+      }
+    },
+    {
+      "@id": "assays/a_winter_wheat/",
+      "@type": "Dataset",
+      "additionalType": "Assay",
+      "identifier": "a_winter_wheat",
+      "hasPart": [
+        {
+          "@id": "assays/a_winter_wheat/dataset/"
+        },
+        {
+          "@id": "assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv"
+        }
+      ],
+      "about": [
+        {
+          "@id": "#Process_Harvest_0"
+        },
+        {
+          "@id": "#Process_Harvest_1"
+        },
+        {
+          "@id": "#Process_Harvest_2"
+        },
+        {
+          "@id": "#Process_Harvest_3"
+        },
+        {
+          "@id": "#Process_Harvest_4"
+        },
+        {
+          "@id": "#Process_Harvest_5"
+        },
+        {
+          "@id": "#Process_Harvest_6"
+        },
+        {
+          "@id": "#Process_Harvest_7"
+        },
+        {
+          "@id": "#Process_Harvest_8"
+        },
+        {
+          "@id": "#Process_Harvest_9"
+        },
+        {
+          "@id": "#Process_Phenotyping_0"
+        },
+        {
+          "@id": "#Process_Phenotyping_1"
+        },
+        {
+          "@id": "#Process_Phenotyping_2"
+        },
+        {
+          "@id": "#Process_Phenotyping_3"
+        },
+        {
+          "@id": "#Process_Phenotyping_4"
+        },
+        {
+          "@id": "#Process_Phenotyping_5"
+        },
+        {
+          "@id": "#Process_Phenotyping_6"
+        },
+        {
+          "@id": "#Process_Phenotyping_7"
+        },
+        {
+          "@id": "#Process_Phenotyping_8"
+        },
+        {
+          "@id": "#Process_Phenotyping_9"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_0"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_1"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_2"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_3"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_4"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_5"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_6"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_7"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_8"
+        },
+        {
+          "@id": "#Process_Seed_Regeneration_9"
+        }
+      ],
+      "variableMeasured": {
+        "@id": "#Descriptor_assays/a_winter_wheat/dataset/./assays/a_winter_wheat/dataset/traits.csv#col=2"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "additionalType": "Investigation",
+      "identifier": "Norman_ARC",
+      "creator": {
+        "@id": "http://orcid.org/0000-0002-9735-9946"
+      },
+      "datePublished": "2025-06-19T13:32:22.1958797",
+      "description": "This dataset comprises records collected during the seed regeneration routine of the wheat collection hosted at the Leibniz Institute of Plant Genetics and Crop Plant Research (IPK)",
+      "hasPart": [
+        {
+          "@id": "studies/s_winter_wheat/"
+        },
+        {
+          "@id": "assays/a_winter_wheat/"
+        }
+      ],
+      "name": "Historical phenotypic data from seven decades of seed regeneration in a wheat ex situ collection hosted at the Leibniz Institute of Plant Genetics and Crop Plant Research (IPK)",
+      "license": "ALL RIGHTS RESERVED BY THE AUTHORS"
+    },
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      },
+      "about": {
+        "@id": "./"
+      }
+    }
+  ]
+}

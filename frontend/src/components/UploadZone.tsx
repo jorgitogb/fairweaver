@@ -36,7 +36,7 @@ export default function UploadZone({
       onDrop,
       accept: ACCEPTED,
       maxFiles: 1,
-      maxSize: 10 * 1024 * 1024,
+      maxSize: 500 * 1024 * 1024,
       disabled,
     });
 
@@ -61,7 +61,7 @@ export default function UploadZone({
           <p className="text-slate-600 font-medium mb-1">
             Drag & drop a metadata file, or click to browse
           </p>
-          <p className="text-slate-400 text-sm">Schema.org, ARC RO-Crate, ISA-JSON, DataCite, OAI-PMH, Darwin Core · Max 10 MB</p>
+          <p className="text-slate-400 text-sm">Schema.org, ARC RO-Crate, ISA-JSON, DataCite, OAI-PMH, Darwin Core · Max 500 MB</p>
         </>
       )}
       <div className="mt-4 flex flex-wrap justify-center gap-2">

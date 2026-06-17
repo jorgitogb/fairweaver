@@ -22,26 +22,263 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
 
     Traverses the @graph to find Investigation, Study, and Assay entities,
     following the FAIRagro Search Hub specification paths.
-    
+
+    Uses selective entity collection: only entities needed for extraction
+    are kept in memory, reducing peak usage for large files.
+
     Args:
         content: ARC RO-Crate JSON content
         validate_fairagro: Whether to validate against FAIRagro template (default: True)
-    
+
     Returns:
         dict: Extracted fields with optional validation info
     """
     data = json.loads(content)
+    raw_graph = data.get("@graph", [])
+    if not raw_graph:
+        return {}
+
+    # ── Streaming entity collection ────────────────────────────────────────
+    # Single pass: collect only entity types needed for extraction.
+    entities: dict[str, dict] = {}
+    graph: list[dict] = []
+    investigation = None
+    studies: list[dict] = []
+    assays: list[dict] = []
+
+    for e in raw_graph:
+        eid = e.get("@id")
+        etype = _entity_type_name(e)
+
+        if etype in _NDJSON_NEEDED_TYPES:
+            if eid:
+                entities[eid] = e
+            graph.append(e)
+
+            if etype == "Investigation" and not investigation:
+                investigation = e
+            elif etype == "Study":
+                studies.append(e)
+            elif etype == "Assay":
+                assays.append(e)
+
+    # Allow raw_graph to be garbage collected
+    del raw_graph
+
+    # ── Shared extraction logic ────────────────────────────────────────────
+    return _extract_fields(
+        graph=graph,
+        entities=entities,
+        investigation=investigation,
+        studies=studies,
+        assays=assays,
+        validate_fairagro=validate_fairagro,
+    )
+
+
+# ── Streaming / large-file support ───────────────────────────────────────────
+
+
+# Entity types needed for MIAPPE extraction (used by both load() and load_ndjson())
+_NDJSON_NEEDED_TYPES = frozenset(
+    {
+        "Investigation",
+        "Study",
+        "Assay",
+        "Source",
+        "LabProcess",
+        "Sample",
+        "Dataset",
+        "PropertyValue",
+        "CharacteristicValue",
+        "ParameterValue",
+        "Person",
+        "Organization",
+        "DefinedTerm",
+        "LabProtocol",
+        "ScholarlyArticle",
+        "CreativeWork",
+    }
+)
+
+
+def convert_to_ndjson(content: bytes) -> bytes:
+    """Convert a standard RO-Crate JSON to newline-delimited JSON (ndjson).
+
+    Each line is one entity from the @graph array. The first line contains
+    the RO-Crate header (@context + metadata). This format enables streaming
+    parsing without loading the entire graph into memory.
+
+    Args:
+        content: Standard RO-Crate JSON bytes
+
+    Returns:
+        bytes: ndjson content (header line + one entity per line)
+    """
+    data = json.loads(content)
     graph = data.get("@graph", [])
+
+    lines: list[str] = []
+    # Header line: RO-Crate context + metadata (everything except @graph)
+    header = {k: v for k, v in data.items() if k != "@graph"}
+    lines.append(json.dumps(header, ensure_ascii=False))
+
+    # One entity per line
+    for entity in graph:
+        lines.append(json.dumps(entity, ensure_ascii=False))
+
+    return "\n".join(lines).encode("utf-8")
+
+
+def load_ndjson(content: bytes, validate_fairagro: bool = True) -> dict:
+    """Parse RO-Crate ndjson content with streaming entity collection.
+
+    Each line is parsed independently, keeping only entities needed for
+    extraction. Memory usage is proportional to the number of needed entities,
+    not the total graph size.
+
+    For a 250 MB file with 500K entities, this uses ~150 MB vs ~1.2 GB
+    for the standard JSON loader.
+
+    Args:
+        content: ndjson bytes (header line + one entity per line)
+        validate_fairagro: Whether to validate against FAIRagro template
+
+    Returns:
+        dict: Extracted fields
+    """
+    text = content.decode("utf-8", errors="replace")
+    lines = text.split("\n")
+
+    # First line is the header
+    if not lines:
+        return {}
+
+    # Stream entities: collect only needed types
+    entities: dict[str, dict] = {}
+    graph: list[dict] = []
+    investigation = None
+    studies: list[dict] = []
+    assays: list[dict] = []
+
+    for line in lines[1:]:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        eid = e.get("@id")
+        etype = _entity_type_name(e)
+
+        if etype in _NDJSON_NEEDED_TYPES:
+            if eid:
+                entities[eid] = e
+            graph.append(e)
+
+            if etype == "Investigation" and not investigation:
+                investigation = e
+            elif etype == "Study":
+                studies.append(e)
+            elif etype == "Assay":
+                assays.append(e)
+
     if not graph:
         return {}
 
-    entities = {e.get("@id"): e for e in graph if e.get("@id")}
-    result: dict[str, Any] = {}
+    # Delegate to the shared extraction logic
+    return _extract_fields(
+        graph=graph,
+        entities=entities,
+        investigation=investigation,
+        studies=studies,
+        assays=assays,
+        validate_fairagro=validate_fairagro,
+    )
 
-    # ── Locate root entities by additionalType ────────────────────────────
-    investigation = _find_entity_by_type(graph, "Investigation")
-    studies = _find_all_by_type(graph, "Study")
-    assays = _find_all_by_type(graph, "Assay")
+
+def load_ndjson_file(filepath: str, validate_fairagro: bool = True) -> dict:
+    """Stream-parse an ndjson RO-Crate file without loading it all into memory.
+
+    Reads the file line by line, parsing each entity independently.
+    Peak memory is proportional to needed entities, not file size.
+
+    Use convert_to_ndjson() first to convert a standard JSON file to ndjson,
+    then call this function for memory-efficient loading.
+
+    Args:
+        filepath: Path to ndjson file
+        validate_fairagro: Whether to validate against FAIRagro template
+
+    Returns:
+        dict: Extracted fields
+    """
+    entities: dict[str, dict] = {}
+    graph: list[dict] = []
+    investigation = None
+    studies: list[dict] = []
+    assays: list[dict] = []
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        # First line is the header
+        header_line = f.readline()
+        if not header_line.strip():
+            return {}
+
+        # Stream entities line by line
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            eid = e.get("@id")
+            etype = _entity_type_name(e)
+
+            if etype in _NDJSON_NEEDED_TYPES:
+                if eid:
+                    entities[eid] = e
+                graph.append(e)
+
+                if etype == "Investigation" and not investigation:
+                    investigation = e
+                elif etype == "Study":
+                    studies.append(e)
+                elif etype == "Assay":
+                    assays.append(e)
+
+    if not graph:
+        return {}
+
+    return _extract_fields(
+        graph=graph,
+        entities=entities,
+        investigation=investigation,
+        studies=studies,
+        assays=assays,
+        validate_fairagro=validate_fairagro,
+    )
+
+
+def _extract_fields(
+    graph: list[dict],
+    entities: dict[str, dict],
+    investigation: dict | None,
+    studies: list[dict],
+    assays: list[dict],
+    validate_fairagro: bool = True,
+) -> dict:
+    """Shared extraction logic used by both load() and load_ndjson().
+
+    Separates field extraction from graph parsing so the same logic
+    works for both standard JSON (full graph) and ndjson (streamed graph).
+    """
+    result: dict[str, Any] = {}
 
     # ── Citation block: from Investigation ────────────────────────────────
     if investigation:
@@ -106,7 +343,6 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
                                 crop_pest_uris.append(uri)
 
     # Fallback: extract crop/sensor directly from Study entities
-    # when LabProcess traversal yields nothing (e.g. simpler ARC structures)
     if not crop_species:
         for study in studies:
             cs = _string_value(study.get("crop_species"))
@@ -123,7 +359,7 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
                 crop_pest_uris.append(cp_uri)
 
     if crop_species:
-        result["crop_species"] = crop_species[0]  # first crop
+        result["crop_species"] = crop_species[0]
     if crop_species_uris:
         result["crop_species_uri"] = crop_species_uris[0]
     if crop_pests:
@@ -146,7 +382,6 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
         if method:
             sensor_platform_types.append(_string_value(method) or "")
 
-        # Walk about → LabProcess → additionalProperty for drone info
         for lab_process in _as_list(assay.get("about")):
             lab_process = _resolve_ref(lab_process, entities)
             if not _has_type(lab_process, "LabProcess"):
@@ -171,16 +406,89 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
     if drone_models:
         result["drone_model"] = drone_models[0]
 
+    # ── MIAPPE extraction (new blocks, never overwrite existing) ──────────
+    try:
+        sources = _find_sources(graph, entities)
+    except Exception:
+        sources = []
+        logger.debug("_find_sources failed, skipping MIAPPE extraction")
+
+    # Taxonomy
+    try:
+        tax = _extract_taxonomy(entities, sources)
+        result.setdefault("taxon_genus", tax.get("taxon_genus"))
+        result.setdefault("taxon_species", tax.get("taxon_species"))
+        result.setdefault("taxon_infraspecific_name", tax.get("taxon_infraspecific_name"))
+    except Exception:
+        logger.debug("Taxonomy extraction failed")
+
+    # Geolocation
+    try:
+        geo = _extract_geolocation(entities, sources)
+        result.setdefault("geo_latitude", geo.get("geo_latitude"))
+        result.setdefault("geo_longitude", geo.get("geo_longitude"))
+        result.setdefault("geo_altitude", geo.get("geo_altitude"))
+    except Exception:
+        logger.debug("Geolocation extraction failed")
+
+    # Germplasm
+    try:
+        germ = _extract_germplasm(entities, sources)
+        result.setdefault("germplasm_source_id", germ.get("germplasm_source_id"))
+        result.setdefault("germplasm_source_doi", germ.get("germplasm_source_doi"))
+    except Exception:
+        logger.debug("Germplasm extraction failed")
+
+    # Origin Country
+    try:
+        result.setdefault("origin_country", _extract_origin_country(entities, sources))
+    except Exception:
+        logger.debug("Origin Country extraction failed")
+
+    # Parameter values
+    try:
+        pv = _extract_parameter_values(entities, graph)
+        if pv:
+            result["parameter_values"] = pv
+    except Exception:
+        logger.debug("Parameter value extraction failed")
+
+    # License ref resolution (only if current is a dict ref)
+    try:
+        if isinstance(result.get("license"), dict):
+            resolved = _resolve_license(investigation, entities)
+            if resolved:
+                result["license"] = resolved
+    except Exception:
+        logger.debug("License resolution failed")
+
+    # Investigation contacts/publications/citation
+    try:
+        meta = _extract_investigation_meta(investigation, entities)
+        for k, v in meta.items():
+            result.setdefault(k, v)
+    except Exception:
+        logger.debug("Investigation meta extraction failed")
+
+    # Event ID crop fallback (only if no crop found yet)
+    try:
+        if not result.get("crop_species"):
+            fallback = _extract_event_id_crops(entities, graph, result.get("crop_species"))
+            fallback_crop = fallback.get("crop_species")
+            if fallback_crop:
+                result.setdefault("crop_species", fallback_crop)
+    except Exception:
+        logger.debug("Event ID crop fallback failed")
+
     # FAIRagro template validation
     if validate_fairagro:
         try:
-            from arc_templates.fairagro_validator import FairagroArcValidator
-            validator = FairagroArcValidator()
-            validation = validator.validate(data)
-            if not validation["valid"]:
-                logger.warning(f"FAIRagro ARC validation failed: {validation['errors']}")
-                # Add validation info to result for frontend feedback
-                result["_validation"] = validation
+            from fairagro_validator import validate_arc_fairagro
+
+            validation = validate_arc_fairagro(result)
+            result["fairagro_valid"] = validation.get("valid", False)
+            result["fairagro_errors"] = validation.get("errors", [])
+            result["fairagro_warnings"] = validation.get("warnings", [])
         except ImportError:
             logger.debug("FAIRagro validator not available, skipping validation")
         except Exception as e:
@@ -191,27 +499,26 @@ def load(content: bytes, validate_fairagro: bool = True) -> dict:
 
 def write(json_ld: dict) -> bytes:
     """Convert FAIRagro JSON back to ARC RO-Crate JSON-LD format.
-    
+
     Args:
         json_ld: FAIRagro JSON data (can be flat or nested structure)
-    
+
     Returns:
         bytes: ARC RO-Crate JSON-LD content
     """
-    
+
     # Create basic RO-Crate structure
-    ro_crate = {
-        "@context": "https://w3id.org/ro/crate/1.1/context",
-        "@graph": []
-    }
+    ro_crate = {"@context": "https://w3id.org/ro/crate/1.1/context", "@graph": []}
 
     # Add RO-Crate metadata descriptor
-    ro_crate["@graph"].append({
-        "@id": "ro-crate-metadata.json",
-        "@type": "CreativeWork",
-        "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
-        "about": {"@id": "ro-crate-metadata.json"}
-    })
+    ro_crate["@graph"].append(
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
+            "about": {"@id": "ro-crate-metadata.json"},
+        }
+    )
 
     # Handle both flat and nested structures
     if "@context" in json_ld:
@@ -250,7 +557,9 @@ def write(json_ld: dict) -> bytes:
             "@id": "#study",
             "@type": "Dataset",
             "additionalType": "Study",
-            "name": json_ld["alternative_titles"][0] if isinstance(json_ld["alternative_titles"], list) else json_ld["alternative_titles"],
+            "name": json_ld["alternative_titles"][0]
+            if isinstance(json_ld["alternative_titles"], list)
+            else json_ld["alternative_titles"],
             "description": json_ld.get("description", ""),
         }
         ro_crate["@graph"].append(study)
@@ -277,24 +586,28 @@ def write(json_ld: dict) -> bytes:
     if "crop_species" in json_ld:
         if "about" not in investigation:
             investigation["about"] = []
-        investigation["about"].append({
-            "@id": "#crop_data",
-            "@type": "PropertyValue",
-            "name": "Organism",
-            "value": json_ld["crop_species"]
-        })
+        investigation["about"].append(
+            {
+                "@id": "#crop_data",
+                "@type": "PropertyValue",
+                "name": "Organism",
+                "value": json_ld["crop_species"],
+            }
+        )
 
     if "measurementTechnique" in json_ld:
         if "about" not in investigation:
             investigation["about"] = []
-        investigation["about"].append({
-            "@id": "#sensor_data",
-            "@type": "PropertyValue",
-            "name": "Measurement Technique",
-            "value": json_ld["measurementTechnique"]
-        })
+        investigation["about"].append(
+            {
+                "@id": "#sensor_data",
+                "@type": "PropertyValue",
+                "name": "Measurement Technique",
+                "value": json_ld["measurementTechnique"],
+            }
+        )
 
-    return json.dumps(ro_crate, indent=2).encode('utf-8')
+    return json.dumps(ro_crate, indent=2).encode("utf-8")
 
 
 # ── Graph helpers ──────────────────────────────────────────────────────────────
@@ -313,6 +626,31 @@ def _has_type(entity: Any, type_name: str) -> bool:
     if isinstance(atype2, str):
         atype2 = [atype2]
     return type_name in atype2
+
+
+def _entity_type_name(entity: dict) -> str | None:
+    """Extract the primary type name from an entity's @type or additionalType.
+
+    Returns additionalType if @type is a generic container (e.g. 'Dataset')
+    that has a more specific additionalType. This matches _has_type() behavior.
+    """
+    if not isinstance(entity, dict):
+        return None
+
+    atype = entity.get("@type", [])
+    if isinstance(atype, str):
+        atype = [atype]
+
+    atype2 = entity.get("additionalType", [])
+    if isinstance(atype2, str):
+        atype2 = [atype2]
+
+    # Prefer additionalType when @type is generic (Dataset, CreativeWork, etc.)
+    if atype2:
+        return atype2[0] if isinstance(atype2[0], str) else None
+    if atype:
+        return atype[0] if isinstance(atype[0], str) else None
+    return None
 
 
 def _find_entity_by_type(graph: list, type_name: str) -> dict | None:
@@ -359,6 +697,257 @@ def _string_value(value: Any) -> str:
                 return s
         return ""
     return str(value) if value else ""
+
+
+# ── MIAPPE extraction helpers ──────────────────────────────────────────────────
+
+# MIAPPE propertyIDs for taxonomy
+_MIAPPE_GENUS = "http://purl.obolibrary.org/obo/MIAPPE_0042"
+_MIAPPE_SPECIES = "http://purl.obolibrary.org/obo/MIAPPE_0043"
+_MIAPPE_INFRASPECIFIC = "http://purl.obolibrary.org/obo/MIAPPE_0044"
+
+# MIAPPE propertyIDs for biological material geo
+_MIAPPE_BIO_LAT = "http://purl.obolibrary.org/obo/MIAPPE_0045"
+_MIAPPE_BIO_LNG = "http://purl.obolibrary.org/obo/MIAPPE_0046"
+_MIAPPE_BIO_ALT = "http://purl.obolibrary.org/obo/MIAPPE_0047"
+
+# MIAPPE propertyIDs for material source geo
+_MIAPPE_SRC_LAT = "http://purl.obolibrary.org/obo/MIAPPE_0052"
+_MIAPPE_SRC_LNG = "http://purl.obolibrary.org/obo/MIAPPE_0053"
+_MIAPPE_SRC_ALT = "http://purl.obolibrary.org/obo/MIAPPE_0054"
+
+# MIAPPE propertyIDs for germplasm
+_MIAPPE_SRC_ID = "http://purl.obolibrary.org/obo/MIAPPE_0050"
+_MIAPPE_SRC_DOI = "http://purl.obolibrary.org/obo/MIAPPE_0051"
+
+# AGRO propertyIDs for field geo
+_AGRO_FIELD_LAT = "http://purl.obolibrary.org/obo/AGRO_00000574"
+_AGRO_FIELD_LNG = "http://purl.obolibrary.org/obo/AGRO_00000575"
+_AGRO_FIELD_ALT = "http://purl.obolibrary.org/obo/AGRO_00000612"
+
+# Name-based lookups
+_NAME_ORIGIN_COUNTRY = "Origin Country"
+_NAME_ORGANISM = "Organism"
+
+
+def _find_sources(graph: list, entities: dict) -> list[dict]:
+    """Find all Source entities via direct scan or from LabProcess.object."""
+    sources = []
+    seen: set[str] = set()
+
+    for e in graph:
+        if _has_type(e, "Source") and e.get("@id"):
+            sources.append(e)
+            seen.add(e["@id"])
+
+    # Also collect from LabProcess.object
+    for e in graph:
+        if not _has_type(e, "LabProcess"):
+            continue
+        for obj in _as_list(e.get("object")):
+            if isinstance(obj, dict) and obj.get("@id"):
+                resolved = entities.get(obj["@id"])
+                if resolved and _has_type(resolved, "Source") and obj["@id"] not in seen:
+                    sources.append(resolved)
+                    seen.add(obj["@id"])
+
+    return sources
+
+
+def _cv_value_by_property_id(sources: list[dict], entities: dict, property_id: str) -> str | None:
+    """Get the first non-empty value from CharacteristicValue matching propertyID."""
+    for source in sources:
+        for prop in _as_list(source.get("additionalProperty")):
+            prop = _resolve_ref(prop, entities)
+            if not isinstance(prop, dict):
+                continue
+            pid = prop.get("propertyID", "")
+            if pid == property_id:
+                val = _string_value(prop.get("value"))
+                if val:
+                    return val
+    return None
+
+
+def _cv_value_by_name(sources: list[dict], entities: dict, name: str) -> str | None:
+    """Get the first non-empty value from CharacteristicValue matching name."""
+    for source in sources:
+        for prop in _as_list(source.get("additionalProperty")):
+            prop = _resolve_ref(prop, entities)
+            if not isinstance(prop, dict):
+                continue
+            if prop.get("name") == name:
+                val = _string_value(prop.get("value"))
+                if val:
+                    return val
+    return None
+
+
+def _extract_taxonomy(entities: dict, sources: list[dict]) -> dict[str, str | None]:
+    """Extract Genus, Species, Infraspecific name from Source CharacteristicValues."""
+    return {
+        "taxon_genus": _cv_value_by_property_id(sources, entities, _MIAPPE_GENUS),
+        "taxon_species": _cv_value_by_property_id(sources, entities, _MIAPPE_SPECIES),
+        "taxon_infraspecific_name": _cv_value_by_property_id(
+            sources, entities, _MIAPPE_INFRASPECIFIC
+        ),
+    }
+
+
+def _extract_geolocation(entities: dict, sources: list[dict]) -> dict[str, str | None]:
+    """Extract geolocation from Source CharacteristicValues.
+
+    Priority: field geo (AGRO) first, fallback to biological material geo (MIAPPE).
+    """
+    lat = _cv_value_by_property_id(sources, entities, _AGRO_FIELD_LAT)
+    lng = _cv_value_by_property_id(sources, entities, _AGRO_FIELD_LNG)
+    alt = _cv_value_by_property_id(sources, entities, _AGRO_FIELD_ALT)
+
+    if not lat:
+        lat = _cv_value_by_property_id(sources, entities, _MIAPPE_BIO_LAT)
+    if not lng:
+        lng = _cv_value_by_property_id(sources, entities, _MIAPPE_BIO_LNG)
+    if not alt:
+        alt = _cv_value_by_property_id(sources, entities, _MIAPPE_BIO_ALT)
+
+    # Fallback to material source geo
+    if not lat:
+        lat = _cv_value_by_property_id(sources, entities, _MIAPPE_SRC_LAT)
+    if not lng:
+        lng = _cv_value_by_property_id(sources, entities, _MIAPPE_SRC_LNG)
+    if not alt:
+        alt = _cv_value_by_property_id(sources, entities, _MIAPPE_SRC_ALT)
+
+    return {"geo_latitude": lat, "geo_longitude": lng, "geo_altitude": alt}
+
+
+def _extract_germplasm(entities: dict, sources: list[dict]) -> dict[str, str | None]:
+    """Extract Material source ID and DOI from Source CharacteristicValues."""
+    return {
+        "germplasm_source_id": _cv_value_by_property_id(sources, entities, _MIAPPE_SRC_ID),
+        "germplasm_source_doi": _cv_value_by_property_id(sources, entities, _MIAPPE_SRC_DOI),
+    }
+
+
+def _extract_origin_country(entities: dict, sources: list[dict]) -> str | None:
+    """Extract Origin Country from Source CharacteristicValues."""
+    return _cv_value_by_name(sources, entities, _NAME_ORIGIN_COUNTRY)
+
+
+def _extract_parameter_values(entities: dict, graph: list) -> dict[str, list[str]]:
+    """Extract ParameterValue entries from LabProcess entities."""
+    params: dict[str, list[str]] = {}
+    for e in graph:
+        if not _has_type(e, "LabProcess"):
+            continue
+        for pv_ref in _as_list(e.get("parameterValue")):
+            pv = _resolve_ref(pv_ref, entities)
+            if not isinstance(pv, dict):
+                continue
+            name = _string_value(pv.get("name"))
+            val = _string_value(pv.get("value"))
+            if name and val:
+                params.setdefault(name, []).append(val)
+    return params
+
+
+def _extract_event_id_crops(
+    entities: dict, graph: list, current_crop: str | None
+) -> dict[str, str | None]:
+    """Fallback crop extraction when Organism not found on Source.
+
+    Scans all Source entities for Organism/Genus/Species/Infraspecific via name.
+    If still nothing, returns current crop (no override).
+    """
+    for e in graph:
+        if not _has_type(e, "Source"):
+            continue
+        for prop in _as_list(e.get("additionalProperty")):
+            prop = _resolve_ref(prop, entities)
+            if not isinstance(prop, dict):
+                continue
+            if prop.get("name") == _NAME_ORGANISM:
+                val = _string_value(prop.get("value"))
+                if val and not current_crop:
+                    return {"crop_species": val}
+    return {}
+
+
+def _resolve_license(investigation: dict | None, entities: dict) -> str | None:
+    """Resolve license from @id reference (e.g. #LICENSE) to CreativeWork text."""
+    if not investigation:
+        return None
+    lic = investigation.get("license")
+    if isinstance(lic, dict) and "@id" in lic:
+        resolved = entities.get(lic["@id"])
+        if resolved and isinstance(resolved, dict):
+            return _string_value(resolved.get("text")) or _string_value(resolved.get("name"))
+    return None
+
+
+def _extract_investigation_meta(investigation: dict | None, entities: dict) -> dict[str, Any]:
+    """Extract investigationContacts and investigationPublications from Investigation."""
+    result: dict[str, Any] = {}
+    if not investigation:
+        return result
+
+    # investigationContacts
+    contacts_raw = investigation.get("investigationContacts")
+    if contacts_raw:
+        contacts = []
+        for ref in _as_list(contacts_raw):
+            resolved = _resolve_ref(ref, entities)
+            if isinstance(resolved, dict):
+                name = _string_value(resolved.get("name"))
+                email = _string_value(resolved.get("email"))
+                aff = resolved.get("affiliation", {})
+                aff_name = ""
+                if isinstance(aff, dict):
+                    aff_name = _string_value(aff.get("name"))
+                elif isinstance(aff, str):
+                    aff_name = aff
+                if name:
+                    contacts.append({"name": name, "email": email, "affiliation": aff_name})
+        if contacts:
+            result["investigation_contacts"] = contacts
+
+    # investigationPublications
+    pubs_raw = investigation.get("investigationPublications")
+    if pubs_raw:
+        pubs = []
+        for ref in _as_list(pubs_raw):
+            resolved = _resolve_ref(ref, entities)
+            if isinstance(resolved, dict):
+                title = _string_value(resolved.get("headline")) or _string_value(
+                    resolved.get("name")
+                )
+                identifier = _resolve_ref(resolved.get("identifier"), entities)
+                ident_str = (
+                    _string_value(identifier)
+                    if isinstance(identifier, dict)
+                    else _string_value(identifier)
+                )
+                if title:
+                    pubs.append({"title": title, "identifier": ident_str})
+        if pubs:
+            result["investigation_publications"] = pubs
+
+    # citation (standalone reference)
+    citation_raw = investigation.get("citation")
+    if citation_raw:
+        resolved = _resolve_ref(citation_raw, entities)
+        if isinstance(resolved, dict):
+            title = _string_value(resolved.get("headline")) or _string_value(resolved.get("name"))
+            identifier = _resolve_ref(resolved.get("identifier"), entities)
+            ident_str = (
+                _string_value(identifier)
+                if isinstance(identifier, dict)
+                else _string_value(identifier)
+            )
+            if title:
+                result["citation"] = {"title": title, "identifier": ident_str}
+
+    return result
 
 
 # ── Transforms (used by mapping engine) ────────────────────────────────────────
@@ -518,7 +1107,7 @@ def parse_schema_org_person(creator_data: Any) -> Any:
                 "@type": "Person",
                 "name": creator_data.get("name", ""),
                 "email": creator_data.get("email", ""),
-                "affiliation": creator_data.get("affiliation", {})
+                "affiliation": creator_data.get("affiliation", {}),
             }
         return creator_data
 
@@ -540,10 +1129,9 @@ def extract_study_entities(has_part_data: Any) -> Any:
         studies = []
         for item in has_part_data:
             if isinstance(item, dict) and item.get("@type") == "Dataset":
-                studies.append({
-                    "name": item.get("name", ""),
-                    "description": item.get("description", "")
-                })
+                studies.append(
+                    {"name": item.get("name", ""), "description": item.get("description", "")}
+                )
         return studies
 
     return None

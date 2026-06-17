@@ -60,3 +60,7 @@ test_batch.zip
 
 # Generated docs
 IMPLEMENTATION_SUMMARY.md
+
+# Large sample data files (use local copies)
+sample-data/demo/arc-ro-crate-benjamin.json
+sample-data/demo/arc-ro-crate-metadata-matthiasL.json
