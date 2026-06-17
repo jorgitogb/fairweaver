@@ -111,6 +111,9 @@
       "name": "Wheat Multispectral imaging",
       "description": "Multispectral imaging assay for Wheat Drought Phenotyping Field Trial 2024",
       "measurementTechnique": "Multispectral imaging",
+      "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+      "technologyType": "Multispectral imaging sensor",
+      "technologyPlatform": "DJI Matrice 300 RTK UAV",
       "about": [
         {
           "@id": "#Study_wheat"

@@ -20,8 +20,47 @@
       "value": "0000-0001-6113-3518"
     }
   },
+  "identifier": "10.5447/fairweaver/2024/maize-heat-001",
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "datePublished": "2024-07-01",
+  "investigationContacts": [
+    {
+      "@type": "Person",
+      "givenName": "Uwe",
+      "familyName": "Scholz",
+      "name": "Uwe Scholz",
+      "email": "scholz@ipk-gatersleben.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "IPK Gatersleben"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0001-6113-3518"
+      }
+    }
+  ],
+  "investigationPublications": [
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Transcriptome analysis of heat-stressed maize reveals novel thermotolerance pathways",
+      "identifier": "https://doi.org/10.1234/fake-doi/maize-2024"
+    }
+  ],
+  "studyDesignDescriptors": [
+    "maize",
+    "heat stress",
+    "RNA-Seq",
+    "transcriptomics",
+    "Zea mays",
+    "heat shock proteins",
+    "NovaSeq"
+  ],
+  "measurementTechnique": "RNA-Seq transcriptomics",
+  "measurementMethod": "Stranded mRNA-seq with poly(A) selection",
+  "technologyType": "High-throughput sequencing",
+  "technologyPlatform": "Illumina NovaSeq 6000",
   "keywords": [
     "maize",
     "heat stress",
@@ -38,5 +77,26 @@
   "url": "https://fairweaver.example.org/datasets/maize-heat-2024",
   "inLanguage": "en",
   "version": "2.1",
-  "alternateName": "Maize Heat Stress Transcriptome 2024"
+  "alternateName": "Maize Heat Stress Transcriptome 2024",
+  "studyDesignType": "Completely randomized design",
+  "studyPersonnel": [
+    {
+      "@type": "Person",
+      "givenName": "Uwe",
+      "familyName": "Scholz",
+      "name": "Uwe Scholz",
+      "email": "scholz@ipk-gatersleben.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "IPK Gatersleben"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0001-6113-3518"
+      }
+    }
+  ],
+  "assayCategory": "measurement",
+  "assayType": "seq_assay"
 }

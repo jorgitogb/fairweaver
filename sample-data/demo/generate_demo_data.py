@@ -4,6 +4,11 @@
 Schema.org files use proper Schema.org vocabulary throughout.
 ARC RO-Crate files match what the ARC export should produce per compliance level.
 
+Compliance levels aligned with fairagro_template.yaml:
+  - basic:           required_fields only
+  - intermediate:    basic + recommended_fields + validation_rules pass
+  - full:            intermediate + publishable + reproducible + FAIRagro metadata blocks
+
 Usage:  uv run python sample-data/demo/generate_demo_data.py
 """
 
@@ -79,6 +84,9 @@ def _build_themes():
             "alternateName": "Wheat Drought Field Trial 2024",
             "about_crop": {"@type": "Thing", "name": "Triticum aestivum", "sameAs": "http://purl.obolibrary.org/obo/NCBITaxon_4565"},
             "measurementTechnique": "Multispectral imaging",
+            "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+            "technologyType": "Multispectral imaging sensor",
+            "technologyPlatform": "DJI Matrice 300 RTK UAV",
             "instrument": {"@type": "Thing", "name": "Micasense RedEdge-MX", "description": "Multispectral sensor on DJI Matrice 300 RTK UAV", "additionalType": "Sensor"},
             "funder": "DFG – German Research Foundation",
             "distribution": {"@type": "DataDownload", "contentUrl": "https://fairweaver.example.org/datasets/wheat-drought-2024/download", "encodingFormat": "application/zip"},
@@ -86,6 +94,12 @@ def _build_themes():
             "crop_pest": "Zymoseptoria tritici",
             "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_5284",
             "authors": [TIMO, OLIVER],
+            "location": {"@type": "Place", "name": "RPTU Field Station Kaiserslautern", "geo": {"@type": "GeoCoordinates", "latitude": 49.4401, "longitude": 7.7491}},
+            "country": "Germany",
+            "state": "Rhineland-Palatinate",
+            "county": "Kaiserslautern",
+            "soil_type": "Luvisol",
+            "process_type": "UAV-based remote sensing",
         },
         "maize": {
             "doi": "10.5447/fairweaver/2024/maize-heat-001",
@@ -102,6 +116,9 @@ def _build_themes():
             "alternateName": "Maize Heat Stress Transcriptome 2024",
             "about_crop": {"@type": "Thing", "name": "Zea mays", "sameAs": "http://purl.obolibrary.org/obo/NCBITaxon_4577"},
             "measurementTechnique": "RNA-Seq transcriptomics",
+            "measurementMethod": "Stranded mRNA-seq with poly(A) selection",
+            "technologyType": "High-throughput sequencing",
+            "technologyPlatform": "Illumina NovaSeq 6000",
             "instrument": {"@type": "Thing", "name": "Illumina NovaSeq 6000", "description": "High-throughput sequencing platform for mRNA-seq", "additionalType": "SequencingPlatform"},
             "funder": "BMBF – German Ministry of Education and Research",
             "distribution": {"@type": "DataDownload", "contentUrl": "https://fairweaver.example.org/datasets/maize-heat-2024/download", "encodingFormat": "application/zip"},
@@ -109,6 +126,12 @@ def _build_themes():
             "crop_pest": "Spodoptera frugiperda",
             "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_7108",
             "authors": [UWE, THOMAS, CHRISTIAN],
+            "location": {"@type": "Place", "name": "IPK Gatersleben Phytotron", "geo": {"@type": "GeoCoordinates", "latitude": 51.8241, "longitude": 11.2856}},
+            "country": "Germany",
+            "state": "Saxony-Anhalt",
+            "county": "Salzlandkreis",
+            "soil_type": "Chernozem",
+            "process_type": "High-throughput sequencing",
         },
     }
 
@@ -116,23 +139,52 @@ def _build_themes():
 # ── Schema.org Builder ──────────────────────────────────────────────────────
 
 def build_schema_org(t: dict, theme_key: str, level: str) -> dict:
+    """Build Schema.org Dataset JSON aligned with FAIRagro compliance levels.
+
+    Basic:           required_fields — Investigation (name, description, creator,
+                       identifier, license, datePublished, investigationContacts,
+                       investigationPublications) + Study (name, description,
+                       studyDesignDescriptors) + Assay (name, description,
+                       measurementTechnique, measurementMethod, technologyType,
+                       technologyPlatform)
+    Intermediate:    basic + recommended_fields — keywords, publisher, url,
+                       inLanguage, version, alternateName, studyDesignType,
+                       studyPersonnel, assayCategory, assayType
+    Full:            intermediate + FAIRagro metadata blocks — about, instrument,
+                       funder, distribution, citation, crop_pest, location, soil,
+                       process, geographic coverage
+    """
     root = {
         "@context": "https://schema.org",
         "@type": "Dataset",
         "@id": "https://doi.org/" + t["doi"],
     }
 
-    # Basic fields (FAIRagro required)
+    # ── Basic: required_fields ──────────────────────────────────────────────
     root["name"] = t["name"]
     root["description"] = t["description"]
     root["creator"] = t["creator"]
+    root["identifier"] = t["doi"]
     root["license"] = t["license"]
     root["datePublished"] = t["datePublished"]
+
+    # Investigation required: contacts + publications
+    root["investigationContacts"] = [t["creator"]]
+    root["investigationPublications"] = [t["citation"]]
+
+    # Study required
+    root["studyDesignDescriptors"] = t["keywords"]
+
+    # Assay required
+    root["measurementTechnique"] = t["measurementTechnique"]
+    root["measurementMethod"] = t["measurementMethod"]
+    root["technologyType"] = t["technologyType"]
+    root["technologyPlatform"] = t["technologyPlatform"]
 
     if level == "basic":
         return root
 
-    # Intermediate fields (FAIRagro recommended)
+    # ── Intermediate: recommended_fields ────────────────────────────────────
     root["keywords"] = t["keywords"]
     root["publisher"] = t["publisher"]
     root["url"] = t["url"]
@@ -140,18 +192,50 @@ def build_schema_org(t: dict, theme_key: str, level: str) -> dict:
     root["version"] = t["version"]
     root["alternateName"] = t["alternateName"]
 
+    # Study recommended
+    root["studyDesignType"] = "Randomized complete block design" if theme_key == "wheat" else "Completely randomized design"
+    root["studyPersonnel"] = [t["creator"]]
+
+    # Assay recommended
+    root["assayCategory"] = "measurement"
+    root["assayType"] = "imaging_assay" if "imaging" in t["measurementTechnique"].lower() else "seq_assay"
+
     if level == "intermediate":
         return root
 
-    # Full fields (FAIRagro full)
+    # ── Full: FAIRagro metadata blocks ──────────────────────────────────────
+    # generalExtended block
     root["about"] = t["about_crop"]
-    root["measurementTechnique"] = t["measurementTechnique"]
     root["instrument"] = t["instrument"]
     root["funder"] = {"@type": "Organization", "name": t["funder"]}
     root["distribution"] = t["distribution"]
+
+    # citation block
     root["citation"] = t["citation"]
+
+    # crop block
+    root["crop_species"] = t["about_crop"]["name"]
+    root["crop_species_uri"] = t["about_crop"]["sameAs"]
     root["crop_pest"] = t["crop_pest"]
     root["crop_pest_uri"] = t["crop_pest_uri"]
+
+    # sensor block (instrument details)
+    root["sensorType"] = t["technologyType"]
+    root["sensorPlatformType"] = t["technologyPlatform"]
+
+    # location block
+    root["location"] = t["location"]
+
+    # geographicCoverage block
+    root["country"] = t["country"]
+    root["state"] = t["state"]
+    root["county"] = t["county"]
+
+    # soil block
+    root["soilType"] = t["soil_type"]
+
+    # process block
+    root["processType"] = t["process_type"]
 
     return root
 
@@ -159,6 +243,15 @@ def build_schema_org(t: dict, theme_key: str, level: str) -> dict:
 # ── ARC RO-Crate Builder ────────────────────────────────────────────────────
 
 def build_arc(t: dict, theme_key: str, level: str) -> dict:
+    """Build ARC RO-Crate JSON aligned with FAIRagro compliance levels.
+
+    Basic:           required_fields per entity (Investigation, Study, Assay)
+    Intermediate:    basic + recommended_fields (keywords, publisher, designType,
+                       personnel, assayCategory, assayType)
+    Full:            intermediate + FAIRagro metadata blocks (citation, crop,
+                       sensor, location, geographicCoverage, soil, process)
+                       + publishable + reproducible requirements
+    """
     is_intermediate = level in ("intermediate", "full")
     is_full = level == "full"
 
@@ -207,7 +300,7 @@ def build_arc(t: dict, theme_key: str, level: str) -> dict:
     org_id = "#Organization_" + org_name.replace(" ", "_").replace(",", "")
     graph.append({"@id": org_id, "@type": "Organization", "name": org_name})
 
-    # -- Investigation
+    # -- Investigation ────────────────────────────────────────────────────────
     inv = {
         "@id": "#Investigation_" + theme_key,
         "@type": "Dataset",
@@ -240,7 +333,7 @@ def build_arc(t: dict, theme_key: str, level: str) -> dict:
             "author": [{"@id": "#" + _person_id(p)} for p in t["authors"]],
         })
 
-    # -- Study
+    # -- Study ────────────────────────────────────────────────────────────────
     study = {
         "@id": "#Study_" + theme_key,
         "@type": "Dataset",
@@ -260,7 +353,7 @@ def build_arc(t: dict, theme_key: str, level: str) -> dict:
         study["crop_pest_uri"] = t["crop_pest_uri"]
     graph.append(study)
 
-    # -- Assay
+    # -- Assay ────────────────────────────────────────────────────────────────
     assay = {
         "@id": "#Assay_" + theme_key,
         "@type": "Dataset",
@@ -268,6 +361,9 @@ def build_arc(t: dict, theme_key: str, level: str) -> dict:
         "name": theme_key.title() + " " + t["measurementTechnique"],
         "description": t["measurementTechnique"] + " assay for " + t["name"],
         "measurementTechnique": t["measurementTechnique"],
+        "measurementMethod": t["measurementMethod"],
+        "technologyType": t["technologyType"],
+        "technologyPlatform": t["technologyPlatform"],
         "about": [{"@id": "#Study_" + theme_key}],
     }
     if is_intermediate:
@@ -292,6 +388,48 @@ def build_arc(t: dict, theme_key: str, level: str) -> dict:
             "name": f"Sample {i} - {theme_key}",
             "encodingFormat": "image/tiff" if suffix == "tiff" else "application/gzip",
         })
+
+    # -- FAIRagro metadata blocks (full only) ────────────────────────────────
+    if is_full:
+        # Location block
+        graph.append({
+            "@id": "#Location_" + theme_key,
+            "@type": "Place",
+            "name": t["location"]["name"],
+            "geo": t["location"]["geo"],
+        })
+
+        # Geographic coverage block
+        graph.append({
+            "@id": "#GeographicCoverage_" + theme_key,
+            "@type": "DefinedRegion",
+            "name": f"{t['county']}, {t['state']}, {t['country']}",
+            "country": t["country"],
+            "state": t["state"],
+            "county": t["county"],
+        })
+
+        # Soil block
+        graph.append({
+            "@id": "#Soil_" + theme_key,
+            "@type": "Thing",
+            "name": t["soil_type"],
+            "additionalType": "SoilType",
+        })
+
+        # Process block
+        graph.append({
+            "@id": "#Process_" + theme_key,
+            "@type": "Thing",
+            "name": t["process_type"],
+            "additionalType": "Process",
+        })
+
+        # Link location and coverage to root
+        root["location"] = {"@id": "#Location_" + theme_key}
+        root["geographicCoverage"] = {"@id": "#GeographicCoverage_" + theme_key}
+        root["soil"] = {"@id": "#Soil_" + theme_key}
+        root["process"] = {"@id": "#Process_" + theme_key}
 
     return {
         "@context": ["https://w3id.org/ro/crate/1.1/context", {"@vocab": "https://schema.org/"}],

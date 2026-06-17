@@ -161,6 +161,9 @@
       "name": "Maize RNA-Seq transcriptomics",
       "description": "RNA-Seq transcriptomics assay for Maize Heat Stress Transcriptome RNA-Seq Dataset",
       "measurementTechnique": "RNA-Seq transcriptomics",
+      "measurementMethod": "Stranded mRNA-seq with poly(A) selection",
+      "technologyType": "High-throughput sequencing",
+      "technologyPlatform": "Illumina NovaSeq 6000",
       "about": [
         {
           "@id": "#Study_maize"

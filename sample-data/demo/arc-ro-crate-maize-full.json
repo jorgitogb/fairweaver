@@ -31,7 +31,19 @@
         {
           "@id": "#Colmsee_Christian"
         }
-      ]
+      ],
+      "location": {
+        "@id": "#Location_maize"
+      },
+      "geographicCoverage": {
+        "@id": "#GeographicCoverage_maize"
+      },
+      "soil": {
+        "@id": "#Soil_maize"
+      },
+      "process": {
+        "@id": "#Process_maize"
+      }
     },
     {
       "@id": "#Scholz_Uwe",
@@ -202,6 +214,9 @@
       "name": "Maize RNA-Seq transcriptomics",
       "description": "RNA-Seq transcriptomics assay for Maize Heat Stress Transcriptome RNA-Seq Dataset",
       "measurementTechnique": "RNA-Seq transcriptomics",
+      "measurementMethod": "Stranded mRNA-seq with poly(A) selection",
+      "technologyType": "High-throughput sequencing",
+      "technologyPlatform": "Illumina NovaSeq 6000",
       "about": [
         {
           "@id": "#Study_maize"
@@ -232,6 +247,36 @@
       "@type": "File",
       "name": "Sample 3 - maize",
       "encodingFormat": "application/gzip"
+    },
+    {
+      "@id": "#Location_maize",
+      "@type": "Place",
+      "name": "IPK Gatersleben Phytotron",
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 51.8241,
+        "longitude": 11.2856
+      }
+    },
+    {
+      "@id": "#GeographicCoverage_maize",
+      "@type": "DefinedRegion",
+      "name": "Salzlandkreis, Saxony-Anhalt, Germany",
+      "country": "Germany",
+      "state": "Saxony-Anhalt",
+      "county": "Salzlandkreis"
+    },
+    {
+      "@id": "#Soil_maize",
+      "@type": "Thing",
+      "name": "Chernozem",
+      "additionalType": "SoilType"
+    },
+    {
+      "@id": "#Process_maize",
+      "@type": "Thing",
+      "name": "High-throughput sequencing",
+      "additionalType": "Process"
     }
   ]
 }

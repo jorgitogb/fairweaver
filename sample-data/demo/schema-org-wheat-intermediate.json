@@ -20,8 +20,47 @@
       "value": "0000-0003-3925-6778"
     }
   },
+  "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "datePublished": "2024-09-15",
+  "investigationContacts": [
+    {
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "M\u00fchlhaus",
+      "name": "Timo M\u00fchlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      }
+    }
+  ],
+  "investigationPublications": [
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+      "identifier": "https://doi.org/10.1234/fake-doi/wheat-2024"
+    }
+  ],
+  "studyDesignDescriptors": [
+    "wheat",
+    "drought stress",
+    "NDVI",
+    "phenotyping",
+    "field trial",
+    "Triticum aestivum",
+    "multispectral imaging"
+  ],
+  "measurementTechnique": "Multispectral imaging",
+  "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+  "technologyType": "Multispectral imaging sensor",
+  "technologyPlatform": "DJI Matrice 300 RTK UAV",
   "keywords": [
     "wheat",
     "drought stress",
@@ -38,5 +77,26 @@
   "url": "https://fairweaver.example.org/datasets/wheat-drought-2024",
   "inLanguage": "en",
   "version": "1.0",
-  "alternateName": "Wheat Drought Field Trial 2024"
+  "alternateName": "Wheat Drought Field Trial 2024",
+  "studyDesignType": "Randomized complete block design",
+  "studyPersonnel": [
+    {
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "M\u00fchlhaus",
+      "name": "Timo M\u00fchlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      }
+    }
+  ],
+  "assayCategory": "measurement",
+  "assayType": "imaging_assay"
 }
