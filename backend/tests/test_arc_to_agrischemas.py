@@ -117,6 +117,7 @@ class TestArcToAgrischemasConversion:
     def test_fallback_extract_crop_from_study(self):
         """Plugin extracts crop_species directly from Study entities."""
         from formats.ro_crate_plugin import load as ro_crate_load
+
         content = self._load_arc("arc-ro-crate-wheat-full.json")
         parsed = ro_crate_load(content, validate_fairagro=False)
         assert parsed["crop_species"] == "Triticum aestivum"

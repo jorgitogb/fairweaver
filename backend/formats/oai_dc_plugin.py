@@ -53,9 +53,21 @@ def _element_to_sickle(el: ET.Element) -> dict:
 def write(json_ld: dict) -> dict:
     out = {"@format": "oai_dc"}
     dc_fields = {
-        "title", "creator", "subject", "description", "publisher",
-        "contributor", "date", "type", "format", "identifier",
-        "source", "language", "relation", "coverage", "rights",
+        "title",
+        "creator",
+        "subject",
+        "description",
+        "publisher",
+        "contributor",
+        "date",
+        "type",
+        "format",
+        "identifier",
+        "source",
+        "language",
+        "relation",
+        "coverage",
+        "rights",
     }
     for k in dc_fields:
         if k in json_ld and json_ld[k]:

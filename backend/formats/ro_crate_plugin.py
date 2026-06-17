@@ -289,17 +289,21 @@ def _extract_fields(
         result["@id"] = investigation.get("@id", "")
         result["license"] = investigation.get("license", "")
         result["datePublished"] = investigation.get("datePublished", "")
+        result["keywords"] = investigation.get("keywords", [])
 
     # ── Alternative titles: from Study and Assay names ───────────────────
-    alt_titles = []
+    alt_titles: list[str] = []
+    seen_titles: set[str] = set()
     for s in studies:
         name = s.get("name")
-        if name:
+        if name and name not in seen_titles:
             alt_titles.append(name)
+            seen_titles.add(name)
     for a in assays:
         name = a.get("name")
-        if name:
+        if name and name not in seen_titles:
             alt_titles.append(name)
+            seen_titles.add(name)
     if alt_titles:
         result["alternative_titles"] = alt_titles
 
@@ -308,6 +312,7 @@ def _extract_fields(
     crop_species_uris = []
     crop_pests = []
     crop_pest_uris = []
+    crop_infection_labels = []
 
     for study in studies:
         about_list = _as_list(study.get("about"))
@@ -319,7 +324,7 @@ def _extract_fields(
 
             for sample in _as_list(lab_process.get("object")):
                 sample = _resolve_ref(sample, entities)
-                if not _has_type(sample, "Sample"):
+                if not _has_type(sample, "Sample") and not _has_type(sample, "Material"):
                     continue
 
                 for prop in _as_list(sample.get("additionalProperty")):
@@ -341,6 +346,11 @@ def _extract_fields(
                             uri = _string_value(prop.get("valueRef"))
                             if uri:
                                 crop_pest_uris.append(uri)
+
+                    elif name_val == "Infection Label":
+                        label = _string_value(prop.get("value"))
+                        if label:
+                            crop_infection_labels.append(label)
 
     # Fallback: extract crop/sensor directly from Study entities
     if not crop_species:
@@ -366,12 +376,15 @@ def _extract_fields(
         result["crop_pest"] = crop_pests[0]
     if crop_pest_uris:
         result["crop_pest_uri"] = crop_pest_uris[0]
+    if crop_infection_labels:
+        result["crop_infection_label"] = crop_infection_labels[0]
 
     # ── Sensor block: Assay → LabProcess → object + measurementMethod ────
     sensor_types = []
     sensor_platform_types = []
     drone_manufacturers = []
     drone_models = []
+    drone_lps: list[dict] = []
 
     for assay in assays:
         technique = _resolve_ref(assay.get("measurementTechnique"), entities)
@@ -386,6 +399,8 @@ def _extract_fields(
             lab_process = _resolve_ref(lab_process, entities)
             if not _has_type(lab_process, "LabProcess"):
                 continue
+
+            drone_lps.append(lab_process)
 
             for prop in _as_list(lab_process.get("additionalProperty")):
                 prop = _resolve_ref(prop, entities)
@@ -406,6 +421,15 @@ def _extract_fields(
     if drone_models:
         result["drone_model"] = drone_models[0]
 
+    # Drone location params (Longitude/Latitude/Date and Time)
+    try:
+        drone_loc = _extract_drone_location_params(entities, drone_lps)
+        result.setdefault("drone_longitude", drone_loc.get("drone_longitude"))
+        result.setdefault("drone_latitude", drone_loc.get("drone_latitude"))
+        result.setdefault("drone_datetime", drone_loc.get("drone_datetime"))
+    except Exception:
+        logger.debug("Drone location extraction failed")
+
     # ── MIAPPE extraction (new blocks, never overwrite existing) ──────────
     try:
         sources = _find_sources(graph, entities)
@@ -421,6 +445,15 @@ def _extract_fields(
         result.setdefault("taxon_infraspecific_name", tax.get("taxon_infraspecific_name"))
     except Exception:
         logger.debug("Taxonomy extraction failed")
+
+    # Crop characteristics (grain weight, ICC code, variety)
+    try:
+        crop_chars = _extract_crop_characteristics(entities, sources)
+        result.setdefault("crop_grain_weight", crop_chars.get("crop_grain_weight"))
+        result.setdefault("crop_icc_code", crop_chars.get("crop_icc_code"))
+        result.setdefault("crop_variety", crop_chars.get("crop_variety"))
+    except Exception:
+        logger.debug("Crop characteristics extraction failed")
 
     # Geolocation
     try:
@@ -445,6 +478,15 @@ def _extract_fields(
     except Exception:
         logger.debug("Origin Country extraction failed")
 
+    # Geographic coverage (country/state/county)
+    try:
+        geo_cov = _extract_geographic_coverage(entities, sources)
+        result.setdefault("geo_country", geo_cov.get("geo_country"))
+        result.setdefault("geo_state", geo_cov.get("geo_state"))
+        result.setdefault("geo_county", geo_cov.get("geo_county"))
+    except Exception:
+        logger.debug("Geographic coverage extraction failed")
+
     # Parameter values
     try:
         pv = _extract_parameter_values(entities, graph)
@@ -452,6 +494,22 @@ def _extract_fields(
             result["parameter_values"] = pv
     except Exception:
         logger.debug("Parameter value extraction failed")
+
+    # Soil depths (distinct top/bottom pairs from SoilSampling processes)
+    try:
+        soil = _extract_soil_depths(entities, graph)
+        if soil:
+            result["soil_depths"] = soil
+    except Exception:
+        logger.debug("Soil depth extraction failed")
+
+    # Agricultural process types (distinct protocol names)
+    try:
+        proc_types = _extract_process_types(entities, graph)
+        if proc_types:
+            result["agricultural_processes"] = proc_types
+    except Exception:
+        logger.debug("Process type extraction failed")
 
     # License ref resolution (only if current is a dict ref)
     try:
@@ -469,6 +527,9 @@ def _extract_fields(
             result.setdefault(k, v)
     except Exception:
         logger.debug("Investigation meta extraction failed")
+
+    # Default subject for FAIRagro Search Hub
+    result.setdefault("subject", "Agricultural Sciences")
 
     # Event ID crop fallback (only if no crop found yet)
     try:
@@ -834,6 +895,21 @@ def _extract_origin_country(entities: dict, sources: list[dict]) -> str | None:
     return _cv_value_by_name(sources, entities, _NAME_ORIGIN_COUNTRY)
 
 
+# AGRO/BCO propertyIDs for geographic coverage
+_BCO_COUNTRY = "http://purl.obolibrary.org/obo/bco_country"
+_BCO_STATE = "http://purl.obolibrary.org/obo/bco_stateProvince"
+_BCO_COUNTY = "http://purl.obolibrary.org/obo/bco_county"
+
+
+def _extract_geographic_coverage(entities: dict, sources: list[dict]) -> dict[str, str | None]:
+    """Extract country, state, county from Source CharacteristicValues."""
+    return {
+        "geo_country": _cv_value_by_property_id(sources, entities, _BCO_COUNTRY),
+        "geo_state": _cv_value_by_property_id(sources, entities, _BCO_STATE),
+        "geo_county": _cv_value_by_property_id(sources, entities, _BCO_COUNTY),
+    }
+
+
 def _extract_parameter_values(entities: dict, graph: list) -> dict[str, list[str]]:
     """Extract ParameterValue entries from LabProcess entities."""
     params: dict[str, list[str]] = {}
@@ -849,6 +925,152 @@ def _extract_parameter_values(entities: dict, graph: list) -> dict[str, list[str
             if name and val:
                 params.setdefault(name, []).append(val)
     return params
+
+
+# Name-based lookups for drone location params
+_NAME_DRONE_LONGITUDE = "Longitude"
+_NAME_DRONE_LATITUDE = "Latitude"
+_NAME_DRONE_DATETIME = "Date and Time"
+
+
+def _extract_drone_location_params(
+    entities: dict, lab_processes: list[dict]
+) -> dict[str, str | None]:
+    """Extract Longitude, Latitude, Date and Time from LabProcess parameterValues."""
+    lng: str | None = None
+    lat: str | None = None
+    dt: str | None = None
+
+    for lp in lab_processes:
+        for pv_ref in _as_list(lp.get("parameterValue")):
+            pv = _resolve_ref(pv_ref, entities)
+            if not isinstance(pv, dict):
+                continue
+            name = _string_value(pv.get("name"))
+            val = _string_value(pv.get("value"))
+            if not val:
+                continue
+
+            if name == _NAME_DRONE_LONGITUDE and lng is None:
+                lng = val
+            elif name == _NAME_DRONE_LATITUDE and lat is None:
+                lat = val
+            elif name == _NAME_DRONE_DATETIME and dt is None:
+                dt = val
+
+    return {"drone_longitude": lng, "drone_latitude": lat, "drone_datetime": dt}
+
+
+# Soil depth propertyIDs
+_ENVO_SOIL_TOP_DEPTH = "https://bioregistry.io/ENVO:06105225"
+_ENVO_SOIL_BOTTOM_DEPTH = "https://bioregistry.io/ENVO:06105226"
+_SOIL_SAMPLING_PROTOCOL = "#Protocol_Events-SoilSampling"
+
+
+def _extract_soil_depths(entities: dict, graph: list) -> list[dict[str, str]]:
+    """Extract distinct soil top/bottom depth pairs from soil sampling LabProcesses.
+
+    Scans LabProcess entities executing the SoilSampling protocol and collects
+    distinct (top, bottom) depth combinations from their parameterValues.
+    """
+    pairs: set[tuple[str, str]] = set()
+
+    for e in graph:
+        if not _has_type(e, "LabProcess"):
+            continue
+
+        protocol = e.get("executesLabProtocol")
+        if isinstance(protocol, dict):
+            protocol_id = protocol.get("@id", "")
+        elif isinstance(protocol, str):
+            protocol_id = protocol
+        else:
+            continue
+
+        if protocol_id != _SOIL_SAMPLING_PROTOCOL:
+            continue
+
+        top: str | None = None
+        bottom: str | None = None
+
+        for pv_ref in _as_list(e.get("parameterValue")):
+            pv = _resolve_ref(pv_ref, entities)
+            if not isinstance(pv, dict):
+                continue
+            pid = pv.get("propertyID", "")
+            val = _string_value(pv.get("value"))
+            if not val:
+                continue
+
+            if pid == _ENVO_SOIL_TOP_DEPTH:
+                top = val
+            elif pid == _ENVO_SOIL_BOTTOM_DEPTH:
+                bottom = val
+
+        if top is not None and bottom is not None:
+            pairs.add((top, bottom))
+
+    return [{"top": t, "bottom": b} for t, b in sorted(pairs)]
+
+
+# Agricultural process protocol IDs
+_PROCESS_PROTOCOLS = frozenset(
+    {
+        "#Protocol_Events-Tillage",
+        "#Protocol_Events-Mulching",
+        "#Protocol_Events-CropResidueManagement",
+        "#Protocol_Events-Planting",
+        "#Protocol_Events-InorganicFertilization",
+        "#Protocol_Events-ChemicalApplications",
+        "#Protocol_Events-Irrigation",
+        "#Protocol_Events-Harvest",
+        "#Protocol_Events-OrganicFertilization",
+    }
+)
+
+_PROTOCOL_PREFIX = "#Protocol_Events-"
+
+
+def _extract_process_types(entities: dict, graph: list) -> list[str]:
+    """Extract distinct agricultural process type names from LabProcess entities.
+
+    Scans LabProcess entities for executesLabProtocol references matching known
+    agricultural process protocol IDs, and returns their display names sorted.
+    """
+    types: set[str] = set()
+
+    for e in graph:
+        if not _has_type(e, "LabProcess"):
+            continue
+
+        protocol = e.get("executesLabProtocol")
+        if isinstance(protocol, dict):
+            protocol_id = protocol.get("@id", "")
+        elif isinstance(protocol, str):
+            protocol_id = protocol
+        else:
+            continue
+
+        if protocol_id in _PROCESS_PROTOCOLS and protocol_id.startswith(_PROTOCOL_PREFIX):
+            name = protocol_id[len(_PROTOCOL_PREFIX) :]
+            types.add(name)
+
+    return sorted(types)
+
+
+# Crop characteristic name-based lookups
+_NAME_GRAIN_WEIGHT = "1000-grain dry weight"
+_NAME_ICC_CODE = "ICC code"
+_NAME_INFRASPECIFIC = "Infraspecific name"
+
+
+def _extract_crop_characteristics(entities: dict, sources: list[dict]) -> dict[str, str | None]:
+    """Extract grain weight, ICC code, and variety from Source CharacteristicValues."""
+    return {
+        "crop_grain_weight": _cv_value_by_name(sources, entities, _NAME_GRAIN_WEIGHT),
+        "crop_icc_code": _cv_value_by_name(sources, entities, _NAME_ICC_CODE),
+        "crop_variety": _cv_value_by_name(sources, entities, _NAME_INFRASPECIFIC),
+    }
 
 
 def _extract_event_id_crops(

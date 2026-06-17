@@ -11,7 +11,7 @@ class TestTemplateFieldPathExtraction:
         """Test successful retrieval of template field structure."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
         assert "template_id" in data
         assert data["template_id"] == "fairagro_arc_v2"
@@ -20,21 +20,21 @@ class TestTemplateFieldPathExtraction:
         assert "field_paths" in data
         assert "required_entities" in data
         assert "domains" in data
-        
+
         # Check required fields structure
         assert "Investigation" in data["required_fields"]
         assert "name" in data["required_fields"]["Investigation"]
         assert "creator" in data["required_fields"]["Investigation"]
-        
+
         # Check recommended fields structure
         assert "Investigation" in data["recommended_fields"]
         assert "alternative_titles" in data["recommended_fields"]["Investigation"]
-        
+
         # Check field paths structure
         assert "citation" in data["field_paths"]
         assert "title" in data["field_paths"]["citation"]
         assert "description" in data["field_paths"]["citation"]
-        
+
         # Check domains
         assert "agronomy" in data["domains"]
         assert "plant_phenotyping" in data["domains"]
@@ -47,7 +47,7 @@ class TestTemplateFieldPathExtraction:
         # The endpoint returns the same structure regardless of template_id for now
         resp = client.get("/template-fields/fairagro_searchhub")
         assert resp.status_code == 200
-        
+
         data = resp.json()
         assert data["template_id"] == "fairagro_arc_v2"
         assert len(data["required_fields"]["Investigation"]) > 0
@@ -67,15 +67,15 @@ class TestTemplateFieldPathExtraction:
         """Test that required fields have correct structure."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Verify required fields structure
         assert isinstance(data["required_fields"], dict)
         assert "Investigation" in data["required_fields"]
         assert "Study" in data["required_fields"]
         assert "Assay" in data["required_fields"]
-        
+
         # Check each entity type has required fields
         for entity in ["Investigation", "Study", "Assay"]:
             assert isinstance(data["required_fields"][entity], list)
@@ -88,12 +88,12 @@ class TestTemplateFieldPathExtraction:
         """Test that recommended fields have correct structure."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Verify recommended fields structure
         assert isinstance(data["recommended_fields"], dict)
-        
+
         for entity in ["Investigation", "Study", "Assay"]:
             assert isinstance(data["recommended_fields"].get(entity, []), list)
             for field in data["recommended_fields"].get(entity, []):
@@ -104,15 +104,15 @@ class TestTemplateFieldPathExtraction:
         """Test that field paths have correct structure."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Verify field paths structure
         assert isinstance(data["field_paths"], dict)
         assert "citation" in data["field_paths"]
         assert "crop" in data["field_paths"]
         assert "sensor" in data["field_paths"]
-        
+
         # Check nested structure
         for category in ["citation", "crop", "sensor"]:
             assert isinstance(data["field_paths"][category], dict)
@@ -125,9 +125,9 @@ class TestTemplateFieldPathExtraction:
         """Test that template metadata is correctly included."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Check template metadata
         assert isinstance(data["template_id"], str)
         assert data["template_id"] == "fairagro_arc_v2"
@@ -135,7 +135,7 @@ class TestTemplateFieldPathExtraction:
         assert isinstance(data["name"], str)
         assert isinstance(data["description"], str)
         assert isinstance(data["specification"], str)
-        
+
         # Check that domains is a list
         assert isinstance(data["domains"], list)
         assert len(data["domains"]) >= 1
@@ -144,12 +144,12 @@ class TestTemplateFieldPathExtraction:
         """Test that field paths are suitable for mapping extraction."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Verify field paths can be used for source→target mapping
         citation_paths = data["field_paths"]["citation"]
-        
+
         # Check that each path represents a mapping from source to target
         for field_name, path in citation_paths.items():
             # Paths can use field extraction syntax like:
@@ -165,20 +165,29 @@ class TestTemplateFieldPathExtraction:
         """Test that response includes all expected fields for ARC conversion."""
         resp = client.get("/template-fields/fairagro")
         assert resp.status_code == 200
-        
+
         data = resp.json()
-        
+
         # Essential fields for ARC conversion
         essential_fields = [
-            "template_id", "version", "name", "description", "specification",
-            "domains", "required_fields", "recommended_fields", 
-            "field_paths", "required_entities", "arc_structure",
-            "required_isa_files", "validation_rules"
+            "template_id",
+            "version",
+            "name",
+            "description",
+            "specification",
+            "domains",
+            "required_fields",
+            "recommended_fields",
+            "field_paths",
+            "required_entities",
+            "arc_structure",
+            "required_isa_files",
+            "validation_rules",
         ]
-        
+
         for field in essential_fields:
             assert field in data, f"Missing essential field: {field}"
-        
+
         # Check that we have both mandatory and recommended fields
         assert len(data["required_fields"]) > 0
         assert len(data["recommended_fields"]) > 0

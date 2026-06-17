@@ -128,3 +128,21 @@ pivots:
         required_fields: []
         recommended_fields:
           - sensor
+      location:
+        required_fields: []
+        recommended_fields:
+          - location
+      geographicCoverage:
+        required_fields: []
+        recommended_fields:
+          - country
+          - state
+          - county
+      soil:
+        required_fields: []
+        recommended_fields:
+          - soilLayer
+      process:
+        required_fields: []
+        recommended_fields:
+          - processType

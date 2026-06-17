@@ -175,7 +175,7 @@ class TestMatthiasL:
         assert len(parsed["parameter_values"]) == 87
 
     def test_alternative_titles_count(self, parsed):
-        assert len(parsed["alternative_titles"]) == 805
+        assert len(parsed["alternative_titles"]) == 12
 
     def test_creator_count(self, parsed):
         assert len(parsed["creator"]) == 53

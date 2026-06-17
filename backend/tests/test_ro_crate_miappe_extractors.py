@@ -9,11 +9,16 @@ from __future__ import annotations
 from formats.ro_crate_plugin import (
     _cv_value_by_name,
     _cv_value_by_property_id,
+    _extract_crop_characteristics,
+    _extract_drone_location_params,
     _extract_event_id_crops,
+    _extract_geographic_coverage,
     _extract_geolocation,
     _extract_investigation_meta,
     _extract_origin_country,
     _extract_parameter_values,
+    _extract_process_types,
+    _extract_soil_depths,
     _extract_taxonomy,
     _extract_germplasm,
     _find_sources,
@@ -453,3 +458,425 @@ class TestExtractInvestigationMeta:
         investigation = {}
         result = _extract_investigation_meta(investigation, {})
         assert result == {}
+
+
+# ── _extract_geographic_coverage ───────────────────────────────────────────
+
+
+class TestExtractGeographicCoverage:
+    def test_extracts_country_state_county(self):
+        country_cv = _make_cv(
+            property_id="http://purl.obolibrary.org/obo/bco_country",
+            name="Country",
+            value="Germany",
+        )
+        state_cv = _make_cv(
+            property_id="http://purl.obolibrary.org/obo/bco_stateProvince",
+            name="State Province",
+            value="Land Brandenburg",
+        )
+        county_cv = _make_cv(
+            property_id="http://purl.obolibrary.org/obo/bco_county",
+            name="County",
+            value="Landkreis Markisch-Oderland",
+        )
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": [country_cv, state_cv, county_cv]}]
+        )
+        result = _extract_geographic_coverage(entities, sources)
+        assert result == {
+            "geo_country": "Germany",
+            "geo_state": "Land Brandenburg",
+            "geo_county": "Landkreis Markisch-Oderland",
+        }
+
+    def test_returns_none_when_no_cv(self):
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": []}]
+        )
+        result = _extract_geographic_coverage(entities, sources)
+        assert result == {"geo_country": None, "geo_state": None, "geo_county": None}
+
+    def test_partial_extraction(self):
+        country_cv = _make_cv(
+            property_id="http://purl.obolibrary.org/obo/bco_country",
+            name="Country",
+            value="Germany",
+        )
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": [country_cv]}]
+        )
+        result = _extract_geographic_coverage(entities, sources)
+        assert result["geo_country"] == "Germany"
+        assert result["geo_state"] is None
+        assert result["geo_county"] is None
+
+
+# ── _extract_drone_location_params ──────────────────────────────────────────
+
+
+class TestExtractDroneLocationParams:
+    def test_extracts_longitude_latitude_datetime(self):
+        lp = _make_lab_process(
+            "#LP1",
+            parameter_value_refs=[
+                {"@id": "#PV_Lng"},
+                {"@id": "#PV_Lat"},
+                {"@id": "#PV_DT"},
+            ],
+        )
+        entities = {
+            "#LP1": lp,
+            "#PV_Lng": _make_cv(name="Longitude", value="14.121", cv_id="#PV_Lng"),
+            "#PV_Lat": _make_cv(name="Latitude", value="52.516", cv_id="#PV_Lat"),
+            "#PV_DT": _make_cv(name="Date and Time", value="2025-03-15T10:30:00", cv_id="#PV_DT"),
+        }
+        result = _extract_drone_location_params(entities, [lp])
+        assert result == {
+            "drone_longitude": "14.121",
+            "drone_latitude": "52.516",
+            "drone_datetime": "2025-03-15T10:30:00",
+        }
+
+    def test_returns_none_when_no_params(self):
+        lp = _make_lab_process("#LP1")
+        entities = {"#LP1": lp}
+        result = _extract_drone_location_params(entities, [lp])
+        assert result == {"drone_longitude": None, "drone_latitude": None, "drone_datetime": None}
+
+    def test_partial_extraction(self):
+        lp = _make_lab_process("#LP1", parameter_value_refs=[{"@id": "#PV_Lng"}])
+        entities = {
+            "#LP1": lp,
+            "#PV_Lng": _make_cv(name="Longitude", value="14.121", cv_id="#PV_Lng"),
+        }
+        result = _extract_drone_location_params(entities, [lp])
+        assert result["drone_longitude"] == "14.121"
+        assert result["drone_latitude"] is None
+        assert result["drone_datetime"] is None
+
+    def test_skips_empty_values(self):
+        lp = _make_lab_process("#LP1", parameter_value_refs=[{"@id": "#PV_Empty"}])
+        entities = {
+            "#LP1": lp,
+            "#PV_Empty": _make_cv(name="Longitude", value="", cv_id="#PV_Empty"),
+        }
+        result = _extract_drone_location_params(entities, [lp])
+        assert result["drone_longitude"] is None
+
+    def test_first_match_wins(self):
+        lp1 = _make_lab_process("#LP1", parameter_value_refs=[{"@id": "#PV1"}])
+        lp2 = _make_lab_process("#LP2", parameter_value_refs=[{"@id": "#PV2"}])
+        entities = {
+            "#LP1": lp1,
+            "#LP2": lp2,
+            "#PV1": _make_cv(name="Longitude", value="14.1", cv_id="#PV1"),
+            "#PV2": _make_cv(name="Longitude", value="14.2", cv_id="#PV2"),
+        }
+        result = _extract_drone_location_params(entities, [lp1, lp2])
+        assert result["drone_longitude"] == "14.1"
+
+
+# ── Material type support ──────────────────────────────────────────────────
+
+
+class TestMaterialTypeSupport:
+    def test_material_with_additional_type_matches_sample(self):
+        """Entity with @type=Sample + additionalType=Material should match Sample check."""
+        mat = {
+            "@id": "#Mat1",
+            "@type": "Sample",
+            "additionalType": "Material",
+            "additionalProperty": [],
+        }
+        from formats.ro_crate_plugin import _has_type
+
+        assert _has_type(mat, "Sample")
+
+    def test_material_only_additional_type_matches_material(self):
+        """Entity with only additionalType=Material should match Material check."""
+        mat = {"@id": "#Mat1", "additionalType": "Material", "additionalProperty": []}
+        from formats.ro_crate_plugin import _has_type
+
+        assert _has_type(mat, "Material")
+
+    def test_material_only_does_not_match_sample(self):
+        """Entity with only additionalType=Material should NOT match Sample check."""
+        mat = {"@id": "#Mat1", "additionalType": "Material", "additionalProperty": []}
+        from formats.ro_crate_plugin import _has_type
+
+        assert not _has_type(mat, "Sample")
+
+
+# ── Infection Label extraction (integrated into crop block) ────────────────
+
+
+class TestInfectionLabelExtraction:
+    def test_extract_infection_label_from_material(self):
+        """Infection Label CharacteristicValue should be extractable by name."""
+        from formats.ro_crate_plugin import _cv_value_by_name
+
+        cv = _make_cv(name="Infection Label", value="PVY_positiv")
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": [cv]}]
+        )
+        result = _cv_value_by_name(sources, entities, "Infection Label")
+        assert result == "PVY_positiv"
+
+
+# ── Subject default ────────────────────────────────────────────────────────
+
+
+class TestSubjectDefault:
+    def test_always_has_subject_in_output(self):
+        """_extract_fields should always set subject='Agricultural Sciences'."""
+        from formats.ro_crate_plugin import _extract_fields
+
+        result = _extract_fields(
+            graph=[],
+            entities={},
+            investigation=None,
+            studies=[],
+            assays=[],
+            validate_fairagro=False,
+        )
+        assert result.get("subject") == "Agricultural Sciences"
+
+
+# ── Keywords extraction ────────────────────────────────────────────────────
+
+
+class TestKeywordsExtraction:
+    def test_extracts_keywords_from_investigation(self):
+        from formats.ro_crate_plugin import _extract_fields
+
+        investigation = {
+            "@id": "./",
+            "@type": "Dataset",
+            "additionalType": "Investigation",
+            "keywords": ["wheat", "drought tolerance", "phenotyping"],
+        }
+        result = _extract_fields(
+            graph=[investigation],
+            entities={"./": investigation},
+            investigation=investigation,
+            studies=[],
+            assays=[],
+            validate_fairagro=False,
+        )
+        assert result.get("keywords") == ["wheat", "drought tolerance", "phenotyping"]
+
+    def test_returns_empty_list_when_no_keywords(self):
+        from formats.ro_crate_plugin import _extract_fields
+
+        investigation = {"@id": "./", "name": "Test"}
+        result = _extract_fields(
+            graph=[],
+            entities={},
+            investigation=investigation,
+            studies=[],
+            assays=[],
+            validate_fairagro=False,
+        )
+        assert result.get("keywords") == []
+
+
+# ── _extract_soil_depths ──────────────────────────────────────────────────
+
+
+class TestExtractSoilDepths:
+    def test_extracts_distinct_depth_pairs(self):
+        lp1 = _make_lab_process(
+            "#LP1",
+            parameter_value_refs=[{"@id": "#PV_Top1"}, {"@id": "#PV_Bot1"}],
+        )
+        lp1["executesLabProtocol"] = {"@id": "#Protocol_Events-SoilSampling"}
+        entities = {
+            "#LP1": lp1,
+            "#PV_Top1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="0", cv_id="#PV_Top1"
+            ),
+            "#PV_Bot1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105226", value="30", cv_id="#PV_Bot1"
+            ),
+        }
+        graph = [lp1]
+        result = _extract_soil_depths(entities, graph)
+        assert result == [{"top": "0", "bottom": "30"}]
+
+    def test_deduplicates_same_pair(self):
+        lp1 = _make_lab_process(
+            "#LP1", parameter_value_refs=[{"@id": "#PV_Top1"}, {"@id": "#PV_Bot1"}]
+        )
+        lp1["executesLabProtocol"] = {"@id": "#Protocol_Events-SoilSampling"}
+        lp2 = _make_lab_process(
+            "#LP2", parameter_value_refs=[{"@id": "#PV_Top2"}, {"@id": "#PV_Bot2"}]
+        )
+        lp2["executesLabProtocol"] = {"@id": "#Protocol_Events-SoilSampling"}
+        entities = {
+            "#LP1": lp1,
+            "#LP2": lp2,
+            "#PV_Top1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="0", cv_id="#PV_Top1"
+            ),
+            "#PV_Bot1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105226", value="30", cv_id="#PV_Bot1"
+            ),
+            "#PV_Top2": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="0", cv_id="#PV_Top2"
+            ),
+            "#PV_Bot2": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105226", value="30", cv_id="#PV_Bot2"
+            ),
+        }
+        result = _extract_soil_depths(entities, [lp1, lp2])
+        assert len(result) == 1
+
+    def test_collects_multiple_distinct_pairs(self):
+        lp1 = _make_lab_process(
+            "#LP1", parameter_value_refs=[{"@id": "#PV_Top1"}, {"@id": "#PV_Bot1"}]
+        )
+        lp1["executesLabProtocol"] = {"@id": "#Protocol_Events-SoilSampling"}
+        lp2 = _make_lab_process(
+            "#LP2", parameter_value_refs=[{"@id": "#PV_Top2"}, {"@id": "#PV_Bot2"}]
+        )
+        lp2["executesLabProtocol"] = {"@id": "#Protocol_Events-SoilSampling"}
+        entities = {
+            "#LP1": lp1,
+            "#LP2": lp2,
+            "#PV_Top1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="0", cv_id="#PV_Top1"
+            ),
+            "#PV_Bot1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105226", value="30", cv_id="#PV_Bot1"
+            ),
+            "#PV_Top2": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="30", cv_id="#PV_Top2"
+            ),
+            "#PV_Bot2": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105226", value="60", cv_id="#PV_Bot2"
+            ),
+        }
+        result = _extract_soil_depths(entities, [lp1, lp2])
+        assert len(result) == 2
+
+    def test_skips_non_soil_sampling_processes(self):
+        lp = _make_lab_process("#LP1", parameter_value_refs=[{"@id": "#PV1"}])
+        lp["executesLabProtocol"] = {"@id": "#Protocol_Events-Tillage"}
+        entities = {
+            "#LP1": lp,
+            "#PV1": _make_cv(
+                property_id="https://bioregistry.io/ENVO:06105225", value="0", cv_id="#PV1"
+            ),
+        }
+        result = _extract_soil_depths(entities, [lp])
+        assert result == []
+
+    def test_returns_empty_when_no_processes(self):
+        result = _extract_soil_depths({}, [])
+        assert result == []
+
+
+# ── _extract_process_types ─────────────────────────────────────────────────
+
+
+class TestExtractProcessTypes:
+    def test_extracts_distinct_process_names(self):
+        lp1 = {
+            "@id": "#LP1",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Events-Tillage"},
+        }
+        lp2 = {
+            "@id": "#LP2",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Events-Planting"},
+        }
+        lp3 = {
+            "@id": "#LP3",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Events-Harvest"},
+        }
+        result = _extract_process_types({}, [lp1, lp2, lp3])
+        assert sorted(result) == ["Harvest", "Planting", "Tillage"]
+
+    def test_deduplicates_same_process(self):
+        lp1 = {
+            "@id": "#LP1",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Events-Tillage"},
+        }
+        lp2 = {
+            "@id": "#LP2",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Events-Tillage"},
+        }
+        result = _extract_process_types({}, [lp1, lp2])
+        assert result == ["Tillage"]
+
+    def test_skips_unknown_protocols(self):
+        lp = {
+            "@id": "#LP1",
+            "@type": "LabProcess",
+            "executesLabProtocol": {"@id": "#Protocol_Materials-BiologicalMaterial"},
+        }
+        result = _extract_process_types({}, [lp])
+        assert result == []
+
+    def test_skips_non_lab_process_entities(self):
+        src = {"@id": "#S1", "@type": "Source"}
+        result = _extract_process_types({}, [src])
+        assert result == []
+
+    def test_returns_empty_when_no_graph(self):
+        result = _extract_process_types({}, [])
+        assert result == []
+
+    def test_handles_string_protocol_id(self):
+        lp = {
+            "@id": "#LP1",
+            "@type": "LabProcess",
+            "executesLabProtocol": "#Protocol_Events-Irrigation",
+        }
+        result = _extract_process_types({}, [lp])
+        assert result == ["Irrigation"]
+
+
+# ── _extract_crop_characteristics ──────────────────────────────────────────
+
+
+class TestExtractCropCharacteristics:
+    def test_extracts_grain_weight_icc_code_variety(self):
+        grain_cv = _make_cv(name="1000-grain dry weight", value="45.2")
+        icc_cv = _make_cv(name="ICC code", value="12345")
+        variety_cv = _make_cv(name="Infraspecific name", value="Absolut")
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": [grain_cv, icc_cv, variety_cv]}]
+        )
+        result = _extract_crop_characteristics(entities, sources)
+        assert result == {
+            "crop_grain_weight": "45.2",
+            "crop_icc_code": "12345",
+            "crop_variety": "Absolut",
+        }
+
+    def test_returns_none_when_no_cv(self):
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": []}]
+        )
+        result = _extract_crop_characteristics(entities, sources)
+        assert result == {
+            "crop_grain_weight": None,
+            "crop_icc_code": None,
+            "crop_variety": None,
+        }
+
+    def test_partial_extraction(self):
+        grain_cv = _make_cv(name="1000-grain dry weight", value="45.2")
+        entities, sources = _build_entities_and_sources(
+            [{"source_id": "#S1", "additionalProperty": [grain_cv]}]
+        )
+        result = _extract_crop_characteristics(entities, sources)
+        assert result["crop_grain_weight"] == "45.2"
+        assert result["crop_icc_code"] is None
+        assert result["crop_variety"] is None

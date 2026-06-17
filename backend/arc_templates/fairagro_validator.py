@@ -47,7 +47,9 @@ class FairagroArcValidator:
             for entity in entity_instances:
                 for field in required_fields:
                     if field not in entity:
-                        errors.append(f"{entity_type} {entity.get('@id', 'unknown')} missing required field: {field}")
+                        errors.append(
+                            f"{entity_type} {entity.get('@id', 'unknown')} missing required field: {field}"
+                        )
 
         # 4. Check validation rules
         for rule in self.template.get("validation_rules", []):
@@ -65,8 +67,8 @@ class FairagroArcValidator:
             "compliance": {
                 "dataplant_arc": self._check_dataplant_compliance(errors),
                 "fairagro": self._check_fairagro_compliance(errors),
-                "publishable": self._check_publishable_compliance(errors, warnings)
-            }
+                "publishable": self._check_publishable_compliance(errors, warnings),
+            },
         }
 
     def _validate_arc_structure(self, errors: List, warnings: List):
@@ -84,24 +86,28 @@ class FairagroArcValidator:
     def _validate_dataplant_requirements(self, arc_data: Dict, errors: List, warnings: List):
         """Validate DataPLANT-specific ARC requirements."""
         graph = arc_data.get("@graph", [])
-        
+
         # Check for investigation metadata file
-        investigation_file = next((e for e in graph if e.get("@id") == "isa.investigation.xlsx"), None)
+        investigation_file = next(
+            (e for e in graph if e.get("@id") == "isa.investigation.xlsx"), None
+        )
         if not investigation_file:
             errors.append("Missing required file: isa.investigation.xlsx")
-        
+
         # Check for RO-Crate metadata file
         ro_crate_file = next((e for e in graph if e.get("@id") == "ro-crate-metadata.json"), None)
         if not ro_crate_file:
             errors.append("Missing required file: ro-crate-metadata.json")
-        
+
         # Check investigation has required metadata for publishable ARC
         investigation = next((e for e in graph if self._has_type(e, "Investigation")), None)
         if investigation:
             required_metadata = ["name", "description", "identifier", "license", "datePublished"]
             missing_metadata = [field for field in required_metadata if field not in investigation]
             if missing_metadata:
-                warnings.append(f"Investigation missing recommended metadata for publishable ARC: {', '.join(missing_metadata)}")
+                warnings.append(
+                    f"Investigation missing recommended metadata for publishable ARC: {', '.join(missing_metadata)}"
+                )
 
     def _check_validation_rule(self, rule: Dict, graph: List, errors: List, warnings: List):
         """Check individual validation rules."""
@@ -142,7 +148,9 @@ class FairagroArcValidator:
         for entity in entities:
             missing_fields = [field for field in fields if field not in entity]
             if missing_fields:
-                errors.append(f"{entity_type} {entity.get('@id', 'unknown')} missing required fields: {', '.join(missing_fields)}")
+                errors.append(
+                    f"{entity_type} {entity.get('@id', 'unknown')} missing required fields: {', '.join(missing_fields)}"
+                )
 
     def _check_path_resolution_rule(self, rule: Dict, graph: List, warnings: List):
         """Check data path resolution rule."""
@@ -155,7 +163,7 @@ class FairagroArcValidator:
         path = rule["path"]
         # Handle multiple field options (e.g., "Investigation.creator | Investigation.investigationContacts")
         field_options = [opt.strip() for opt in path.split("|")]
-        
+
         for field_opt in field_options:
             if "/" in field_opt:  # Entity.field format
                 entity_type, field = field_opt.split(".")
@@ -193,19 +201,40 @@ class FairagroArcValidator:
     def _check_dataplant_compliance(self, errors: List) -> bool:
         """Check if ARC meets DataPLANT specification requirements."""
         # Check for critical DataPLANT requirements
-        critical_errors = [e for e in errors if any(term in e for term in ["isa.investigation.xlsx", "ro-crate-metadata.json", "Investigation"])]
+        critical_errors = [
+            e
+            for e in errors
+            if any(
+                term in e
+                for term in ["isa.investigation.xlsx", "ro-crate-metadata.json", "Investigation"]
+            )
+        ]
         return len(critical_errors) == 0
 
     def _check_fairagro_compliance(self, errors: List) -> bool:
         """Check if ARC meets FAIRagro requirements."""
         # Check for FAIRagro-specific errors
-        fairagro_errors = [e for e in errors if any(term in e for term in ["Investigation", "Study", "Assay", "creator", "measurementTechnique"])]
+        fairagro_errors = [
+            e
+            for e in errors
+            if any(
+                term in e
+                for term in ["Investigation", "Study", "Assay", "creator", "measurementTechnique"]
+            )
+        ]
         return len(fairagro_errors) == 0
 
     def _check_publishable_compliance(self, errors: List, warnings: List) -> bool:
         """Check if ARC meets publishable requirements."""
         # Check for publishable requirements
-        publishable_errors = [e for e in errors if any(term in e for term in ["isa.investigation.xlsx", "Investigation", "identifier", "license"])]
+        publishable_errors = [
+            e
+            for e in errors
+            if any(
+                term in e
+                for term in ["isa.investigation.xlsx", "Investigation", "identifier", "license"]
+            )
+        ]
         return len(publishable_errors) == 0
 
     def get_template_info(self) -> Dict:
@@ -219,5 +248,5 @@ class FairagroArcValidator:
             "required_entities": self.template["required_entities"],
             "required_fields": self.template["required_fields"],
             "arc_structure": self.template.get("arc_structure", {}),
-            "required_isa_files": self.template.get("required_isa_files", [])
+            "required_isa_files": self.template.get("required_isa_files", []),
         }

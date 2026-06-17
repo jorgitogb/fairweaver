@@ -45,6 +45,18 @@ field_rules:
     required: false
     confidence: 0.8
 
+  - source: subject
+    target: citation.subject
+    block: citation
+    required: false
+    confidence: 0.9
+
+  - source: keywords
+    target: citation.keywords
+    block: citation
+    required: false
+    confidence: 0.8
+
   # ── generalExtended block ───────────────────────────────────────
   - source: license
     target: generalExtended.license
@@ -83,6 +95,30 @@ field_rules:
     required: false
     confidence: 0.75
 
+  - source: crop_infection_label
+    target: crop.crop.infectionLabel
+    block: crop
+    required: false
+    confidence: 0.7
+
+  - source: crop_variety
+    target: crop.crop.variety
+    block: crop
+    required: false
+    confidence: 0.7
+
+  - source: crop_grain_weight
+    target: crop.crop.grainWeight
+    block: crop
+    required: false
+    confidence: 0.65
+
+  - source: crop_icc_code
+    target: crop.crop.iccCode
+    block: crop
+    required: false
+    confidence: 0.6
+
   # ── sensor block ─────────────────────────────────────────────
   - source: measurementTechnique
     target: sensor.sensor.sensorType
@@ -109,3 +145,55 @@ field_rules:
     block: sensor
     required: false
     confidence: 0.7
+
+  # ── location block ───────────────────────────────────────────
+  - source: drone_longitude
+    target: location.location.longitude
+    block: location
+    required: false
+    confidence: 0.7
+
+  - source: drone_latitude
+    target: location.location.latitude
+    block: location
+    required: false
+    confidence: 0.7
+
+  - source: drone_datetime
+    target: location.location.dateTime
+    block: location
+    required: false
+    confidence: 0.65
+
+  # ── geographicCoverage block ─────────────────────────────────
+  - source: geo_country
+    target: geographicCoverage.country
+    block: geographicCoverage
+    required: false
+    confidence: 0.8
+
+  - source: geo_state
+    target: geographicCoverage.state
+    block: geographicCoverage
+    required: false
+    confidence: 0.75
+
+  - source: geo_county
+    target: geographicCoverage.county
+    block: geographicCoverage
+    required: false
+    confidence: 0.7
+
+  # ── soil block ───────────────────────────────────────────────
+  - source: soil_depths
+    target: soil.soilLayer
+    block: soil
+    required: false
+    confidence: 0.65
+
+  # ── process block ────────────────────────────────────────────
+  - source: agricultural_processes
+    target: process.processType
+    block: process
+    required: false
+    confidence: 0.6

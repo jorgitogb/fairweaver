@@ -54,8 +54,14 @@ arc_record_store: dict[
 ] = {}  # oai_identifier → {arc: dict, raw_schema: dict, set_spec: str}
 
 
-def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
-    """Extract ARC RO-Crate root entity and reshape to FAIRagro Core Metadata Spec JSON-LD."""
+def _arc_to_fairagro_jsonld(arc_data: dict, extracted: dict | None = None) -> dict:
+    """Extract ARC RO-Crate root entity and reshape to FAIRagro Core Metadata Spec JSON-LD.
+
+    Args:
+        arc_data: Raw ARC RO-Crate JSON with @graph
+        extracted: Optional plugin-extracted fields from ro_crate_plugin.load()
+    """
+    ext = extracted or {}
     graph = arc_data.get("@graph", [])
     root = next((e for e in graph if e.get("@id") == "./"), {})
 
@@ -86,17 +92,19 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
                         }
                 authors.append(entry)
 
-    # Build keywords as DefinedTerm array
-    raw_keywords = root.get("keywords", [])
-    if isinstance(raw_keywords, str):
-        raw_keywords = [raw_keywords]
+    # Build keywords — prefer extracted, fallback to root
+    kw_source = ext.get("keywords") or root.get("keywords", [])
+    if isinstance(kw_source, str):
+        kw_source = [kw_source]
     keywords = []
-    for kw in raw_keywords:
+    for kw in kw_source:
         if isinstance(kw, str):
             keywords.append({"@type": "DefinedTerm", "name": kw})
+        elif isinstance(kw, dict):
+            keywords.append(kw)
 
     # Build identifier
-    raw_id = root.get("identifier", "")
+    raw_id = ext.get("identifier") or root.get("identifier", "")
     identifiers = []
     if raw_id:
         prop_id = (
@@ -115,10 +123,12 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
     result = {
         "@context": {"@language": "en", "@vocab": "https://schema.org/"},
         "@type": "Dataset",
-        "name": root.get("name", "Untitled"),
-        "description": [root.get("description", "")] if root.get("description") else [],
+        "name": ext.get("name") or root.get("name", "Untitled"),
+        "description": [ext.get("description") or root.get("description", "")]
+        if (ext.get("description") or root.get("description"))
+        else [],
         "identifier": identifiers,
-        "license": root.get("license", ""),
+        "license": ext.get("license") or root.get("license", ""),
         "url": root.get("url", ""),
         "keywords": keywords,
         "about": [
@@ -137,10 +147,149 @@ def _arc_to_fairagro_jsonld(arc_data: dict) -> dict:
         },
     }
 
+    # ── Agrischemas: Crop (BioSample) ──────────────────────────────────
+    crop_species = ext.get("crop_species")
+    if crop_species:
+        crop_entry: dict = {
+            "@context": "https://bioschemas.org/",
+            "@type": "BioSample",
+            "additionalType": "http://purl.obolibrary.org/obo/AGRO_00000325",
+            "additionalProperty": [],
+        }
+        props = crop_entry["additionalProperty"]
+        props.append(
+            {
+                "@type": "PropertyValue",
+                "name": "Species",
+                "propertyID": "http://purl.obolibrary.org/obo/MIAPPE_0043",
+                "value": crop_species,
+            }
+        )
+        if ext.get("crop_species_uri"):
+            props[-1]["valueReference"] = {
+                "@type": "DefinedTerm",
+                "url": ext["crop_species_uri"],
+            }
+        if ext.get("crop_variety"):
+            props.append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "Variety",
+                    "value": ext["crop_variety"],
+                }
+            )
+        if ext.get("crop_grain_weight"):
+            props.append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "1000-grain dry weight",
+                    "value": ext["crop_grain_weight"],
+                    "unitText": "gram",
+                    "unitCode": "http://purl.obolibrary.org/obo/UO_0000021",
+                }
+            )
+        if ext.get("crop_icc_code"):
+            props.append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "ICC code",
+                    "value": ext["crop_icc_code"],
+                }
+            )
+        if ext.get("crop_pest"):
+            props.append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "Infection Taxon",
+                    "value": ext["crop_pest"],
+                }
+            )
+        if ext.get("crop_infection_label"):
+            props.append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "Infection Label",
+                    "value": ext["crop_infection_label"],
+                }
+            )
+        result["about"].append(crop_entry)
+
+    # ── Agrischemas: Soil (Sample) ─────────────────────────────────────
+    soil_depths = ext.get("soil_depths")
+    if soil_depths:
+        soil_entry: dict = {
+            "@context": "https://bioschemas.org/",
+            "@type": "Sample",
+            "additionalType": "http://aims.fao.org/aos/agrovoc/c_7156",
+            "additionalProperty": [],
+        }
+        for depth in soil_depths:
+            soil_entry["additionalProperty"].append(
+                {
+                    "@type": "PropertyValue",
+                    "name": "sampling depth",
+                    "propertyID": "http://purl.obolibrary.org/obo/AGRO_00000701",
+                    "value": f"{depth['top']}-{depth['bottom']}",
+                    "unitText": "centimeter",
+                    "unitCode": "http://purl.obolibrary.org/obo/UO_0000015",
+                }
+            )
+        result["about"].append(soil_entry)
+
+    # ── Agrischemas: Process types (LabProcess) ────────────────────────
+    proc_types = ext.get("agricultural_processes")
+    if proc_types:
+        for proc_name in proc_types:
+            result["about"].append(
+                {
+                    "@context": "https://bioschemas.org/",
+                    "@type": "LabProcess",
+                    "additionalType": "http://purl.obolibrary.org/obo/AGRO_00002071",
+                    "executesLabProtocol": {
+                        "@type": "LabProtocol",
+                        "name": proc_name,
+                    },
+                }
+            )
+
+    # ── spatialCoverage (geographic coverage + drone geo) ──────────────
+    spatial: list[dict] = []
+    geo_lat = ext.get("geo_latitude") or ext.get("drone_latitude")
+    geo_lng = ext.get("geo_longitude") or ext.get("drone_longitude")
+    geo_alt = ext.get("geo_altitude")
+
+    if geo_lat and geo_lng:
+        city_entry: dict = {
+            "@type": "City",
+            "geo": {"@type": "GeoShape", "point": f"{geo_lat}, {geo_lng}"},
+        }
+        if geo_alt:
+            city_entry["additionalProperty"] = [
+                {
+                    "@type": "PropertyValue",
+                    "name": "elevation",
+                    "propertyID": "http://aims.fao.org/aos/agrovoc/c_316",
+                    "unitText": "meter",
+                    "unitCode": "http://purl.obolibrary.org/obo/UO_0000008",
+                    "value": geo_alt,
+                }
+            ]
+        spatial.append(city_entry)
+
+    if ext.get("geo_country"):
+        spatial.append({"@type": "Country", "name": ext["geo_country"]})
+    if ext.get("geo_state"):
+        spatial.append({"@type": "State", "name": ext["geo_state"]})
+    if ext.get("geo_county"):
+        spatial.append({"@type": "AdministrativeArea", "name": ext["geo_county"]})
+
+    if spatial:
+        result["spatialCoverage"] = spatial
+
     if authors:
         result["author"] = authors
-    if root.get("datePublished"):
-        result["datePublished"] = root["datePublished"]
+    if ext.get("datePublished") or root.get("datePublished"):
+        result["datePublished"] = ext.get("datePublished") or root["datePublished"]
     if root.get("version"):
         result["version"] = root["version"]
     if root.get("inLanguage"):
@@ -802,7 +951,7 @@ async def _process_single_arc_export(
     validation = validator.validate(arc_data)
 
     # Generate FAIRagro-compliant JSON-LD for Search Hub
-    fairagro_jsonld = _arc_to_fairagro_jsonld(arc_data)
+    fairagro_jsonld = _arc_to_fairagro_jsonld(arc_data, extracted=parsed)
 
     # Store in OAI-PMH record store
     oai_id = f"oai:fairweaver:{file.filename.replace('.json', '')}"
