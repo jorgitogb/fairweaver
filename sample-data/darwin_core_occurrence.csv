@@ -1,5 +1,0 @@
-scientificName,basisOfRecord,eventDate,institutionCode,collectionCode,catalogNumber,decimalLatitude,decimalLongitude,country,stateProvince,locality,kingdom,phylum,class,order,family,genus,specificEpithet,recordedBy,identifiedBy
-Ursus arctos,PRESERVED_SPECIMEN,2020-06-15,INAT,INAT-obs,12345,48.8566,2.3522,France,Île-de-France,Paris,Animalia,Chordata,Mammalia,Carnivora,Ursidae,Ursus,arctos,Jane Doe,John Smith
-Panthera leo,OBSERVATION,2021-03-22,INAT,INAT-obs,12346,-1.2921,36.8219,Kenya,Rift Valley,Maasai Mara,Animalia,Chordata,Mammalia,Carnivora,Felidae,Panthera,leo,Mike Johnson,Sarah Wilson
-Bombus terrestris,OBSERVATION,2022-07-08,UBio,UBio-coll,78901,51.5074,-0.1278,United Kingdom,England,London,Animalia,Arthropoda,Insecta,Hymenoptera,Apidae,Bombus,terrestris,Emily Clark,Tom Brown
-Quercus robur,MACHINE_OBSERVATION,2023-04-12,GBIF,GBIF-grid,45678,52.5200,13.4050,Germany,Berlin,Berlin,Plantae,Tracheophyta,oliopsida,Fagales,Fagaceae,Quercus,robur,ForestAI,ForestAI
