@@ -1,0 +1,17 @@
+flowchart TD
+    I["@type: Dataset / additionalType: Investigation"]
+    A1["@type: Dataset / additionalType: Assay<br/>crop-phenology-monitoring"]
+    A2["@type: Dataset / additionalType: Assay<br/>plant-carbon-analysis"]
+    I -->|"hasPart"| A1
+    I -->|"hasPart"| A2
+
+    S["@type: Sample / additionalType: Source<br/>V140_MNC"]
+    S -->|"additionalProperty"| CV["@type: PropertyValue<br/>additionalType: CharacteristicValue<br/>name: Biological material ID<br/>value: zeamay_C38_7<br/>propertyID: MIAPPE_0040"]
+
+    classDef isa fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef flat fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef crop fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#1b5e20
+
+    class I isa
+    class A1,A2 flat
+    class S,CV crop

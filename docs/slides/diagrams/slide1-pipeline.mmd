@@ -1,0 +1,40 @@
+flowchart LR
+    subgraph INPUT["Input"]
+        I["Schema.org JSON-LD<br/>(RDI / Research Data Infrastructure)"]
+    end
+
+    subgraph TRANSFORM["Transformation"]
+        T["FAIRagro Template/Spec<br/>Applied as Transformation Rules"]
+    end
+
+    subgraph OUTPUT_A["Output A — ARC RO-Crate"]
+        A["arc-rocrate-metadata.json<br/>(Annotated Research Context)"]
+    end
+
+    subgraph HARVEST["Harvest Paths to FAIRagro JSON"]
+        H1["Path 1: DataHub Harvest<br/>(GitLab ARC Storage)"]
+        H2["Path 2: Middleware API<br/>(Federated Service Orchestration)"]
+    end
+
+    subgraph OUTPUT_B["Output B — FAIRagro SearchHub"]
+        B["FAIRagro schema.json<br/>→ FAIRagro SearchHub Ingestion"]
+    end
+
+    I --> T
+    T --> A
+    A -->|harvest| H1
+    A -.->|orchestrate| H2
+    H1 --> B
+    H2 --> B
+
+    classDef in fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef trans fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef outa fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef harvest fill:#fce4ec,stroke:#c2185b,stroke-width:2px,stroke-dasharray: 5 5,color:#880e4f
+    classDef outb fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
+
+    class I in
+    class T trans
+    class A outa
+    class H1,H2 harvest
+    class B outb

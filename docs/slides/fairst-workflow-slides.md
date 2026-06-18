@@ -72,6 +72,7 @@ flowchart LR
 ## Slide 3 — Examining ARC Structure: Domain Objects at Different Depths
 
 **Goal:**
+
 - Understand how Agrischemas concepts map into ARC RO-Crate
 - Show that equivalent domain concepts require very different traversal depths
 
@@ -83,30 +84,65 @@ flowchart TD
     I -->|"hasPart"| S
     S -->|"hasPart"| A
 
-    A -->|"measurementMethod"| DT["@type: DefinedTerm<br/>name: digital camera<br/>termCode: OBI:0001048"]
-    label1["(Agrischemas: sensorType)"]
+    A -->|"measurementMethod"| DT["@type: DefinedTerm<br/>name: digital camera<br/>termCode: OBI:0001048<br/><b>Agrischemas: sensorType</b>"]
 
     S -->|"about"| LP["@type: LabProcess"]
     LP -->|"object"| SM["@type: Sample / additionalType: Material"]
-    SM -->|"additionalProperty"| PV["@type: PropertyValue<br/>name: Organism<br/>value: Solanum tuberosum<br/>propertyID: agrovoc:c_49904"]
-    label2["(Agrischemas: cropSpecies)"]
+    SM -->|"additionalProperty"| PV["@type: PropertyValue<br/>name: Organism<br/>value: Solanum tuberosum<br/>propertyID: agrovoc:c_49904<br/><b>Agrischemas: cropSpecies</b>"]
 
     classDef isa fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
     classDef leaf fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
-    classDef labelbox fill:none,stroke:none,color:#2e7d32
 
     class I,S,A isa
     class DT,LP,SM,PV leaf
-    class label1,label2 labelbox
 ```
 
 **Example ARC RO-Crate:** UC13 drone-flyover
 
 ---
 
-## Slide 4 — Required Modeling Pattern & Standardization Gap
+## Slide 4 — Müncheberg ARC: A Different Structural Pattern
 
 **Goal:**
+- Show another real ARC with a different structural pattern
+- Reinforce that parser must handle multiple modeling conventions
+
+```mermaid
+flowchart TD
+    I["@type: Dataset / additionalType: Investigation"]
+    A1["@type: Dataset / additionalType: Assay<br/>crop-phenology-monitoring"]
+    A2["@type: Dataset / additionalType: Assay<br/>plant-carbon-analysis"]
+    I -->|"hasPart"| A1
+    I -->|"hasPart"| A2
+
+    S["@type: Sample / additionalType: Source<br/>V140_MNC"]
+    S -->|"additionalProperty"| CV["@type: PropertyValue<br/>additionalType: CharacteristicValue<br/>name: Biological material ID<br/>value: zeamay_C38_7<br/>propertyID: MIAPPE_0040"]
+
+    classDef isa fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef flat fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef crop fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#1b5e20
+
+    class I isa
+    class A1,A2 flat
+    class S,CV crop
+```
+
+| Aspect | Drone Flyover | Müncheberg LTE |
+|--------|--------------|----------------|
+| **Study entity** | Explicit | Absent |
+| **Crop species path** | Study → LabProcess → Sample → PropertyValue | Source → additionalProperty → CharacteristicValue |
+| **Crop species depth** | 4 hops | 2 hops |
+| **Sensor metadata** | Present | Absent |
+| **Assay count** | 1 | 27+ |
+
+**Example ARC RO-Crate:** Müncheberg LTE
+
+---
+
+## Slide 5 — Required Modeling Pattern & Standardization Gap
+
+**Goal:**
+
 - Define the required path for unambiguous extraction
 - Identify what still needs standardization
 
@@ -147,4 +183,3 @@ flowchart TD
 | **propertyID: SSSOM mapping** | How to standardize ontology term mappings? |
 
 ---
-
