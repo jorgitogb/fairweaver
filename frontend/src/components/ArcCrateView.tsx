@@ -4,8 +4,9 @@ import type { ArcValidationResult } from "../api/client";
 import ArcEntityTree from "./ArcEntityTree";
 import type { GraphEntity } from "./ArcEntityTree";
 import MiappeExtractionTree from "./MiappeExtractionTree";
+import ArcHierarchyTree from "./ArcHierarchyTree";
 
-type Tab = "arc" | "fairagro" | "validation" | "entities" | "miappe";
+type Tab = "arc" | "fairagro" | "validation" | "entities" | "hierarchy" | "miappe";
 
 interface Props {
   preview: Record<string, unknown>;
@@ -74,8 +75,8 @@ export default function ArcCrateView({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        {(["arc", "fairagro", "validation", "entities", "miappe"] as Tab[]).map((t) => (
+      <div className="flex flex-wrap border-b border-slate-200">
+        {(["arc", "fairagro", "validation", "entities", "hierarchy", "miappe"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -85,10 +86,11 @@ export default function ArcCrateView({
                 : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
-            {t === "arc" && "ARC RO-Crate"}
-            {t === "fairagro" && "FAIRagro JSON-LD"}
+            {t === "arc" && "ARC"}
+            {t === "fairagro" && "JSON-LD"}
             {t === "validation" && "Validation"}
             {t === "entities" && "Entities"}
+            {t === "hierarchy" && "Hierarchy"}
             {t === "miappe" && "MIAPPE"}
           </button>
         ))}
@@ -141,6 +143,10 @@ export default function ArcCrateView({
         ) : tab === "entities" ? (
           <div className="max-h-96 overflow-y-auto">
             <ArcEntityTree graph={((preview as Record<string, unknown>)?.["@graph"] || []) as GraphEntity[]} />
+          </div>
+        ) : tab === "hierarchy" ? (
+          <div className="max-h-96 overflow-y-auto">
+            <ArcHierarchyTree graph={((preview as Record<string, unknown>)?.["@graph"] || []) as GraphEntity[]} />
           </div>
         ) : tab === "miappe" ? (
           <div className="max-h-96 overflow-y-auto">
@@ -215,10 +221,11 @@ export default function ArcCrateView({
               <span className="text-sm font-medium text-slate-700">{filename}</span>
               <span className="text-xs text-slate-400">—</span>
               <span className="text-xs font-medium text-slate-500">
-                {tab === "arc" && "ARC RO-Crate"}
-                {tab === "fairagro" && "FAIRagro JSON-LD"}
+                {tab === "arc" && "ARC"}
+                {tab === "fairagro" && "JSON-LD"}
                 {tab === "validation" && "Validation"}
                 {tab === "entities" && "Entities"}
+                {tab === "hierarchy" && "Hierarchy"}
                 {tab === "miappe" && "MIAPPE"}
               </span>
             </div>
@@ -274,6 +281,8 @@ export default function ArcCrateView({
               </div>
             ) : tab === "entities" ? (
               <ArcEntityTree graph={((preview as Record<string, unknown>)?.["@graph"] || []) as GraphEntity[]} />
+            ) : tab === "hierarchy" ? (
+              <ArcHierarchyTree graph={((preview as Record<string, unknown>)?.["@graph"] || []) as GraphEntity[]} />
             ) : tab === "miappe" ? (
               <MiappeExtractionTree preview={preview} />
             ) : (

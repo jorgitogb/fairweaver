@@ -25,7 +25,7 @@ interface Props {
   graph: GraphEntity[];
 }
 
-const ENTITY_ICONS: Record<string, typeof FlaskConical> = {
+export const ENTITY_ICONS: Record<string, typeof FlaskConical> = {
   Investigation: FlaskConical,
   Study: FileText,
   Assay: Microscope,
@@ -40,7 +40,7 @@ const DOMAIN_BADGES: Record<string, { icon: typeof Sprout; label: string; color:
   measurementTechnique: { icon: Microscope, label: "Sensor", color: "bg-blue-100 text-blue-700" },
 };
 
-function getEntityType(entity: GraphEntity): string {
+export function getEntityType(entity: GraphEntity): string {
   if (entity.additionalType) return entity.additionalType;
   const t = entity["@type"];
   if (Array.isArray(t)) return t[0] || "Unknown";

@@ -18,11 +18,13 @@ const FORMAT_LABELS: Record<string, string> = {
 interface Props {
   onFileAccepted: (file: File) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 export default function UploadZone({
   onFileAccepted,
   disabled = false,
+  compact = false,
 }: Props) {
   const onDrop = useCallback(
     (accepted: File[]) => {
@@ -44,7 +46,8 @@ export default function UploadZone({
     <div
       {...getRootProps()}
       className={`
-        border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all
+        border-2 border-dashed rounded-xl text-center cursor-pointer transition-all
+        ${compact ? "p-4" : "p-6 sm:p-8 md:p-10"}
         ${isDragActive ? "border-emerald-400 bg-emerald-50" : "border-slate-300 hover:border-emerald-400 hover:bg-slate-50"}
         ${isDragReject ? "border-red-400 bg-red-50" : ""}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
@@ -52,10 +55,14 @@ export default function UploadZone({
     >
       <input {...getInputProps()} />
       <UploadCloud
-        className={`mx-auto mb-3 w-10 h-10 ${isDragActive ? "text-emerald-500" : "text-slate-400"}`}
+        className={`mx-auto ${compact ? "w-5 h-5 mb-1" : "w-10 h-10 mb-3"} ${isDragActive ? "text-emerald-500" : "text-slate-400"}`}
       />
       {isDragActive ? (
-        <p className="text-emerald-600 font-medium">Drop it here…</p>
+        <p className="text-emerald-600 font-medium text-sm">Drop it here…</p>
+      ) : compact ? (
+        <p className="text-slate-500 text-xs">
+          Drag or click to replace file
+        </p>
       ) : (
         <>
           <p className="text-slate-600 font-medium mb-1">
@@ -64,17 +71,19 @@ export default function UploadZone({
           <p className="text-slate-400 text-sm">Schema.org, ARC RO-Crate, ISA-JSON, DataCite, OAI-PMH, Darwin Core · Max 500 MB</p>
         </>
       )}
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {Object.entries(FORMAT_LABELS).map(([ext, label]) => (
-          <span
-            key={ext}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500"
-          >
-            <FileJson className="w-3 h-3" />
-            {label}
-          </span>
-        ))}
-      </div>
+      {!compact && (
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {Object.entries(FORMAT_LABELS).map(([ext, label]) => (
+            <span
+              key={ext}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500"
+            >
+              <FileJson className="w-3 h-3" />
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

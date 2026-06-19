@@ -11,7 +11,7 @@ import {
 import UploadZone from "./components/UploadZone";
 import ArcCrateView from "./components/ArcCrateView";
 import ComplianceBadge from "./components/ComplianceBadge";
-import { Loader2, Github, Database, ArrowDownUp } from "lucide-react";
+import { Loader2, Github, Database, ArrowDownUp, AlertTriangle } from "lucide-react";
 
 const PIVOT_OPTIONS = [
   { id: "fairagro_searchhub", label: "FAIRagro Search Hub", category: "FAIRagro" },
@@ -149,7 +149,7 @@ export default function App() {
               FAIRweaver
             </span>
             <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
-              v0.1 · pre-hackathon
+              v0.1
             </span>
           </div>
           <a
@@ -164,8 +164,8 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-8">
-        <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 space-y-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-emerald-200/60">
           <h1 className="text-xl font-semibold text-slate-800 mb-2">
             FAIRweaver — Metadata Interoperability
           </h1>
@@ -183,10 +183,10 @@ export default function App() {
                   <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
                     1 · Upload metadata
                   </h2>
-                  <UploadZone onFileAccepted={handleFileAccepted} />
+                  <UploadZone onFileAccepted={handleFileAccepted} compact />
                   {file && (
                     <p className="mt-2 text-sm text-slate-600 flex items-center gap-2 flex-wrap">
-                      📄 <span className="font-medium">{file.name}</span>
+                      📄 <span className="font-medium truncate max-w-[180px]">{file.name}</span>
                       <span className="text-slate-400">
                         ({(file.size / 1024).toFixed(1)} KB)
                       </span>
@@ -233,7 +233,7 @@ export default function App() {
                   <button
                     onClick={() => convertMutation.mutate()}
                     disabled={convertMutation.isPending}
-                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all shadow-sm hover:shadow-md"
                   >
                     {convertMutation.isPending ? (
                       <>
@@ -247,8 +247,8 @@ export default function App() {
                 </section>
 
                 {convertMutation.isError && (
-                  <p className="text-red-500 text-sm">
-                    ⚠ {(convertMutation.error as Error).message}
+                  <p className="text-red-500 text-sm flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4 shrink-0" /> {(convertMutation.error as Error).message}
                   </p>
                 )}
               </>
@@ -323,12 +323,11 @@ export default function App() {
                 </div>
               </section>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-300 text-sm text-center p-10 border-2 border-dashed border-slate-200 rounded-xl">
+              <div className="min-h-[240px] flex items-center justify-center text-slate-400 text-sm text-center p-6 sm:p-10 rounded-xl bg-slate-50/50">
                 <div>
                   <Database className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p>
-                    Upload a metadata file (Schema.org, ARC RO-Crate, DataCite XML, Darwin Core CSV)
-                    to convert it to your target pivot format.
+                  <p className="text-slate-400">
+                    Results will appear here after conversion
                   </p>
                 </div>
               </div>
@@ -337,7 +336,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="text-center text-xs text-slate-400 py-8">
+      <footer className="text-center text-xs text-slate-400 py-8 border-t border-slate-200">
         FAIRweaver · BioHackathon Germany 2026 · Apache 2.0
       </footer>
     </div>

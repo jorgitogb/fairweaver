@@ -74,6 +74,7 @@ describe("HarvestZone", () => {
     expect(onHarvest).toHaveBeenCalledWith({
       base_url: "https://example.org/oai",
       metadata_prefix: "oai_dc",
+      pivot_id: "fairagro_searchhub",
     });
   });
 

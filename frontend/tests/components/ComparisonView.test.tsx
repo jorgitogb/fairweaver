@@ -42,7 +42,7 @@ describe("ComparisonView", () => {
 
   it("shows source fields on the left", () => {
     render(<ComparisonView {...defaultProps} />);
-    expect(screen.getByText("Input Fields")).toBeInTheDocument();
+    expect(screen.getByText(/Input Fields/i)).toBeInTheDocument();
     const titleMatches = screen.getAllByText("title");
     expect(titleMatches.length).toBeGreaterThanOrEqual(1);
     const creatorMatches = screen.getAllByText("creator");
