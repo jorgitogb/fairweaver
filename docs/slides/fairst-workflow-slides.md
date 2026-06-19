@@ -2,7 +2,7 @@
 
 ---
 
-## Slide 1 — FAIRagro Metadata Transformation Pipeline
+## FAIRagro Metadata Transformation Pipeline
 
 ```mermaid
 flowchart LR
@@ -57,7 +57,7 @@ flowchart LR
 
 ---
 
-## Slide 2 — Three File Scenarios: Input → ARC → FAIRagro Output
+## Three File Scenarios: Input → ARC → FAIRagro Output
 
 | Case | Input File | ARC Output | FAIRagro Output |
 |------|-----------|------------|-----------------|
@@ -69,7 +69,7 @@ flowchart LR
 
 ---
 
-## Slide 3 — Examining ARC Structure: Domain Objects at Different Depths
+## Examining ARC Structure: Domain Objects at Different Depths
 
 **Goal:**
 
@@ -103,7 +103,7 @@ flowchart TD
 
 ---
 
-## Slide 4 — Müncheberg ARC: A Different Structural Pattern
+## Müncheberg ARC: A Different Structural Pattern
 
 **Goal:**
 - Show another real ARC with a different structural pattern
@@ -149,7 +149,7 @@ flowchart TD
 
 ---
 
-## Slide 5 — Required Modeling Pattern & Standardization Gap
+## Required Modeling Pattern & Standardization Gap
 
 **Goal:**
 

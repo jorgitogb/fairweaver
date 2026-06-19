@@ -20,52 +20,34 @@ pipeline must handle that variability — or define conventions to eliminate it.
 
 ---
 
-## 2. The Pipeline (Slide 1)
+## 2. The Pipeline
 
-The pipeline is strictly sequential. Schema.org JSON-LD from an RDI (Research Data
-Infrastructure) enters at the top, gets transformed by FAIRagro templates, and produces
-two outputs in order:
+The pipeline is strictly sequential. Output B (FAIRagro JSON) is derived from
+Output A (ARC RO-Crate) — not a parallel output.
 
-1. **Output A — ARC RO-Crate.** A JSON-LD document that follows the ARC specification.
-2. **Output B — FAIRagro JSON.** Derived from Output A, not produced independently.
+Two harvest paths converge on the same FAIRagro JSON schema:
+- **Path 1 (solid):** Direct harvest from GitLab DataHub where ARCs are stored
+- **Path 2 (dashed):** Via FAIRagro Middleware API (federated service)
 
-Output B's dependency on Output A is the key architectural insight. If the ARC is
-incomplete, the FAIRagro extraction is incomplete too. There is no shortcut.
-
-Two paths feed the ARC into Search Hub:
-
-- **Path 1 (direct harvest):** GitLab DataHub stores the ARC; a harvester reads it and
-  produces FAIRagro JSON.
-- **Path 2 (orchestrated):** The FAIRagro Middleware API coordinates the full workflow,
-  from harvest through conversion to ingestion. The dashed line in the diagram signals
-  this path is still being stabilized.
-
-Both paths converge on the same FAIRagro schema.json consumed by Search Hub.
+Both paths produce identical FAIRagro schema.json ingested into SearchHub.
 
 ---
 
-## 3. The Compliance Spectrum (Slide 2)
+## 3. The Compliance Spectrum
 
-Three test files illustrate the relationship between ARC quality and extraction depth:
+| Case | Input File | ARC Output | FAIRagro Output |
+|------|------------|------------|-----------------|
+| **Synthetic** | `schema-org-wheat-full.json` | `arc-ro-crate-wheat-full` ✓ compliant | Full extraction ✓ |
+| **Real — Small** | `arc-ro-crate-dronflyover.json` (<10 MB) | Manual, partial ⚠ | Partial — mappable fields only |
+| **Real — Large** | `arc-ro-crate-muenchenberg-lte.json` (>100 MB) | Manual, partial ⚠ | Basic harvest only |
 
-**Synthetic (`schema-org-wheat-full.json`):** A manually crafted input designed to cover
-every FAIRagro-required field. The resulting ARC is fully compliant; extraction gets
-everything. This proves the pipeline works when the input follows the rules.
+💡 If an ARC follows the FAIRagro specification → full metadata extraction.
+If not → only basic information is harvested.
 
-**Real — Small (`arc-ro-crate-dronflyover.json`, <10 MB):** An actual agronomic ARC from
-the UC13 drone flyover. It follows the ISA Investigation → Study → Assay hierarchy but
-uses non-standard property names and missing optional fields. Result: partial extraction.
-Only fields that map unambiguously to the FAIRagro schema come through.
-
-**Real — Large (`arc-ro-crate-muenchenberg-lte.json`, >100 MB):** A long-term experiment
-ARC from Müncheberg with 27+ assays but a flatter structure. Many domain-specific fields
-don't match any FAIRagro template key. Result: basic harvest only — title, description,
-identifier, creator. Most of the rich agronomic detail is lost.
-
-The pattern is clear: compliance determines extraction depth. If an ARC follows the
-FAIRagro specification, you get full extraction. If not, you get the intersection of
-what's present and what's mappable. This is not a pipeline limitation — it's a signal
-that the community needs modeling conventions.
+The pattern is clear: compliance determines extraction depth. Well-structured ARCs
+enable full, automated extraction; unstructured ones yield only basic metadata.
+This is not a pipeline limitation — it's a signal that the community needs modeling
+conventions.
 
 ---
 
@@ -127,19 +109,13 @@ The terminal node — PropertyValue with a `propertyID` — is critical. `name: 
 linking to an ontology term (e.g., `agrovoc:c_49904`) makes it semantically precise and
 machine-resolvable.
 
-Two open questions remain:
+| Question | Details |
+|----------|---------|
+| **Structure: ?** | How to formally specify the required traversal path? |
+| **propertyID: SSSOM mapping** | How to standardize ontology term mappings? |
 
-1. **Structure specification.** How do we formally specify a required graph traversal path
-   so that tools can validate compliance automatically? A shape expression (ShEx) or
-   SHACL shape? A simple property-path DSL in the pivot registry YAML?
-
-2. **Ontology mapping standardization.** `propertyID` values need a shared vocabulary of
-   mappings so that every ARC uses the same ontology term for "crop species." SSSOM
-   (Simple Standard for Sharing Ontological Mappings) is a candidate — but it needs
-   community adoption.
-
-These are not FAIRweaver problems. They are community-level standardization problems that
-FAIRweaver exposes and quantifies.
+These are not FAIRweaver problems. They are community-level standardization problems
+that FAIRweaver exposes and quantifies.
 
 ---
 

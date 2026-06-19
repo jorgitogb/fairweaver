@@ -4,7 +4,7 @@ Detailed notes for each slide in the presentation.
 
 ---
 
-## Slide 1 — FAIRagro Metadata Transformation Pipeline
+## FAIRagro Metadata Transformation Pipeline
 
 ### Speaker Notes
 
@@ -36,7 +36,7 @@ Both paths produce the same FAIRagro JSON-LD consumed by the Search Hub. The key
 
 ---
 
-## Slide 2 — Three File Scenarios: Input → ARC → FAIRagro Output
+## Three File Scenarios: Input → ARC → FAIRagro Output
 
 ### Speaker Notes
 
@@ -58,7 +58,7 @@ We tested the pipeline with three concrete files to show how structure quality d
 
 ---
 
-## Slide 3 — Examining ARC Structure: Domain Objects at Different Depths
+## Examining ARC Structure: Domain Objects at Different Depths
 
 ### Speaker Notes
 
@@ -87,7 +87,7 @@ The `propertyID` in the PropertyValue is critical — it links to an ontology te
 
 ---
 
-## Slide 4 — Müncheberg ARC: A Different Structural Pattern
+## Müncheberg ARC: A Different Structural Pattern
 
 ### Speaker Notes
 
@@ -126,7 +126,7 @@ This slide shows that the Müncheberg ARC uses a different structural convention
 
 ---
 
-## Slide 5 — Required Modeling Pattern & Standardization Gap
+## Required Modeling Pattern & Standardization Gap
 
 ### Speaker Notes
 
