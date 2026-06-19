@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test suite for ARC export component integration in FAIRweaver frontend.
+Test suite for ARC export component integration in FAIRagro-MI frontend.
 This follows TDD principles with explicit test cases before implementation.
 """
 

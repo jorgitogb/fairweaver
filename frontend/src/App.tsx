@@ -146,10 +146,10 @@ export default function App() {
               <path d="M32 16 C31 11 32 8 33 9 C34 10 33 14 32 16 Z" fill="#66BB6A"/>
             </svg>
             <span className="font-bold text-slate-800 tracking-tight">
-              FAIRweaver
+              FAIRagro-MI
             </span>
             <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
-              v0.1
+              Demo
             </span>
           </div>
           <a
@@ -167,11 +167,10 @@ export default function App() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-10 space-y-8">
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-emerald-200/60">
           <h1 className="text-xl font-semibold text-slate-800 mb-2">
-            FAIRweaver — Metadata Interoperability
+            FAIRagro-MI — metadata inspector (Demo)
           </h1>
           <p className="text-slate-600 max-w-2xl">
-            Upload metadata in any format (Schema.org, ARC RO-Crate, DataCite, Darwin Core) and convert
-            to the target pivot: FAIRagro Search Hub, AgroSchemas, or Bioschemas.
+            Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata in your browser.
           </p>
         </div>
 
@@ -337,7 +336,7 @@ export default function App() {
       </main>
 
       <footer className="text-center text-xs text-slate-400 py-8 border-t border-slate-200">
-        FAIRweaver · BioHackathon Germany 2026 · Apache 2.0
+        FAIRagro-MI (metadata inspector, Demo) · BioHackathon Germany 2026
       </footer>
     </div>
   );

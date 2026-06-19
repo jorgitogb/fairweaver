@@ -1,5 +1,5 @@
 """
-FAIRweaver format plugin: ISA-JSON
+FAIRagro-MI format plugin: ISA-JSON
 https://isa-specs.readthedocs.io/en/latest/isajson.html
 """
 

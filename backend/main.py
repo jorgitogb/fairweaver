@@ -26,9 +26,9 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="FAIRweaver API",
-    description="AI-assisted metadata interoperability platform with selectable pivot",
-    version="0.1.0",
+    title="FAIRagro-MI API",
+    description="Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata. (metadata inspector, Demo)",
+    version="0.1.0-demo",
 )
 
 app.add_middleware(
@@ -142,7 +142,7 @@ def _arc_to_fairagro_jsonld(arc_data: dict, extracted: dict | None = None) -> di
         ],
         "includedInDataCatalog": {
             "@type": "DataCatalog",
-            "name": "FAIRweaver Demo",
+            "name": "FAIRagro-MI (Demo)",
             "url": "https://github.com/jorgitogb/fairweaver",
         },
     }
@@ -1343,7 +1343,7 @@ async def oai_pmh_server(
 
     if verb == "Identify":
         content = f"""  <Identify>
-    <repositoryName>FAIRweaver ARC RO-Crate Repository</repositoryName>
+    <repositoryName>FAIRagro-MI (Demo) ARC RO-Crate Repository</repositoryName>
     <baseURL>{_oai_xml_escape(_oai_base_url)}</baseURL>
     <protocolVersion>2.0</protocolVersion>
     <adminEmail>admin@example.org</adminEmail>

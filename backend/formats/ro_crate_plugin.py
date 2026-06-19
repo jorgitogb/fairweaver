@@ -1,5 +1,5 @@
 """
-FAIRweaver format plugin: RO-Crate (ARC metadata format)
+FAIRagro-MI format plugin: RO-Crate (ARC metadata format)
 Parses ARC RO-Crate JSON-LD into a flat dict for the mapping engine.
 Implements the ARC-to-FAIRagro entity traversal logic described in the
 FAIRagro Search Hub specification.

@@ -4,7 +4,7 @@
 Create complete demo package: Schema.org → ARC RO-Crate conversion with 3 FAIRagro compliance levels (basic/intermediate/full). Includes mock data (2 themes × 3 levels), PlantUML architecture diagrams, UI compliance badge, and documentation.
 
 ## Business Value
-- Showcase FAIRweaver at BioHackathon Germany 2026
+- Showcase FAIRagro-MI (metadata inspector) at BioHackathon Germany 2026
 - Reusable test data for CI/CD
 - Non-technical audience understanding of conversion pipeline
 - Validate FAIRagro template compliance classification

@@ -1,5 +1,5 @@
 """
-FAIRweaver AI Client
+FAIRagro-MI AI Client
 Connects to external OpenAI-compatible API (SAIA) for intelligent mapping suggestions.
 """
 

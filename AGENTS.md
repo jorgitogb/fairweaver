@@ -1,4 +1,4 @@
-# FAIRweaver — Agent Guide
+# FAIRagro-MI — Agent Guide
 
 This file is the authoritative reference for AI coding agents (Cursor, Copilot, Claude Code, etc.)
 working on this codebase. Read it fully before making any change.
@@ -137,7 +137,7 @@ docker compose up
 
 ## Architecture Overview
 
-FAIRweaver is a **monorepo** with two independent services that communicate only via REST:
+FAIRagro-MI is a **monorepo** with two independent services that communicate only via REST:
 
 ```
 ┌─────────────────────────────────────┐

@@ -1,9 +1,9 @@
-# 🧬 FAIRweaver
+# 🧬 FAIRagro-MI (metadata inspector)
 
-> AI-assisted metadata interoperability platform with selectable pivot.  
-> BioHackathon Germany 2026 · de.NBI Cloud · Apache 2.0
+> Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata in your browser.  
+> BioHackathon Germany 2026 · Demo
 
-FAIRweaver converts research metadata between formats (ISA-JSON, DataCite, RO-Crate, Darwin Core, MIAPPE) using a **selectable interoperability pivot** — Bioschemas, AgroSchemas, Schema.org, or your own JSON-LD context. An AI model generates portable YAML mapping files and suggests missing FAIR fields. All AI inference runs via the [GWDG Academic Cloud API](https://docs.hpc.gwdg.de/services/saia/index.html) — no local GPU required.
+FAIRagro-MI is a visual demo tool that lets you upload metadata in formats like Schema.org, ARC RO-Crate, DataCite, and Darwin Core, and inspect how they map to the FAIRagro pipeline — all in your browser. It's a manual visualizer of the real infrastructure, not the production service.
 
 ---
 

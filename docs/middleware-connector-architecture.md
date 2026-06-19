@@ -17,7 +17,7 @@ RDIs (various formats)
     -> ARC Builder (creates RO-Crate)
     -> Push ARC to GitLab DataHub
 
-[Planned] OAI-PMH Service (separate, not part of FAIRweaver)
+[Planned] OAI-PMH Service (separate, not part of FAIRagro-MI)
   -> Reads ARC metadata from GitLab
   -> Serves OAI-PMH 2.0 endpoint
 
@@ -74,7 +74,7 @@ start
 
 |[Planned] OAI-PMH Service|
 note right
-  Separate service, not part of FAIRweaver.
+  Separate service, not part of FAIRagro-MI.
   Reads ARC metadata from GitLab,
   serves OAI-PMH 2.0 records.
 end note
@@ -112,10 +112,10 @@ ARCs created by the middleware contain domain-specific entities:
 
 ## [Planned] OAI-PMH Service
 
-- **Separate service**, not part of FAIRweaver
+- **Separate service**, not part of FAIRagro-MI
 - Reads ARC metadata from GitLab DataHub
 - Serves OAI-PMH 2.0 endpoint for Search Hub harvest
-- FAIRweaver has an OAI-PMH endpoint (`/oai-pmh`) for testing/demo purposes only -- this is NOT the production OAI-PMH service
+- FAIRagro-MI has an OAI-PMH endpoint (`/oai-pmh`) for testing/demo purposes only -- this is NOT the production OAI-PMH service
 
 ## Slot 6 Discussion Points
 
@@ -136,5 +136,5 @@ ARCs created by the middleware contain domain-specific entities:
 - `middleware-federation-architecture.puml` -- Component-level architecture with planned OAI-PMH
 - `middleware-harvest-flow.puml` -- Step-by-step activity diagram with OAI-PMH service
 - `arc-to-agrischemas-modeling.puml` -- Domain-specific entity mapping with coverage gaps
-- `conversion-pipeline-simple.puml` -- FAIRweaver demo tool (manual simulation of middleware)
-- `conversion-pipeline-detailed.puml` -- FAIRweaver demo tool (C4 detailed view)
+- `conversion-pipeline-simple.puml` -- FAIRagro-MI demo tool (manual simulation of middleware)
+- `conversion-pipeline-detailed.puml` -- FAIRagro-MI demo tool (C4 detailed view)

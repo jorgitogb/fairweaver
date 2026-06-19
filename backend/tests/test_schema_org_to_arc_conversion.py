@@ -15,7 +15,7 @@ class TestSchemaOrgToARCConversion:
                 "@context": "https://schema.org/",
                 "@type": "Dataset",
                 "name": "Test Dataset",
-                "description": "A test dataset for FAIRweaver",
+                "description": "A test dataset for FAIRagro-MI",
                 "creator": [{"@type": "Person", "name": "John Doe"}],
                 "identifier": "test-123",
                 "datePublished": "2023-01-01",

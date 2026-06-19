@@ -1,7 +1,7 @@
 [project]
-name = "fairweaver"
-version = "0.1.0"
-description = "AI-assisted metadata interoperability platform with selectable pivot"
+name = "faiagro-mi"
+version = "0.1.0-demo"
+description = "Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata. Metadata Inspector (Demo)."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.115.0",

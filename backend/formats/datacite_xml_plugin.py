@@ -1,5 +1,5 @@
 """
-FAIRweaver format plugin: DataCite XML
+FAIRagro-MI format plugin: DataCite XML
 https://schema.datacite.org/
 """
 

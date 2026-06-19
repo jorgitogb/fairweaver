@@ -1,4 +1,4 @@
-# FAIRweaver Mappings
+# FAIRagro-MI Mappings
 
 Community-contributed YAML mapping files for format → pivot conversion.
 

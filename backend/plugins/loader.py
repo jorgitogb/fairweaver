@@ -1,5 +1,5 @@
 """
-FAIRweaver plugin loader.
+FAIRagro-MI plugin loader.
 Discovers all *_plugin.py files in plugins/formats/ automatically.
 """
 

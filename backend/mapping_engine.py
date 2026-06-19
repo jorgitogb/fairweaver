@@ -1,5 +1,5 @@
 """
-FAIRweaver Mapping Engine
+FAIRagro-MI Mapping Engine
 Handles pivot registry, YAML mapping generation, validation, and conversion.
 Uses rule-based matching with SAIA AI assistance for intelligent suggestions.
 """
