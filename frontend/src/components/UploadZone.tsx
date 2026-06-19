@@ -47,7 +47,7 @@ export default function UploadZone({
       {...getRootProps()}
       className={`
         border-2 border-dashed rounded-xl text-center cursor-pointer transition-all
-        ${compact ? "p-4" : "p-6 sm:p-8 md:p-10"}
+        ${compact ? "p-3" : "p-4 sm:p-5 md:p-7"}
         ${isDragActive ? "border-emerald-400 bg-emerald-50" : "border-slate-300 hover:border-emerald-400 hover:bg-slate-50"}
         ${isDragReject ? "border-red-400 bg-red-50" : ""}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
@@ -55,7 +55,7 @@ export default function UploadZone({
     >
       <input {...getInputProps()} />
       <UploadCloud
-        className={`mx-auto ${compact ? "w-5 h-5 mb-1" : "w-10 h-10 mb-3"} ${isDragActive ? "text-emerald-500" : "text-slate-400"}`}
+        className={`mx-auto ${compact ? "w-4 h-4 mb-0.5" : "w-8 h-8 mb-2"} ${isDragActive ? "text-emerald-500" : "text-slate-400"}`}
       />
       {isDragActive ? (
         <p className="text-emerald-600 font-medium text-sm">Drop it here…</p>

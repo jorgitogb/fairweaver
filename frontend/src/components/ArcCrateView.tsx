@@ -5,6 +5,7 @@ import ArcEntityTree from "./ArcEntityTree";
 import type { GraphEntity } from "./ArcEntityTree";
 import MiappeExtractionTree from "./MiappeExtractionTree";
 import ArcHierarchyTree from "./ArcHierarchyTree";
+import JsonHighlight from "./JsonHighlight";
 
 type Tab = "arc" | "fairagro" | "validation" | "entities" | "hierarchy" | "miappe";
 
@@ -75,12 +76,12 @@ export default function ArcCrateView({
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap border-b border-slate-200">
+      <div className="flex border-b border-slate-200">
         {(["arc", "fairagro", "validation", "entities", "hierarchy", "miappe"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 whitespace-nowrap ${
+            className={`px-3 py-1.5 text-xs font-medium transition-colors border-b-2 whitespace-nowrap ${
               tab === t
                 ? "border-emerald-500 text-emerald-700 bg-emerald-50/50"
                 : "border-transparent text-slate-500 hover:text-slate-700"
@@ -153,8 +154,8 @@ export default function ArcCrateView({
             <MiappeExtractionTree preview={preview} />
           </div>
         ) : (
-          <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 text-emerald-300 font-mono whitespace-pre">
-            {JSON.stringify(tab === "arc" ? preview : fairagroJsonld, null, 2)}
+          <pre className="text-xs leading-relaxed p-4 overflow-auto max-h-96 bg-slate-900 font-mono whitespace-pre">
+            <JsonHighlight data={tab === "arc" ? preview : fairagroJsonld} />
           </pre>
         )}
 
@@ -236,7 +237,7 @@ export default function ArcCrateView({
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex-1 overflow-auto">
+          <div className={`flex-1 overflow-auto ${tab === "arc" || tab === "fairagro" ? "bg-slate-900" : ""}`}>
             {tab === "validation" ? (
               <div className="p-4 space-y-3">
                 {validation.valid && (
@@ -286,8 +287,8 @@ export default function ArcCrateView({
             ) : tab === "miappe" ? (
               <MiappeExtractionTree preview={preview} />
             ) : (
-              <pre className="text-xs leading-relaxed p-4 bg-slate-900 text-emerald-300 font-mono whitespace-pre h-full">
-                {JSON.stringify(tab === "arc" ? preview : fairagroJsonld, null, 2)}
+              <pre className="text-xs leading-relaxed p-4 bg-slate-900 font-mono whitespace-pre">
+                <JsonHighlight data={tab === "arc" ? preview : fairagroJsonld} />
               </pre>
             )}
           </div>
