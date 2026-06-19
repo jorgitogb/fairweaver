@@ -5,6 +5,30 @@ working on this codebase. Read it fully before making any change.
 
 ---
 
+## Harness Engineering Setup
+
+This project uses a structured harness to enforce engineering rigor:
+
+- **`init.sh`** — Run BEFORE any work and again before declaring done. Validates environment, base files, feature tracking, and tests. Must exit 0.
+- **`feature_list.json`** — Feature registry. Only ONE feature may be `in_progress` at a time. Status transitions require human approval.
+- **`progress/current.md`** + `progress/history.md` — Track session progress and append-only history.
+- **`specs/<feature-name>/`** — Per-feature SDD specs: `requirements.md`, `design.md`, `tasks.md`.
+- **`CHECKPOINTS.md`** — Final-state evaluation checklist (C1–C7). All boxes must be checked before a feature is `done`.
+- **`ground-rules.md`** — Immutable rules (human-approval-gate, no agent marks `done`).
+
+### Harness Workflow
+1. Read `feature_list.json` to know current feature and status.
+2. Read `ground-rules.md` for immutable rules.
+3. Run `./init.sh` — must exit 0 before starting work.
+4. For non-trivial changes: write spec in `specs/<feature-name>/`.
+5. Implement following SDD + TDD below.
+6. Every 3-5 steps: surface state using checklist in "Context Verification Checkpoint".
+7. Update `progress/current.md`.
+8. Run `CHECKPOINTS.md` evaluation before declaring done.
+9. Run `./init.sh` again before commit.
+
+---
+
 ## Engineering Operating System
 
 Every change follows **SDD + TDD**. No exceptions, no shortcuts.

@@ -167,8 +167,8 @@ wheels = [
 ]
 
 [[package]]
-name = "fairweaver"
-version = "0.1.0"
+name = "faiagro-mi"
+version = "0.1.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "arctrl" },

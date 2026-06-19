@@ -57,6 +57,7 @@ Thumbs.db
 # Artifacts
 arc_output.json
 test_batch.zip
+*.bak
 
 # Generated docs
 IMPLEMENTATION_SUMMARY.md

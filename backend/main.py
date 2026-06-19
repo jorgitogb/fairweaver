@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="FAIRagro-MI API",
     description="Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata. (metadata inspector, Demo)",
-    version="0.1.0-demo",
+    version="0.1.0.dev0",
 )
 
 app.add_middleware(

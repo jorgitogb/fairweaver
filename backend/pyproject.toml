@@ -1,6 +1,6 @@
 [project]
 name = "faiagro-mi"
-version = "0.1.0-demo"
+version = "0.1.0.dev0"
 description = "Visual demo tool — manually inspect Schema.org, ARC RO-Crate, and FAIRagro metadata. Metadata Inspector (Demo)."
 requires-python = ">=3.12"
 dependencies = [
