@@ -23,6 +23,14 @@ const REF_PROPS = [
   "geographicCoverage",
   "soil",
   "process",
+  "object",
+  "additionalProperty",
+  "measurementMethod",
+  "measurementTechnique",
+  "parameterValue",
+  "executesLabProtocol",
+  "result",
+  "variableMeasured",
 ];
 
 const REF_LABELS: Record<string, string> = {
@@ -41,6 +49,14 @@ const REF_LABELS: Record<string, string> = {
   geographicCoverage: "Geographic Coverage",
   soil: "Soil",
   process: "Process",
+  object: "Object",
+  additionalProperty: "Additional Properties",
+  measurementMethod: "Measurement Method",
+  measurementTechnique: "Measurement Technique",
+  parameterValue: "Parameter Values",
+  executesLabProtocol: "Protocol",
+  result: "Result",
+  variableMeasured: "Variable Measured",
 };
 
 const REF_SET = new Set(REF_PROPS);

@@ -125,9 +125,9 @@ JSON excerpts from the example ARC files that illustrate the structural patterns
 
 ## Slide 4 — Müncheberg LTE ARC Structure
 
-### Flat Structure (No Study Entity)
+### Flat Structure (Study Disconnected from hasPart Chain)
 
-**Investigation** connects directly to 27+ Assays
+**Investigation** connects directly to 27+ Assays; a Study entity exists separately but is NOT linked via `hasPart`.
 ```json
 {
   "@id": "./",
@@ -142,7 +142,7 @@ JSON excerpts from the example ARC files that illustrate the structural patterns
 }
 ```
 
-**Assay** (27+ assays, no intermediate Study)
+**Assay** (27+ assays; Study exists at `studies/LTE-V140-Muencheberg/` but not linked via hasPart)
 ```json
 {
   "@id": "assays/crop-phenology-monitoring/",
@@ -231,9 +231,9 @@ This inconsistency is part of the standardization gap.
 
 | Aspect | Drone Flyover | Müncheberg LTE |
 |--------|---------------|----------------|
-| **Study entity** | Explicit (`studies/plant_plots/`) | Absent |
-| **Crop species path** | Study → LabProcess → Sample → PropertyValue | Source → PropertyValue |
-| **Crop species depth** | 4 hops | 2 hops |
+| **Study entity** | Explicit, in hasPart chain | Present but disconnected (not in hasPart) |
+| **Crop species path (short)** | Study → LabProcess → Sample → PropertyValue (4 hops) | Source → additionalProperty → CharacteristicValue (2 hops) |
+| **Crop species path (long)** | Same as short (only path) | ALSO via Study/LabProcess → object → Source → additionalProperty |
 | **Sensor metadata** | Present (DefinedTerm with OBI:0001048) | Absent |
 | **Assay count** | 1 (drone_image_capture) | 27+ |
 | **propertyID usage** | Inconsistent (uses valueReference) | Consistent (MIAPPE_0040) |

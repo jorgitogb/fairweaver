@@ -120,11 +120,10 @@ describe("ArcEntityTree", () => {
     expect(screen.queryByText(/10\.5447\/test\/001/)).not.toBeInTheDocument();
   });
 
-  it("shows crop badge when Study is expanded", () => {
+  it("shows crop field key in details when Study is expanded", () => {
     render(<ArcEntityTree graph={mockGraph} />);
     fireEvent.click(screen.getByText("Wheat Field Trial"));
-    const matches = screen.getAllByText(/Crop/i);
-    expect(matches.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("crop_species")).toBeInTheDocument();
   });
 
   it("shows empty state for empty graph", () => {

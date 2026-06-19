@@ -215,10 +215,10 @@ def create_presentation():
 
     table_data = [
         ["Aspect", "Drone Flyover", "Müncheberg LTE"],
-        ["Study entity", "Explicit", "Absent"],
-        ["Crop species path", "Study → LabProcess → Sample → PropertyValue", "Source → additionalProperty → CharacteristicValue"],
-        ["Crop species depth", "4 hops", "2 hops"],
-        ["Sensor metadata", "Present", "Absent"],
+        ["Study entity", "Explicit, in hasPart chain", "Present but disconnected (not in hasPart)"],
+        ["Crop species path (short)", "Study → LabProcess → Sample → PropertyValue (4 hops)", "Source → additionalProperty → CharacteristicValue (2 hops)"],
+        ["Crop species path (long)", "Same as short (only path)", "ALSO via LabProcess → object → Source → additionalProperty"],
+        ["Sensor metadata", "Present (DefinedTerm)", "Absent"],
         ["Assay count", "1", "27+"]
     ]
     add_table(slide, table_data, Inches(0.5), Inches(1.5), Inches(12), Inches(3.5))

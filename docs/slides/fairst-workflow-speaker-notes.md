@@ -64,8 +64,9 @@ We tested the pipeline with three concrete files to show how structure quality d
 
 This slide examines how Agrischemas concepts are embedded inside an ARC RO-Crate graph, using the UC13 drone-flyover example.
 
-**The diagram shows the ISA hierarchy:**
-- Investigation → hasPart → Study → hasPart → Assay
+**The diagram shows the ISA hierarchy (corrected from real data):**
+- Investigation → hasPart → Study and Investigation → hasPart → Assay (siblings, not nested)
+- Study → hasPart → Assay does NOT exist in the real data — that edge is empty
 
 **Two Agrischemas concepts live at very different depths:**
 
@@ -90,18 +91,24 @@ The `propertyID` in the PropertyValue is critical — it links to an ontology te
 
 ### Speaker Notes
 
-This slide shows that the Müncheberg ARC uses a completely different structural convention for the same domain concepts.
+This slide shows that the Müncheberg ARC uses a different structural convention for the same domain concepts.
 
 **Key structural differences:**
 
-**No explicit Study entity:**
-- Investigation connects directly to multiple Assays (27+)
-- The Study layer is absent — no intermediate grouping entity
+**Study entity is disconnected:**
+- Investigation connects directly to multiple Assays (27+) via `hasPart`
+- A Study entity exists (`studies/LTE-V140-Muencheberg/`) but is NOT linked via Investigation's `hasPart`
+- The Study layer is not in the ISA's `hasPart` chain — it's a separate graph node
 
-**Crop species at Source level:**
+**Crop species at Source level (short path):**
 - In Müncheberg: `Source (V140_MNC)` → `additionalProperty` → `CharacteristicValue`
 - Just 2 hops from Source
 - Uses MIAPPE propertyIDs (`MIAPPE_0040` for Biological material ID)
+
+**Both ARCs share the long LabProcess path:**
+- Müncheberg ALSO follows the Study → `about` → LabProcess → `object` → Source pattern
+- `Process_S_LTE-V140-Muencheberg_Materials-*` entities exist with `object: {"@id": "#Source_V140_MNC"}`
+- So the "required" pattern from slide 5 is present in BOTH ARCs — what differs is the *alternative path*
 
 **No sensor metadata:**
 - This ARC is about crop phenology, not remote sensing
@@ -112,8 +119,8 @@ This slide shows that the Müncheberg ARC uses a completely different structural
 - Each assay has its own LabProcess chain
 
 **Comparison table reinforces the contrast:**
-- Drone: 4-hop crop path, 1 assay, has sensor
-- Müncheberg: 2-hop crop path, 27+ assays, no sensor
+- Drone: Study in hasPart chain, 4-hop crop path, 1 assay, has sensor
+- Müncheberg: Study disconnected, 2-hop + 4-hop crop paths, 27+ assays, no sensor
 
 **This motivates standardization:** Without agreed modeling conventions, the parser must handle multiple structural patterns to extract the same information.
 

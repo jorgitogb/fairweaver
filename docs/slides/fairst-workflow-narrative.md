@@ -88,18 +88,22 @@ deviation and it loses the concept.
 
 ### Müncheberg LTE
 
-A structurally different ARC. No Study entity at all — Investigation connects directly to
-27+ Assays. Crop species surfaces at a different location entirely: Source →
-`additionalProperty` → CharacteristicValue (2 hops instead of 4). Sensor metadata is
+A structurally different ARC. Investigation connects directly to 27+ Assays; a Study entity
+exists (`studies/LTE-V140-Muencheberg/`) but is NOT linked via the Investigation's `hasPart`
+chain. Crop species surfaces via a shorter alternative path: Source →
+`additionalProperty` → CharacteristicValue (2 hops instead of 4). Müncheberg also has
+the same long LabProcess chain as the drone flyover (via `Study.about` → LabProcess →
+`object` → Source → `additionalProperty`), so both paths coexist. Sensor metadata is
 absent because this ARC is about crop phenology, not remote sensing.
 
 ### What This Tells Us
 
 | Aspect | Drone Flyover | Müncheberg LTE |
 |---|---|---|
-| Study entity | Explicit | Absent |
-| Crop species path | 4 hops via LabProcess | 2 hops via additionalProperty |
-| Sensor metadata | Present | Absent |
+| Study entity | Explicit, in hasPart chain | Present but disconnected (not in hasPart) |
+| Crop species path (short) | 4 hops via LabProcess | 2 hops via additionalProperty |
+| Crop species path (long) | Same as short (only path) | ALSO via LabProcess → Source → additionalProperty |
+| Sensor metadata | Present (DefinedTerm) | Absent |
 | Assay count | 1 | 27+ |
 
 A generic parser cannot reliably extract crop species from both ARCs without knowing

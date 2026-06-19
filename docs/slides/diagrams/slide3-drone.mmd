@@ -1,15 +1,15 @@
 flowchart TD
     I["@type: Dataset / additionalType: Investigation"]
     S["@type: Dataset / additionalType: Study"]
-    A["@type: Dataset / additionalType: Assay"]
+    A["@type: Dataset / additionalType: Assay<br/>drone_image_capture"]
     I -->|"hasPart"| S
-    S -->|"hasPart"| A
+    I -->|"hasPart"| A
 
     A -->|"measurementMethod"| DT["@type: DefinedTerm<br/>name: digital camera<br/>termCode: OBI:0001048<br/>Agrischemas: sensorType"]
 
     S -->|"about"| LP["@type: LabProcess"]
     LP -->|"object"| SM["@type: Sample / additionalType: Material"]
-    SM -->|"additionalProperty"| PV["@type: PropertyValue<br/>name: Organism<br/>value: Solanum tuberosum<br/>propertyID: agrovoc:c_49904<br/>Agrischemas: cropSpecies"]
+    SM -->|"additionalProperty"| PV["@type: PropertyValue<br/>name: Organism<br/>value: Solanum tuberosum<br/>valueReference: NCBITaxon_4113<br/>Agrischemas: cropSpecies"]
 
     classDef isa fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
     classDef leaf fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20

@@ -8,8 +8,13 @@ import {
   Microscope,
   ChevronRight,
   ChevronDown,
-  Sprout,
-  Bug,
+  Beaker,
+  ScrollText,
+  Tag,
+  Package,
+  Database,
+  List,
+  SlidersHorizontal,
 } from "lucide-react";
 
 export interface GraphEntity {
@@ -32,12 +37,13 @@ export const ENTITY_ICONS: Record<string, typeof FlaskConical> = {
   Person: Users,
   Organization: Building2,
   File: Paperclip,
-};
-
-const DOMAIN_BADGES: Record<string, { icon: typeof Sprout; label: string; color: string }> = {
-  crop_species: { icon: Sprout, label: "Crop", color: "bg-emerald-100 text-emerald-700" },
-  crop_pest: { icon: Bug, label: "Pest", color: "bg-amber-100 text-amber-700" },
-  measurementTechnique: { icon: Microscope, label: "Sensor", color: "bg-blue-100 text-blue-700" },
+  LabProcess: Beaker,
+  LabProtocol: ScrollText,
+  DefinedTerm: Tag,
+  Material: Package,
+  Source: Database,
+  CharacteristicValue: List,
+  ParameterValue: SlidersHorizontal,
 };
 
 export function getEntityType(entity: GraphEntity): string {
@@ -49,18 +55,6 @@ export function getEntityType(entity: GraphEntity): string {
 
 function getIcon(type: string) {
   return ENTITY_ICONS[type] || FileText;
-}
-
-function DomainBadges({ entity }: { entity: GraphEntity }) {
-  const badges = Object.entries(DOMAIN_BADGES)
-    .filter(([key]) => entity[key])
-    .map(([key, { icon: Icon, label, color }]) => (
-      <span key={key} className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${color}`}>
-        <Icon className="w-2.5 h-2.5" />
-        {label}: {String(entity[key])}
-      </span>
-    ));
-  return badges.length > 0 ? <div className="flex flex-wrap gap-1 mt-1">{badges}</div> : null;
 }
 
 function EntityNode({ entity, depth }: { entity: GraphEntity; depth: number }) {
@@ -92,7 +86,6 @@ function EntityNode({ entity, depth }: { entity: GraphEntity; depth: number }) {
 
       {expanded && (
         <div className="ml-6 pl-2 border-l border-slate-200 pb-1">
-          <DomainBadges entity={entity} />
           {details.map(([key, val]) => (
             <div key={key} className="flex gap-2 py-0.5 text-[11px]">
               <span className="text-slate-400 font-mono w-28 shrink-0 truncate">{key}</span>
