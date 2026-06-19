@@ -24,7 +24,7 @@ style: |
   img {
     display: block;
     margin: 0 auto;
-    max-height: 400px;
+    max-height: 450px;
   }
 ---
 
@@ -36,7 +36,10 @@ style: |
 
 ![Pipeline diagram](diagrams/slide1-pipeline.png)
 
-**Key Points:**
+---
+
+## Slide 1 — Key Points
+
 - **Sequential dependency**: Output B (FAIRagro JSON) is derived *from* Output A (ARC RO-Crate) — not a parallel output
 - **Two harvest paths** converge on the same FAIRagro JSON schema:
   - **Path 1 (solid)**: Direct harvest from GitLab DataHub where ARCs are stored
@@ -77,6 +80,12 @@ style: |
 
 ![Müncheberg structure](diagrams/slide4-muenchenberg.png)
 
+**Example ARC RO-Crate:** Müncheberg LTE
+
+---
+
+## Slide 4 — Comparison: Drone Flyover vs Müncheberg
+
 | Aspect | Drone Flyover | Müncheberg LTE |
 |--------|--------------|----------------|
 | **Study entity** | Explicit | Absent |
@@ -84,8 +93,6 @@ style: |
 | **Crop species depth** | 4 hops | 2 hops |
 | **Sensor metadata** | Present | Absent |
 | **Assay count** | 1 | 27+ |
-
-**Example ARC RO-Crate:** Müncheberg LTE
 
 ---
 
@@ -101,7 +108,9 @@ style: |
 
 **Example ARC RO-Crate:** UC13 drone-flyover
 
-**Open questions:**
+---
+
+## Slide 5 — Open Questions
 
 | | |
 |---|---|
