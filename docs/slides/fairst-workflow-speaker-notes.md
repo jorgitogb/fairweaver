@@ -144,11 +144,59 @@ After examining both ARCs, we can define the required pattern for reliable crop 
 - `propertyID: agrovoc:c_49904` enables unambiguous semantic mapping
 - Without the ontology link, the parser cannot distinguish "Organism" from other PropertyValue names
 
+### Decoding the figure (visual legend)
+
+The diagram uses **three visual encodings** to communicate priority. Point at them when presenting:
+
+| Visual | Class | Nodes | Meaning |
+|---|---|---|---|
+| Gray fill, dashed border | `inactive` | `I` Investigation, `A` Assay | Optional wrappers. Omit for MVP; parser still works. |
+| Blue fill, bold border | `required` | `S` Study, `LP` LabProcess, `SM` Sample | Must publish. Drop one and the chain breaks. |
+| Green fill, bold border | `keyfield` | `PV` PropertyValue | The ontology anchor — what makes it searchable + interoperable. |
+
+**Edge styles carry meaning too:**
+- **Dashed arrows** (`-.->`) mark `hasPart` links inside the ISA hierarchy → soft, skippable relationships.
+- **Solid arrows** (`-->`) mark the mandatory `about → object → additionalProperty` chain → hard requirement.
+
+**Reading order (top → bottom, left → right):**
+1. Top tier = hierarchy you can drop (`I → S → A`).
+2. Middle tier = mandatory spine (`S → LP → SM`).
+3. Bottom node = the search hook (`SM → PV[agrovoc:c_49904]`).
+
+**One-liner to say out loud:** "If you only publish four boxes — Study, LabProcess, Sample, and a PropertyValue with an agrovoc `propertyID` — your dataset is FAIR-discoverable. The grayed-out Investigation and Assay are context, not blockers."
+
 **Two open standardization questions:**
 1. **Structure:** How do we formally specify the required traversal path? (e.g., "always follow Study → about → LabProcess → object → Sample → additionalProperty → PropertyValue with propertyID")
 2. **propertyID:** How do we standardize ontology mappings? SSSOM is one candidate.
 
 **These questions lead directly into the next part of the presentation:** the modeling approach proposal.
+
+### Delivery script (2 min, tight)
+
+**Audience:** FAIRagro retreat — mixed researchers + devs. Researchers need motivation, devs need the path spec.
+
+**0:00–0:15 — Hook**
+> "Publishing ISA doesn't mean shipping all 3 levels. You can drop Investigation and Assay. Here's the minimum viable graph."
+
+**0:15–1:15 — Walk the figure (top → bottom, color = priority)**
+- Point at `I`, `A` (gray dashed) → "Optional. Skip."
+- Point at `S` (blue) → "Study is the anchor."
+- Point at `LP`, `SM` (blue) → "LabProcess + Sample. Chain `about → object`."
+- Point at `PV` (green) → pause 1s → "This. `propertyID: agrovoc:c_49904`. Without it, no semantic search."
+
+**1:15–1:45 — Land the gap**
+> "Two questions: how do we formally specify this path (SHACL candidate), and how do we standardize `propertyID` mappings (SSSOM candidate). Next slide."
+
+**1:45–2:00 — Buffer** (one quick Q)
+
+**Tactic by audience:**
+- Researchers: green box is the ROI. One ontology term = searchable across all of FAIRagro.
+- Devs: blue chain is what the parser must validate. Shape spec is the engineering work.
+- Mixed Q: "researchers ask 'what do I publish?', devs ask 'what do I parse?' — same answer: these 4 boxes."
+
+**Risk / fallback:**
+- "Why not just Dataset?" → "No ontology link = invisible to cross-repo search."
+- "What about traits/variables?" → defer to slide 4 comparison or live demo.
 
 ---
 
