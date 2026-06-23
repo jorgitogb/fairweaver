@@ -18,88 +18,122 @@ flowchart LR
         A["arc-rocrate-metadata.json<br/>(Annotated Research Context)"]
     end
 
-    subgraph HARVEST["Harvest Paths to FAIRagro JSON"]
-        H1["Path 1: DataHub Harvest<br/>(GitLab ARC Storage)"]
-        H2["Path 2: Middleware API<br/>(Federated Service Orchestration)"]
+    subgraph DATAHUB["DataHub — GitLab ARC Storage"]
+        DH["Full ARC<br/>(data + ARC RO-Crate)"]
+    end
+
+    subgraph HARVEST["Harvest Paths to SearchHub"]
+        H1["Path 1: Direct<br/>(GitLab API)"]
+        H2["Path 2: Middleware<br/>(OAI-PMH / REST API)"]
     end
 
     subgraph OUTPUT_B["Output B — FAIRagro SearchHub"]
-        B["FAIRagro schema.json<br/>→ FAIRagro SearchHub Ingestion"]
+        B["SearchHub ingests<br/>→ FAIRagro schema.json"]
     end
 
     I --> T
     T --> A
-    A -->|harvest| H1
-    A -.->|orchestrate| H2
+    A -->|place ARC| DH
+    DH -->|direct| H1
+    DH -.->|via Middleware API| H2
     H1 --> B
     H2 --> B
 
     classDef in fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
     classDef trans fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
     classDef outa fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
-    classDef harvest fill:#fce4ec,stroke:#c2185b,stroke-width:2px,stroke-dasharray: 5 5,color:#880e4f
+    classDef datahub fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    classDef harvest fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
     classDef outb fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
 
     class I in
     class T trans
     class A outa
+    class DH datahub
     class H1,H2 harvest
     class B outb
 ```
 
-**Sequential dependency**: Output B is derived *from* Output A — not a parallel output.
-Two harvest paths converge on the same `schema.json`.
-Each following slide zooms into one stage.
+**Sequential dependency**: Schema.org → ARC RO-Crate → placed on **DataHub**. Both harvest paths read from the DataHub to feed the SearchHub.
+Two paths converge on the same `schema.json`. Each following slide zooms into one stage.
 
-**Tracing dataset**: Wheat Drought Phenotyping Field Trial 2024 (ID: `10.5447/fairweaver/2024/wheat-drought-001`)
+**Reference**: Full FAIRagro infrastructure → `docs/slides/diagrams/FAIRagro_TA3_TA4_Retreat_2006_Slot2_impulse.png`
+
+**Tracing dataset**: Wheat Drought Phenotyping Field Trial 2024 (ID: `10.5447/<RDI>/2024/wheat-drought-001`)
 
 ---
 
-## Stage 1 · Input: Schema.org JSON-LD from the RDI
+## Stage 1 · Input: FAIRagro Publication Metadata Set
 
-What arrives from a Research Data Infrastructure: **flat**, no ISA hierarchy, all domain info inline.
+Compliant with the FAIRagro Core Metadata Specification — **flat**, no ISA hierarchy, domain info as `about` entities.
 
 ```json
 {
-  "@context": "https://schema.org",
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "agrovoc": "http://aims.fao.org/aos/agrovoc/"
+  },
   "@type": "Dataset",
-  "@id": "https://doi.org/10.5447/fairweaver/2024/wheat-drought-001",
+  "@id": "https://doi.org/10.5447/<RDI>/2024/wheat-drought-001",
   "name": "Wheat Drought Phenotyping Field Trial 2024",
   "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
-  "creator": {
+  "url": "https://<RDI>.example.org/datasets/wheat-drought-2024",
+  "license": "https://spdx.org/licenses/CC-BY-4.0.html",
+  "keywords": [{
+    "@type": "DefinedTerm",
+    "name": "wheat",
+    "termCode": "agrovoc:c_8347"
+  }],
+  "identifier": {
+    "@type": "PropertyValue",
+    "propertyID": "https://registry.identifiers.org/registry/doi",
+    "value": "10.5447/<RDI>/2024/wheat-drought-001"
+  },
+  "author": [{
     "@type": "Person",
     "name": "Timo Mühlhaus",
-    "email": "timo.muehlhaus@rptu.de",
-    "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" },
-    "identifier": { "@type": "PropertyValue", "propertyID": "orcid", "value": "0000-0003-3925-6778" }
-  },
-  "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
-  "license": "https://creativecommons.org/licenses/by/4.0/",
-  "datePublished": "2024-09-15",
-  "keywords": ["wheat", "drought stress", "NDVI", "phenotyping"],
-  "measurementTechnique": "Multispectral imaging",
-  "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
-  "technologyPlatform": "DJI Matrice 300 RTK UAV",
-  "instrument": {
-    "@type": "Thing",
-    "name": "Micasense RedEdge-MX",
-    "additionalType": "Sensor"
-  },
-  "location": {
+    "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" }
+  }],
+  "spatialCoverage": {
     "@type": "Place",
-    "name": "RPTU Field Station Kaiserslautern",
-    "geo": { "@type": "GeoCoordinates", "latitude": 49.4401, "longitude": 7.7491 }
-  },
-  "country": "Germany",
-  "state": "Rhineland-Palatinate",
-  "crop_species": "Triticum aestivum",
-  "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
-  "soilType": "Luvisol",
-  "processType": "UAV-based remote sensing"
+    "name": "RPTU Field Station Kaiserslautern"
+  }
 }
 ```
 
-> Flat record. No ISA hierarchy. No `@id` references. Inline objects (creator, instrument, location) embedded directly.
+> FAIRagro Publication Metadata Set (Section 2): 6 required fields — `name`, `description`, `url`, `keywords`, `license`, `identifier`. `author` replaces `creator`; `spatialCoverage` replaces `location`.
+> Domain entities (Crop, Sensor) go into Agrischemas `about` — see next slide.
+
+---
+
+## Stage 1bis · Agrischemas: Same record, the `about` array
+
+**Continuation of slide 1b** — same `Dataset`, same `@id` (`10.5447/<RDI>/2024/wheat-drought-001`). These Agrischemas domain entities go INSIDE the `Dataset` from the previous slide, under the `about` key.
+
+```json
+"about": [
+  {
+    "@type": "biosc:BioSample",
+    "additionalType": "AGRO:AGRO_00000325",
+    "additionalProperty": [{
+      "@type": "PropertyValue",
+      "name": "species",
+      "propertyID": "agrovoc:c_331243",
+      "value": "Triticum aestivum"
+    }]
+  },
+  {
+    "@type": "Product",
+    "additionalType": "http://www.w3.org/ns/sosa/Sensor",
+    "name": "Micasense RedEdge-MX"
+  }
+]
+```
+
+> **Crop** (Section 3.1): `BioSample` + `additionalType: AGRO_00000325` + species as `PropertyValue` with `propertyID: agrovoc:c_331243` (AGROVOC taxonomic species).
+> **Sensor** (Section 3.4): `Product` + `additionalType: sosa:Sensor`.
+> **Soil** (Section 3.2): `Sample` + `additionalType: agrovoc/c_7156` (omitted for slide brevity).
+> Reference: `https://knowledgebase.fairagro.net/en/tech-guides/core_metadata_specification/`
 
 ---
 
@@ -114,21 +148,18 @@ version: "1.0.0"
 field_rules:
   - source: "name"               → target: "Investigation.name"
   - source: "description"        → target: "Investigation.description"
-  - source: "creator"            → target: "Investigation.creator"  [extract_person]
+  - source: "author"             → target: "Investigation.creator"  [extract_person]
   - source: "identifier"         → target: "Investigation.identifier"
-  - source: "crop_species"       → target: "Study.crop_species"
-  - source: "crop_species_uri"   → target: "Study.crop_species_uri"
-  - source: "measurementTechnique" → target: "Assay.measurementTechnique"
-  - source: "technologyPlatform" → target: "Assay.technologyPlatform"
-  - source: "instrument"         → target: "Assay.instrument"  [extract_sensor]
-  - source: "location"           → target: "Investigation.location"  [extract_place]
-  - source: "soilType"           → target: "Investigation.soil"  [extract_soil]
+  - source: "spatialCoverage"    → target: "Investigation.location"  [extract_place]
+  # Agrischemas about-entities:
+  - source: "about/BioSample"    → target: "Study.crop"  [extract_agrischemas]
+  - source: "about/Product"      → target: "Assay.instrument"  [extract_sensor]
 ```
 
 Three kinds of rules:
-1. **Direct copy** — field lands verbatim at the target
-2. **Re-distribution** — field moves to Study or Assay level
-3. **Extract** — inline object becomes a separate graph entity with `@id` reference
+1. **Direct copy** — `name`, `description`, `identifier` land verbatim
+2. **Re-distribution** — Agrischemas `BioSample` → Study, `Product` → Assay
+3. **Extract** — inline objects become separate graph entities with `@id` reference
 
 Source: `backend/mappings/schema_org-arc_ro_crate.yaml`
 
@@ -140,60 +171,34 @@ One flat Schema.org `Dataset` becomes a **graph of linked entities** connected b
 
 ```json
 {
-  "@context": [
-    "https://w3id.org/ro/crate/1.1/context",
-    { "@vocab": "https://schema.org/" }
-  ],
+  "@context": ["https://w3id.org/ro/crate/1.1/context", { "@vocab": "https://schema.org/" }],
   "@graph": [
     {
-      "@id": "./",
-      "@type": "Dataset", "additionalType": "Investigation",
-      "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
+      "@id": "./", "@type": "Dataset", "additionalType": "Investigation",
+      "identifier": "10.5447/<RDI>/2024/wheat-drought-001",
       "name": "Wheat Drought Phenotyping Field Trial 2024",
-      "description": "Multi-temporal drone-based NDVI...",
-      "datePublished": "2024-09-15",
-      "license": "https://creativecommons.org/licenses/by/4.0/",
       "creator": [{ "@id": "#Mühlhaus_Timo" }],
-      "hasPart": [{ "@id": "#Study_wheat" }],
-      "location": { "@id": "#Location_wheat" },
-      "soil": { "@id": "#Soil_wheat" }
+      "hasPart": [{ "@id": "#Study_wheat" }]
     },
     {
-      "@id": "#Study_wheat",
-      "@type": "Dataset", "additionalType": "Study",
-      "name": "Wheat Field Trial",
-      "studyDesignType": "Randomized complete block design",
+      "@id": "#Study_wheat", "@type": "Dataset", "additionalType": "Study",
       "crop_species": "Triticum aestivum",
       "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
       "hasPart": [{ "@id": "#Assay_wheat" }]
     },
     {
-      "@id": "#Assay_wheat",
-      "@type": "Dataset", "additionalType": "Assay",
-      "name": "Wheat Multispectral imaging",
+      "@id": "#Assay_wheat", "@type": "Dataset", "additionalType": "Assay",
       "measurementTechnique": "Multispectral imaging",
-      "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
       "technologyPlatform": "DJI Matrice 300 RTK UAV",
-      "instrument": [{ "@id": "#Instrument_wheat" }],
-      "about": [{ "@id": "#Study_wheat" }]
+      "instrument": [{ "@id": "#Instrument_wheat" }]
     },
-    {
-      "@id": "#Mühlhaus_Timo",
-      "@type": "Person",
-      "name": "Timo Mühlhaus",
-      "email": "timo.muehlhaus@rptu.de",
-      "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" }
-    },
-    {
-      "@id": "#Instrument_wheat",
-      "@type": "Sensor",
-      "name": "Micasense RedEdge-MX"
-    }
+    { "@id": "#Mühlhaus_Timo", "@type": "Person", "name": "Timo Mühlhaus" },
+    { "@id": "#Instrument_wheat", "@type": "Sensor", "name": "Micasense RedEdge-MX" }
   ]
 }
 ```
 
-> The flat `Dataset` is now an `@graph` of linked entities. `hasPart` chains Investigation → Study → Assay. Inline objects extracted.
+> One flat `Dataset` → `@graph` of linked entities. `hasPart` chains I→S→A. Inline objects extracted.
 > See slides 3–4 for how **real** ARCs deviate from this ideal structure.
 
 ---
@@ -202,22 +207,23 @@ One flat Schema.org `Dataset` becomes a **graph of linked entities** connected b
 
 ```mermaid
 flowchart LR
-    ARC["ARC RO-Crate"]
-    DH["DataPLANT DataHub<br/>GitLab ARC Storage"]
-    B["FAIRagro schema.json<br/>→ SearchHub"]
+    DH["FAIRagro DataHub<br/>GitLab ARC Storage"]
+    SH["FAIRagro SearchHub<br/>(direct harvest via GitLab API)"]
+    B["FAIRagro schema.json"]
 
-    ARC --> DH --> B
+    DH -->|GitLab API| SH
+    SH -->|ingest| B
 
-    classDef arc fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
-    classDef hub fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
+    classDef hub fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    classDef search fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
     classDef out fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
 
-    class ARC arc
     class DH hub
+    class SH search
     class B out
 ```
 
-**Direct harvest** from GitLab ARC storage via OAI-PMH. The DataHub exposes the ARC root; the harvester walks the JSON-LD graph and re-runs conversion against the `fairagro_searchhub` template.
+**Direct harvest** — the SearchHub reads directly from the DataHub via the GitLab API. No middleware in the loop. ARCs are accessed as GitLab repo files; the SearchHub ingests the ARC RO-Crate and produces `schema.json`.
 
 ---
 
@@ -225,22 +231,27 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    ARC["ARC RO-Crate"]
-    MW["FAIRagro Middleware<br/>POST /harvest/convert"]
-    B["FAIRagro schema.json<br/>→ SearchHub"]
+    DH["FAIRagro DataHub<br/>GitLab ARC Storage"]
+    MW["FAIRagro Middleware<br/>(Harvest API: OAI-PMH / REST)"]
+    SH["FAIRagro SearchHub<br/>(calls Middleware API)"]
+    B["FAIRagro schema.json"]
 
-    ARC -.->|orchestrate| MW --> B
+    DH -.->|harvest| MW
+    MW -->|expose API| SH
+    SH -->|ingest| B
 
-    classDef arc fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef hub fill:#c8e6c9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
     classDef mw fill:#fce4ec,stroke:#c2185b,stroke-width:2px,stroke-dasharray: 5 5,color:#880e4f
+    classDef search fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
     classDef out fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
 
-    class ARC arc
+    class DH hub
     class MW mw
+    class SH search
     class B out
 ```
 
-**Orchestrated harvest** via the federated Middleware. Calls `POST /harvest/convert` with the ARC body, runs `_arc_to_fairagro_jsonld()`. Designed for multi-RDI federation.
+**Orchestrated harvest** via the federated Middleware. ARCs are stored on the DataHub; the Middleware harvests from the DataHub and exposes an API (OAI-PMH or REST) for the SearchHub to call. The Middleware never stores ARCs itself — the ARC full package always lives on the DataHub.
 
 ---
 
@@ -254,50 +265,25 @@ The ARC graph is flattened — now **organized by domain block** instead of ISA 
   "@type": "Dataset",
   "citation": {
     "title": "Wheat Drought Phenotyping Field Trial 2024",
-    "dsDescription": "Multi-temporal drone-based NDVI...",
-    "author": [{
-      "name": "Timo Mühlhaus",
-      "orcid": "0000-0003-3925-6778",
-      "affiliation": "RPTU University of Kaiserslautern"
-    }],
-    "otherId": [{ "value": "10.5447/fairweaver/2024/wheat-drought-001" }],
-    "productionDate": "2024-09-15",
-    "keywords": ["wheat", "drought stress", "NDVI", "phenotyping"]
-  },
-  "generalExtended": {
-    "license": "https://creativecommons.org/licenses/by/4.0/",
-    "sourceRDI": "FAIRagro"
+    "author": [{ "name": "Timo Mühlhaus", "orcid": "0000-0003-3925-6778" }],
+    "otherId": [{ "value": "10.5447/<RDI>/2024/wheat-drought-001" }]
   },
   "crop": {
-    "crop": [{
-      "scientificName": "Triticum aestivum",
-      "ontologyRef": "http://purl.obolibrary.org/obo/NCBITaxon_4565"
-    }]
+    "crop": [{ "scientificName": "Triticum aestivum",
+               "ontologyRef": "NCBITaxon_4565" }]
   },
   "sensor": {
-    "sensor": [{
-      "name": "Micasense RedEdge-MX",
-      "platformType": "DJI Matrice 300 RTK UAV"
-    }]
+    "sensor": [{ "name": "Micasense RedEdge-MX",
+                 "platformType": "DJI Matrice 300 RTK UAV" }]
   },
   "location": {
     "name": "RPTU Field Station Kaiserslautern",
     "geo": { "latitude": 49.4401, "longitude": 7.7491 }
-  },
-  "geographicCoverage": {
-    "country": "Germany",
-    "state": "Rhineland-Palatinate"
-  },
-  "soil": {
-    "soilLayer": [{ "soilType": "Luvisol" }]
-  },
-  "process": {
-    "processType": "UAV-based remote sensing"
   }
 }
 ```
 
-> Block structure mirrors `pivot_registry.yaml`: `citation`, `generalExtended`, `crop`, `sensor`, `location`, `geographicCoverage`, `soil`, `process`.
+> Domain-block grouped: `citation`, `crop`, `sensor`, `location`. Full block set in `pivot_registry.yaml`.
 
 ---
 
@@ -410,7 +396,6 @@ flowchart TD
 > **Note:** Müncheberg does have a Study entity (`studies/LTE-V140-Muencheberg/`) and LabProcess chains (via `Study.about`), just like the drone flyover. The key difference is that the Investigation's `hasPart` connects directly to the Assays, skipping the Study. The crop species path also has a shorter alternative at the Source level.
 
 ---
-<<<<<<< Updated upstream
 
 ## Required Modeling Pattern & Standardization Gap
 
@@ -454,9 +439,3 @@ flowchart TD
 |---|---|
 | **Structure: ?** | How to formally specify the required traversal path? |
 | **propertyID: SSSOM mapping** | How to standardize ontology term mappings? |
-
----
-||||||| Stash base
-
-=======
->>>>>>> Stashed changes

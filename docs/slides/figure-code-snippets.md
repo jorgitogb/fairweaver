@@ -260,10 +260,10 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
-  "@id": "https://doi.org/10.5447/fairweaver/2024/wheat-drought-001",
+  "@id": "https://doi.org/10.5447/<RDI>/2024/wheat-drought-001",
   "name": "Wheat Drought Phenotyping Field Trial 2024",
   "description": "Multi-temporal drone-based NDVI and multispectral imaging...",
-  "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
+  "identifier": "10.5447/<RDI>/2024/wheat-drought-001",
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "datePublished": "2024-09-15",
   "creator": {
@@ -328,7 +328,7 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
   "additionalType": "Investigation",
   "name": "Wheat Drought Phenotyping Field Trial 2024",
   "description": "Multi-temporal drone-based NDVI and multispectral imaging...",
-  "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
+  "identifier": "10.5447/<RDI>/2024/wheat-drought-001",
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "datePublished": "2024-09-15",
   "creator": [
@@ -523,3 +523,251 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
    - Assay-level: measurement specifics (technique, method, platform, instrument)
 4. **Context Switching**: `@context` changes from `https://schema.org` to RO-Crate context with Schema.org vocabulary overlay
 5. **Back-references**: Assay includes `about: [{@id: "#Study_wheat"}]` to link back to parent Study
+
+---
+
+## Slide 1 Chain — Pipeline Walkthrough Snippets
+
+These synthetic snippets trace the same wheat-2024 dataset through every stage of the pipeline.
+
+### Slide 1b — Stage 1 · Input: FAIRagro Publication Metadata Set
+
+Compliant with the FAIRagro Core Metadata Specification §2. Uses `@vocab` for compact type URIs.
+
+```json
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "agrovoc": "http://aims.fao.org/aos/agrovoc/"
+  },
+  "@type": "Dataset",
+  "@id": "https://doi.org/10.5447/<RDI>/2024/wheat-drought-001",
+  "name": "Wheat Drought Phenotyping Field Trial 2024",
+  "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
+  "url": "https://<RDI>.example.org/datasets/wheat-drought-2024",
+  "license": "https://spdx.org/licenses/CC-BY-4.0.html",
+  "keywords": [{
+    "@type": "DefinedTerm",
+    "name": "wheat",
+    "termCode": "agrovoc:c_8347"
+  }],
+  "identifier": {
+    "@type": "PropertyValue",
+    "propertyID": "https://registry.identifiers.org/registry/doi",
+    "value": "10.5447/<RDI>/2024/wheat-drought-001"
+  },
+  "author": [{
+    "@type": "Person",
+    "name": "Timo Mühlhaus",
+    "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" }
+  }],
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "RPTU Field Station Kaiserslautern"
+  }
+}
+```
+
+**Key observation:** 6 required FAIRagro fields present: `name`, `description`, `url`, `keywords`, `license`, `identifier`.
+Uses `author` (per §2.1.3) and `spatialCoverage` (per §2.1.12). `keywords` are `DefinedTerm` objects, `identifier` is a `PropertyValue`.
+Domain entities (Crop, Sensor) go into Agrischemas `about` — see slide 1b-bis.
+
+### Slide 1b-bis — Stage 1bis · Agrischemas: Same record, the `about` array
+
+Continuation of slide 1b — same `Dataset`, same `@id`. These `about` entities go inside the same JSON document.
+
+```json
+"about": [
+  {
+    "@type": "biosc:BioSample",
+    "additionalType": "AGRO:AGRO_00000325",
+    "additionalProperty": [{
+      "@type": "PropertyValue",
+      "name": "species",
+      "propertyID": "agrovoc:c_331243",
+      "value": "Triticum aestivum"
+    }]
+  },
+  {
+    "@type": "Product",
+    "additionalType": "http://www.w3.org/ns/sosa/Sensor",
+    "name": "Micasense RedEdge-MX"
+  }
+]
+```
+
+**Key observation:** Crop = `BioSample` + `AGRO_00000325` (§3.1). Species as `PropertyValue` with `propertyID: agrovoc:c_331243` (taxonomic species).
+Sensor = `Product` + `sosa:Sensor` (§3.4). Soil = `Sample` + `agrovoc/c_7156` (§3.2, omitted for brevity).
+`propertyID` is the critical field — it links to an ontology term enabling semantic search.
+
+### Slide 1c — Stage 2 · Transformation: FAIRagro Template Rules
+
+Excerpt from `backend/mappings/schema_org-arc_ro_crate.yaml`:
+
+```yaml
+source_format: schema_org
+pivot: fairagro_searchhub
+version: "1.0.0"
+field_rules:
+  # Direct copies
+  - source: "name"
+    target: "name"
+    confidence: 0.95
+  - source: "description"
+    target: "description"
+    confidence: 0.95
+  - source: "identifier"
+    target: "identifier"
+    confidence: 0.9
+  # Inline extraction
+  - source: "author"
+    target: "creator"
+    transform: extract_person
+  - source: "spatialCoverage"
+    target: "location"
+    transform: extract_place
+  # Agrischemas about-entities → ISA levels
+  - source: "about/BioSample"
+    target: "Study.crop"
+    transform: extract_agrischemas
+  - source: "about/Product"
+    target: "Assay.instrument"
+    transform: extract_sensor
+```
+
+**Key observation:** The YAML bridges FAIRagro input names (`author`, `spatialCoverage`) to RO-Crate output names
+(`creator`, `location`). Agrischemas `about` entities are re-distributed to ISA levels (BioSample → Study, Product → Assay).
+
+### Slide 1d — Stage 3 · Output A: ARC RO-Crate
+
+```json
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    { "@vocab": "https://schema.org/" }
+  ],
+  "@graph": [
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "additionalType": "Investigation",
+      "identifier": "10.5447/<RDI>/2024/wheat-drought-001",
+      "name": "Wheat Drought Phenotyping Field Trial 2024",
+      "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
+      "datePublished": "2024-09-15",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "creator": [{ "@id": "#Mühlhaus_Timo" }],
+      "hasPart": [{ "@id": "#Study_wheat" }],
+      "location": { "@id": "#Location_wheat" },
+      "soil": { "@id": "#Soil_wheat" }
+    },
+    {
+      "@id": "#Mühlhaus_Timo",
+      "@type": "Person",
+      "name": "Timo Mühlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" },
+      "identifier": { "@type": "PropertyValue", "propertyID": "orcid", "value": "0000-0003-3925-6778" }
+    },
+    {
+      "@id": "#Study_wheat",
+      "@type": "Dataset",
+      "additionalType": "Study",
+      "name": "Wheat Field Trial",
+      "studyDesignType": "Randomized complete block design",
+      "crop_species": "Triticum aestivum",
+      "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
+      "hasPart": [{ "@id": "#Assay_wheat" }]
+    },
+    {
+      "@id": "#Assay_wheat",
+      "@type": "Dataset",
+      "additionalType": "Assay",
+      "name": "Wheat Multispectral imaging",
+      "measurementTechnique": "Multispectral imaging",
+      "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+      "technologyPlatform": "DJI Matrice 300 RTK UAV",
+      "instrument": [{ "@id": "#Instrument_wheat" }],
+      "about": [{ "@id": "#Study_wheat" }]
+    },
+    {
+      "@id": "#Instrument_wheat",
+      "@type": "Sensor",
+      "name": "Micasense RedEdge-MX",
+      "description": "Multispectral sensor on DJI Matrice 300 RTK UAV"
+    }
+  ]
+}
+```
+
+**Key observation:** The flat Schema.org `Dataset` is now a graph of linked entities:
+- `Investigation` (`./`) is the root with global metadata.
+- `Study` and `Assay` are separate nodes connected by `hasPart`.
+- Inline `creator` and `instrument` are extracted to their own graph nodes with `@id` references.
+- `crop_species` moved to Study-level; `measurementTechnique` moved to Assay-level.
+
+### Slide 1g — Stage 5 · Output B: FAIRagro SearchHub JSON
+
+```json
+{
+  "@context": "https://fairagro.net/schema/v1",
+  "@type": "Dataset",
+  "citation": {
+    "title": "Wheat Drought Phenotyping Field Trial 2024",
+    "dsDescription": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
+    "author": [{
+      "name": "Timo Mühlhaus",
+      "orcid": "0000-0003-3925-6778",
+      "affiliation": "RPTU University of Kaiserslautern"
+    }],
+    "otherId": [{ "value": "10.5447/<RDI>/2024/wheat-drought-001" }],
+    "productionDate": "2024-09-15",
+    "keywords": ["wheat", "drought stress", "NDVI", "phenotyping"]
+  },
+  "generalExtended": {
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "sourceRDI": "FAIRagro"
+  },
+  "crop": {
+    "crop": [{
+      "scientificName": "Triticum aestivum",
+      "ontologyRef": "http://purl.obolibrary.org/obo/NCBITaxon_4565"
+    }]
+  },
+  "sensor": {
+    "sensor": [{
+      "name": "Micasense RedEdge-MX",
+      "platformType": "DJI Matrice 300 RTK UAV"
+    }]
+  },
+  "location": {
+    "name": "RPTU Field Station Kaiserslautern",
+    "geo": { "latitude": 49.4401, "longitude": 7.7491 }
+  },
+  "geographicCoverage": {
+    "country": "Germany",
+    "state": "Rhineland-Palatinate"
+  },
+  "soil": {
+    "soilLayer": [{ "soilType": "Luvisol" }]
+  },
+  "process": {
+    "processType": "UAV-based remote sensing"
+  }
+}
+```
+
+**Key observation:** The ARC graph is flattened again — but now **organized by domain block**
+instead of ISA hierarchy. Fields are grouped into SearchHub blocks (`citation`, `crop`, `sensor`, …)
+matching the `fairagro_searchhub` pivot registry. This is the schema SearchHub ingests.
+
+### Slide 1h — Pipeline Trace Map (same dataset across all stages)
+
+| Stage | Format | Key change |
+|-------|--------|------------|
+| **Input (1b)** | FAIRagro `Dataset` | Flat, 6 required fields, `author`+`spatialCoverage` |
+| **Agrischemas (1b-bis)** | `about` entities | Crop (BioSample), Sensor (Product), Soil (Sample) |
+| **Transform (1c)** | YAML `field_rules` | Routing & extraction rules, name bridging (author→creator) |
+| **Output A (1d)** | ARC RO-Crate `@graph` | ISA hierarchy, `@id` refs, extracted entities |
+| **Harvest (1e/1f)** | — | Two paths: direct (DataHub) or orchestrated (Middleware) |
+| **Output B (1g)** | `fairagro schema.json` | Domain-block grouped, SearchHub-ready |
