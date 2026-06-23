@@ -64,7 +64,7 @@ Compliant with the FAIRagro Core Metadata Specification — flat, no ISA hierarc
     "value": "10.5447/<RDI>/2024/wheat-drought-001"
   },
   "author": [{
-    "@type": "Person", "name": "Timo Mühlhaus",
+    "@type": "Person", "name": "Liam Brennecke",
     "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" }
   }],
   "spatialCoverage": { "@type": "Place", "name": "RPTU Field Station Kaiserslautern" }
@@ -136,7 +136,7 @@ One flat `Dataset` becomes a **graph** of linked entities via `hasPart`.
       "@id": "./", "@type": "Dataset", "additionalType": "Investigation",
       "identifier": "10.5447/<RDI>/2024/wheat-drought-001",
       "name": "Wheat Drought Phenotyping Field Trial 2024",
-      "creator": [{ "@id": "#Mühlhaus_Timo" }],
+      "creator": [{ "@id": "#Brennecke_Liam" }],
       "hasPart": [{ "@id": "#Study_wheat" }]
     },
     {
@@ -151,7 +151,7 @@ One flat `Dataset` becomes a **graph** of linked entities via `hasPart`.
       "technologyPlatform": "DJI Matrice 300 RTK UAV",
       "instrument": [{ "@id": "#Instrument_wheat" }]
     },
-    { "@id": "#Mühlhaus_Timo", "@type": "Person", "name": "Timo Mühlhaus" },
+    { "@id": "#Brennecke_Liam", "@type": "Person", "name": "Liam Brennecke" },
     { "@id": "#Instrument_wheat", "@type": "Sensor", "name": "Micasense RedEdge-MX" }
   ]
 }
@@ -188,7 +188,7 @@ The ARC graph is flattened again — now organized by **domain block**.
   "@type": "Dataset",
   "citation": {
     "title": "Wheat Drought Phenotyping Field Trial 2024",
-    "author": [{ "name": "Timo Mühlhaus", "orcid": "0000-0003-3925-6778" }],
+    "author": [{ "name": "Liam Brennecke", "orcid": "0000-0002-7391-4826" }],
     "otherId": [{ "value": "10.5447/<RDI>/2024/wheat-drought-001" }]
   },
   "crop": {

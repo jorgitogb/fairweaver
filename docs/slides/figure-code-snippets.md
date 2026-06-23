@@ -268,9 +268,9 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
   "datePublished": "2024-09-15",
   "creator": {
     "@type": "Person",
-    "givenName": "Timo",
-    "familyName": "Mühlhaus",
-    "email": "timo.muehlhaus@rptu.de",
+    "givenName": "Liam",
+    "familyName": "Brennecke",
+    "email": "liam.brennecke@rptu.de",
     "affiliation": {
       "@type": "Organization",
       "name": "RPTU University of Kaiserslautern"
@@ -278,7 +278,7 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
     "identifier": {
       "@type": "PropertyValue",
       "propertyID": "orcid",
-      "value": "0000-0003-3925-6778"
+      "value": "0000-0002-7391-4826"
     }
   },
   "keywords": ["wheat", "drought stress", "NDVI", "phenotyping"],
@@ -332,8 +332,8 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "datePublished": "2024-09-15",
   "creator": [
-    { "@id": "#Mühlhaus_Timo" },
-    { "@id": "#Maus_Oliver" }
+    { "@id": "#Brennecke_Liam" },
+    { "@id": "#Vorobeva_Anya" }
   ],
   "hasPart": [
     { "@id": "#Study_wheat" }
@@ -344,7 +344,7 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
   },
   "funder": "DFG – German Research Foundation",
   "investigationContacts": [
-    { "@id": "#Mühlhaus_Timo" }
+    { "@id": "#Brennecke_Liam" }
   ],
   "investigationPublications": [
     { "@id": "#Publication_wheat" }
@@ -374,7 +374,7 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
   "studyDesignType": "Randomized complete block design",
   "studyDesignDescriptors": ["wheat", "drought stress", "NDVI"],
   "studyPersonnel": [
-    { "@id": "#Mühlhaus_Timo" }
+    { "@id": "#Brennecke_Liam" }
   ],
   "crop_species": "Triticum aestivum",
   "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
@@ -424,16 +424,16 @@ This section shows how a flat Schema.org JSON-LD transforms into a structured AR
 **Person** (from inline `creator`)
 ```json
 {
-  "@id": "#Mühlhaus_Timo",
+  "@id": "#Brennecke_Liam",
   "@type": "Person",
-  "givenName": "Timo",
-  "familyName": "Mühlhaus",
-  "name": "Timo Mühlhaus",
-  "email": "timo.muehlhaus@rptu.de",
+  "givenName": "Liam",
+  "familyName": "Brennecke",
+  "name": "Liam Brennecke",
+  "email": "liam.brennecke@rptu.de",
   "identifier": {
     "@type": "PropertyValue",
     "propertyID": "orcid",
-    "value": "0000-0003-3925-6778"
+    "value": "0000-0002-7391-4826"
   },
   "affiliation": {
     "@type": "Organization",
@@ -558,7 +558,7 @@ Compliant with the FAIRagro Core Metadata Specification §2. Uses `@vocab` for c
   },
   "author": [{
     "@type": "Person",
-    "name": "Timo Mühlhaus",
+    "name": "Liam Brennecke",
     "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" }
   }],
   "spatialCoverage": {
@@ -656,18 +656,18 @@ field_rules:
       "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
       "datePublished": "2024-09-15",
       "license": "https://creativecommons.org/licenses/by/4.0/",
-      "creator": [{ "@id": "#Mühlhaus_Timo" }],
+      "creator": [{ "@id": "#Brennecke_Liam" }],
       "hasPart": [{ "@id": "#Study_wheat" }],
       "location": { "@id": "#Location_wheat" },
       "soil": { "@id": "#Soil_wheat" }
     },
     {
-      "@id": "#Mühlhaus_Timo",
+      "@id": "#Brennecke_Liam",
       "@type": "Person",
-      "name": "Timo Mühlhaus",
-      "email": "timo.muehlhaus@rptu.de",
+      "name": "Liam Brennecke",
+      "email": "liam.brennecke@rptu.de",
       "affiliation": { "@type": "Organization", "name": "RPTU University of Kaiserslautern" },
-      "identifier": { "@type": "PropertyValue", "propertyID": "orcid", "value": "0000-0003-3925-6778" }
+      "identifier": { "@type": "PropertyValue", "propertyID": "orcid", "value": "0000-0002-7391-4826" }
     },
     {
       "@id": "#Study_wheat",
@@ -716,8 +716,8 @@ field_rules:
     "title": "Wheat Drought Phenotyping Field Trial 2024",
     "dsDescription": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat under controlled drought stress...",
     "author": [{
-      "name": "Timo Mühlhaus",
-      "orcid": "0000-0003-3925-6778",
+      "name": "Liam Brennecke",
+      "orcid": "0000-0002-7391-4826",
       "affiliation": "RPTU University of Kaiserslautern"
     }],
     "otherId": [{ "value": "10.5447/<RDI>/2024/wheat-drought-001" }],
