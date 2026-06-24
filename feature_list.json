@@ -15,6 +15,13 @@
       "status": "done",
       "description": "Core playground: Upload schema.org JSON-LD, map to ARC RO-Crate with FAIRagro template, show mapped/missing fields, export RO-Crate JSON",
       "priority": 1
+    },
+    {
+      "name": "create-arc-scaffold-from-rocrate",
+      "sdd": true,
+      "status": "done",
+      "description": "Upload ARC RO-Crate JSON-LD and download a full ARC scaffold directory (studies/, assays/, XLSX files) as a ZIP via arctrl",
+      "priority": 2
     }
   ]
 }

@@ -157,6 +157,7 @@ field_rules:
 ```
 
 Three kinds of rules:
+
 1. **Direct copy** — `name`, `description`, `identifier` land verbatim
 2. **Re-distribution** — Agrischemas `BioSample` → Study, `Product` → Assay
 3. **Extract** — inline objects become separate graph entities with `@id` reference
@@ -298,6 +299,7 @@ The ARC graph is flattened — now **organized by domain block** instead of ISA 
 | **Output B** | `fairagro schema.json` | Domain-block grouped, SearchHub-ready |
 
 **Key insights:**
+
 - **ARC is the single source of truth** — Output B is always derived from Output A.
 - **Both harvest paths** produce identical `schema.json`. Pick by topology (direct = single RDI; middleware = federated).
 - **What determines extraction depth?** → **Slide 2 • Compliance Spectrum**
@@ -354,6 +356,7 @@ flowchart TD
 ## Müncheberg ARC: A Different Structural Pattern
 
 **Goal:**
+
 - Show another real ARC with a different structural pattern
 - Reinforce that parser must handle multiple modeling conventions
 

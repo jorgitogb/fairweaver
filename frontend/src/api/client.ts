@@ -327,6 +327,23 @@ export interface ArcBatchExportResult {
   validation: ArcValidationResult;
 }
 
+export async function createArcScaffold(file: File): Promise<Blob> {
+  const form = new FormData();
+  form.append("file", file);
+
+  const response = await fetch("/arc/scaffold", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "ARC scaffold creation failed" }));
+    throw new Error(error.detail || "ARC scaffold creation failed");
+  }
+
+  return response.blob();
+}
+
 export interface ArcTemplateRecommendation {
   recommendedTemplate: string;
   reason: string;

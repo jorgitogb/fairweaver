@@ -10,6 +10,7 @@ import {
 } from "./api/client";
 import UploadZone from "./components/UploadZone";
 import ArcCrateView from "./components/ArcCrateView";
+import ArcScaffoldCreator from "./components/ArcScaffoldCreator";
 import ComplianceBadge from "./components/ComplianceBadge";
 import { Loader2, Github, Database, ArrowDownUp, AlertTriangle } from "lucide-react";
 
@@ -277,7 +278,22 @@ export default function App() {
                   />
                 </section>
 
-
+                {file && arcResult.preview && (
+                  <section>
+                    <ArcScaffoldCreator
+                      rocrateFile={
+                        sourceFormat === "ro_crate"
+                          ? file
+                          : new File(
+                              [JSON.stringify(arcResult.preview, null, 2)],
+                              "ro-crate.json",
+                              { type: "application/json" }
+                            )
+                      }
+                      arcName={arcResult.filename.replace(/_arc-ro-crate\.json$/i, "")}
+                    />
+                  </section>
+                )}
               </>
             ) : pivotResult ? (
               <section className="w-full">

@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -18,6 +19,7 @@ from arc_templates.fairagro_validator import FairagroArcValidator
 from formats.schema_org_plugin import load as schema_org_load
 from formats.ro_crate_plugin import load as ro_crate_load
 from formats.schema_org_arc_plugin import load as schema_org_arc_load, write as schema_org_arc_write
+from arc_scaffold_builder import build_scaffold_from_rocrate, sanitize_arc_identifier, zip_scaffold
 import tempfile
 import zipfile
 import io
@@ -1253,6 +1255,63 @@ async def validate_arc_fairagro(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Invalid JSON file")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/arc/scaffold", summary="Create ARC scaffold from RO-Crate")
+async def create_arc_scaffold(file: UploadFile = File(...)):
+    """Generate a full ARC scaffold directory as a ZIP from an ARC RO-Crate JSON file."""
+    try:
+        content = await file.read()
+    except Exception as e:
+        logger.warning("Failed to read uploaded file: %s", e)
+        raise HTTPException(status_code=400, detail="Could not read uploaded file")
+
+    try:
+        rocrate_data = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON file: {e}")
+
+    if not isinstance(rocrate_data, dict):
+        raise HTTPException(status_code=400, detail="RO-Crate must be a JSON object")
+
+    if "@graph" not in rocrate_data:
+        raise HTTPException(status_code=400, detail="RO-Crate must contain @graph")
+
+    graph = rocrate_data.get("@graph", [])
+    investigation = next(
+        (e for e in graph if e.get("additionalType") == "Investigation"),
+        None,
+    )
+    if investigation is None:
+        raise HTTPException(
+            status_code=400, detail="RO-Crate must contain at least one Investigation entity"
+        )
+
+    arc_name = sanitize_arc_identifier(
+        investigation.get("identifier") or investigation.get("@id", "arc")
+    )
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        scaffold_dir = Path(tmp_dir) / arc_name
+        try:
+            await asyncio.to_thread(build_scaffold_from_rocrate, rocrate_data, scaffold_dir)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            logger.exception("Failed to build ARC scaffold")
+            raise HTTPException(status_code=500, detail=f"Failed to build ARC scaffold: {e}")
+
+        try:
+            zip_bytes = zip_scaffold(scaffold_dir, arc_name=arc_name)
+        except Exception as e:
+            logger.exception("Failed to package ARC scaffold")
+            raise HTTPException(status_code=500, detail=f"Failed to package ARC scaffold: {e}")
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{arc_name}_scaffold.zip"'},
+    )
 
 
 class ListSetsRequest(BaseModel):
