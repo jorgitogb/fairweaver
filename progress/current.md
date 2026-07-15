@@ -1,48 +1,41 @@
 # Progress — Current session
 
-## Feature
+## Task
 
-create-arc-scaffold-from-rocrate
+Generate a complete, DataHub-ready ARC scaffold from demo RO-Crate data using arctrl for maximum compatibility.
 
 ## Plan
 
-- [x] Backend scaffold builder (RO-Crate → arctrl ARC)
-- [x] POST /arc/scaffold endpoint returning ZIP
-- [x] Frontend API function createArcScaffold()
-- [x] ArcScaffoldCreator UI component
-- [x] Integration into App.tsx
-- [x] Backend tests (8 passing)
-- [x] Frontend component tests (3 passing)
-- [x] Ruff check/format clean
-- [x] Frontend typecheck clean
-- [x] init.sh passes
+- [x] Enhance `arc_scaffold_builder.py` to leverage more arctrl features
+  - [x] Study design descriptors → `ArcStudy.StudyDesignDescriptors`
+  - [x] Study personnel → `ArcStudy.Contacts`
+  - [x] Investigation publications → `ArcInvestigation.Publications`
+  - [x] Ontology source references (NCBITaxon) → `ArcInvestigation.OntologySourceReferences`
+- [x] Add tests for new arctrl mappings (TDD)
+- [x] Create `backend/generate_datahub_scaffold.py` utility
+- [x] Generate scaffold from `sample-data/demo/arc-ro-crate-wheat-full.json`
+- [x] Add placeholder TIFF data files in assay dataset folder
+- [x] Add LICENSE file (CC-BY-4.0)
+- [x] Copy source RO-Crate alongside scaffold
+- [x] Verify scaffold loads cleanly with `ARC.load()`
+- [x] Run ruff check/format
+- [x] Run scaffold tests (19 passing)
 
 ## Notes
 
-- arctrl `ARC.Write()` internally calls `asyncio.run()`, so endpoint wraps builder in `asyncio.to_thread()` to avoid event-loop conflict inside FastAPI.
-- Mapping coverage: Investigation, Study, Assay, Person (creator/author/contact/contributor), ontology annotations for measurement/technology.
-- ZIP is generated in-memory and streamed as `application/zip` download.
-- Identifier sanitization extracts the last path segment from URLs/paths and removes characters forbidden by ARC tooling, producing clean folder and XLSX identifiers (e.g. `wheat-drought-001`).
-- ZIP decompression now yields a single flat folder (e.g. `wheat-drought-001/isa.investigation.xlsx`) instead of nested directories.
+- Generated scaffold: `sample-data/demo/arc-scaffold-wheat-drought/`
+- ARC identifier: `wheat-drought-001`
+- Structure: Investigation + Study (`Study_wheat`) + Assay (`Assay_wheat`) + 2 contacts + 1 publication + NCBITaxon ontology source.
+- Placeholder TIFFs (8-byte header) placed in `assays/Assay_wheat/dataset/` to match arctrl folder naming.
+- Full backend test suite has pre-existing failures in `test_ro_crate_miappe_integration.py` due to missing sample files; not introduced by this change.
 
 ## Files touched
 
-- `backend/arc_scaffold_builder.py` (new)
-- `backend/main.py`
-- `backend/tests/test_arc_scaffold_builder.py` (new)
-- `frontend/src/api/client.ts`
-- `frontend/src/components/ArcScaffoldCreator.tsx` (new)
-- `frontend/tests/components/ArcScaffoldCreator.test.tsx` (new)
-- `frontend/src/App.tsx`
-- `specs/create-arc-scaffold-from-rocrate/requirements.md` (new)
-- `specs/create-arc-scaffold-from-rocrate/design.md` (new)
-- `specs/create-arc-scaffold-from-rocrate/tasks.md` (new)
-- `feature_list.json`
-
-## Blockers
-
-- Pre-existing `test_ro_crate_miappe_integration.py` failures due to missing sample files (`arc-ro-crate-benjamin.json`, `arc-ro-crate-metadata-matthiasL.json`). Not introduced by this feature; new tests pass.
+- `backend/arc_scaffold_builder.py` — enhanced arctrl mappings
+- `backend/tests/test_arc_scaffold_builder.py` — new tests
+- `backend/generate_datahub_scaffold.py` — new generator script
+- `sample-data/demo/arc-scaffold-wheat-drought/` — generated scaffold artifact
 
 ## Next steps
 
-- Human review and approval to mark feature `done` in `feature_list.json`.
+- User will review scaffold and push to GitLab DataHub.
