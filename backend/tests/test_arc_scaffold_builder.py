@@ -177,6 +177,143 @@ class TestArcScaffoldBuilder:
         assert contact.FirstName == "Jane"
         assert contact.LastName == "Doe"
 
+    def test_build_scaffold_study_design_descriptors(self, tmp_path: Path):
+        """Study design descriptors become ontology annotations."""
+        rocrate = {
+            "@context": "https://w3id.org/ro/crate/1.1",
+            "@graph": [
+                {
+                    "@id": "ro-crate-metadata.json",
+                    "@type": "CreativeWork",
+                    "conformsTo": "https://w3id.org/ro/crate/1.1",
+                    "about": {"@id": "./"},
+                },
+                {
+                    "@id": "#Investigation_test",
+                    "@type": "Dataset",
+                    "additionalType": "Investigation",
+                    "name": "Test Investigation",
+                    "identifier": "test-123",
+                    "hasPart": [{"@id": "#Study_test"}],
+                },
+                {
+                    "@id": "#Study_test",
+                    "@type": "Dataset",
+                    "additionalType": "Study",
+                    "name": "Test Study",
+                    "studyDesignDescriptors": [
+                        "phenotyping",
+                        {
+                            "name": "randomized complete block design",
+                            "termSource": "AGRO",
+                            "termAccession": "http://purl.obolibrary.org/obo/AGRO_00000443",
+                        },
+                    ],
+                },
+            ],
+        }
+
+        output_dir = tmp_path / "scaffold"
+        build_scaffold_from_rocrate(rocrate, output_dir)
+
+        study, _assays = XlsxController.Study().from_xlsx_file(
+            str(output_dir / "studies" / "Study_test" / "isa.study.xlsx")
+        )
+        assert len(study.StudyDesignDescriptors) == 2
+        assert study.StudyDesignDescriptors[0].Name == "phenotyping"
+        assert study.StudyDesignDescriptors[1].Name == "randomized complete block design"
+
+    def test_build_scaffold_study_personnel_contacts(self, tmp_path: Path):
+        """Persons referenced from studyPersonnel become Study contacts."""
+        rocrate = {
+            "@context": "https://w3id.org/ro/crate/1.1",
+            "@graph": [
+                {
+                    "@id": "ro-crate-metadata.json",
+                    "@type": "CreativeWork",
+                    "conformsTo": "https://w3id.org/ro/crate/1.1",
+                    "about": {"@id": "./"},
+                },
+                {
+                    "@id": "#Investigation_test",
+                    "@type": "Dataset",
+                    "additionalType": "Investigation",
+                    "name": "Test Investigation",
+                    "identifier": "test-123",
+                    "hasPart": [{"@id": "#Study_test"}],
+                },
+                {
+                    "@id": "#Study_test",
+                    "@type": "Dataset",
+                    "additionalType": "Study",
+                    "name": "Test Study",
+                    "studyPersonnel": [{"@id": "#Person_jane"}],
+                },
+                {
+                    "@id": "#Person_jane",
+                    "@type": "Person",
+                    "givenName": "Jane",
+                    "familyName": "Doe",
+                    "email": "jane@example.com",
+                },
+            ],
+        }
+
+        output_dir = tmp_path / "scaffold"
+        build_scaffold_from_rocrate(rocrate, output_dir)
+
+        study, _assays = XlsxController.Study().from_xlsx_file(
+            str(output_dir / "studies" / "Study_test" / "isa.study.xlsx")
+        )
+        assert len(study.Contacts) == 1
+        assert study.Contacts[0].FirstName == "Jane"
+
+    def test_build_scaffold_investigation_publications(self, tmp_path: Path):
+        """Investigation publications become arctrl Publication objects."""
+        rocrate = {
+            "@context": "https://w3id.org/ro/crate/1.1",
+            "@graph": [
+                {
+                    "@id": "ro-crate-metadata.json",
+                    "@type": "CreativeWork",
+                    "conformsTo": "https://w3id.org/ro/crate/1.1",
+                    "about": {"@id": "./"},
+                },
+                {
+                    "@id": "#Investigation_test",
+                    "@type": "Dataset",
+                    "additionalType": "Investigation",
+                    "name": "Test Investigation",
+                    "identifier": "test-123",
+                    "investigationPublications": [{"@id": "#Pub_test"}],
+                },
+                {
+                    "@id": "#Pub_test",
+                    "@type": "ScholarlyArticle",
+                    "name": "Test Paper",
+                    "identifier": "https://doi.org/10.1234/test",
+                    "author": [{"@id": "#Person_jane"}],
+                },
+                {
+                    "@id": "#Person_jane",
+                    "@type": "Person",
+                    "givenName": "Jane",
+                    "familyName": "Doe",
+                },
+            ],
+        }
+
+        output_dir = tmp_path / "scaffold"
+        build_scaffold_from_rocrate(rocrate, output_dir)
+
+        inv = XlsxController.Investigation().from_xlsx_file(
+            str(output_dir / "isa.investigation.xlsx")
+        )
+        assert len(inv.Publications) == 1
+        pub = inv.Publications[0]
+        assert pub.Title == "Test Paper"
+        assert pub.DOI == "10.1234/test"
+
     def test_zip_scaffold(self, tmp_path: Path):
         """zip_scaffold packages the scaffold directory into a ZIP archive."""
         rocrate = {

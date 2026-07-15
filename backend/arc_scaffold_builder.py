@@ -12,7 +12,16 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from arctrl import ARC, ArcAssay, ArcInvestigation, ArcStudy, OntologyAnnotation, Person
+from arctrl import (
+    ARC,
+    ArcAssay,
+    ArcInvestigation,
+    ArcStudy,
+    OntologyAnnotation,
+    Person,
+    Publication,
+)
+from arctrl.py.Core.arc_types import OntologySourceReference
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +79,7 @@ def build_scaffold_from_rocrate(rocrate_data: dict[str, Any], output_dir: Path) 
     studies = _find_all_by_type(graph, "Study")
     assays = _find_all_by_type(graph, "Assay")
     persons = _find_all_by_type(graph, "Person")
-    arc = _build_arc(investigation, studies, assays, persons)
+    arc = _build_arc(graph, investigation, studies, assays, persons)
     output_dir.mkdir(parents=True, exist_ok=True)
     arc.Write(str(output_dir))
     return output_dir
@@ -110,6 +119,7 @@ def _entity_type_name(entity: dict[str, Any]) -> str | None:
 
 
 def _build_arc(
+    graph: list[dict[str, Any]],
     investigation: dict[str, Any],
     studies: list[dict[str, Any]],
     assays: list[dict[str, Any]],
@@ -120,19 +130,20 @@ def _build_arc(
     identifier = sanitize_arc_identifier(raw_identifier)
 
     person_by_id = {_local_id(p.get("@id", "")): _build_person(p) for p in persons}
+    publication_by_id = _build_publication_map(graph)
 
     inv = ArcInvestigation(
         identifier=identifier,
         title=investigation.get("name"),
         description=investigation.get("description"),
         public_release_date=investigation.get("datePublished"),
+        ontology_source_references=_ontology_source_references(graph),
+        publications=_linked_publications(investigation, publication_by_id),
     )
     inv.Contacts.extend(_linked_persons(investigation, person_by_id))
 
-    arc_studies = [_add_study(inv, study) for study in studies]
+    arc_studies = [_add_study(inv, study, person_by_id) for study in studies]
     study_by_id = {_local_id(s.get("@id", "")): study for s, study in zip(studies, arc_studies)}
-    for arc_study, study in zip(arc_studies, studies):
-        arc_study.Contacts.extend(_linked_persons(study, person_by_id))
 
     for assay in assays:
         _add_assay(inv, assay, study_by_id)
@@ -140,12 +151,18 @@ def _build_arc(
     return ARC.from_arc_investigation(inv)
 
 
-def _add_study(inv: ArcInvestigation, study: dict[str, Any]) -> ArcStudy:
+def _add_study(
+    inv: ArcInvestigation,
+    study: dict[str, Any],
+    person_by_id: dict[str, Person],
+) -> ArcStudy:
     """Create and add an arctrl ArcStudy from an RO-Crate Study entity."""
     study_id = _local_id(study.get("@id", "study"))
     arc_study = inv.InitStudy(study_id)
     arc_study.Title = study.get("name")
     arc_study.Description = study.get("description")
+    arc_study.StudyDesignDescriptors.extend(_study_design_descriptors(study))
+    arc_study.Contacts.extend(_linked_persons(study, person_by_id))
     return arc_study
 
 
@@ -180,7 +197,7 @@ def _build_person(person: dict[str, Any]) -> Person:
 def _linked_persons(entity: dict[str, Any], person_by_id: dict[str, Person]) -> list[Person]:
     """Resolve Person references from fields such as creator/author/contact."""
     linked: list[Person] = []
-    for key in ("creator", "author", "contact", "contributor"):
+    for key in ("creator", "author", "contact", "contributor", "studyPersonnel"):
         for ref in _as_list(entity.get(key, [])):
             ref_id = ref if isinstance(ref, str) else ref.get("@id", "")
             person = person_by_id.get(_local_id(ref_id))
@@ -219,6 +236,90 @@ def _linked_studies(assay: dict[str, Any], study_by_id: dict[str, ArcStudy]) -> 
             if study is not None and study not in linked:
                 linked.append(study)
     return linked
+
+
+def _build_publication_map(graph: list[dict[str, Any]]) -> dict[str, Publication]:
+    """Index all ScholarlyArticle entities in the RO-Crate graph as Publications."""
+    result: dict[str, Publication] = {}
+    for entity in graph:
+        etype = _entity_type_name(entity)
+        if etype in ("ScholarlyArticle", "Publication"):
+            result[_local_id(entity.get("@id", ""))] = _build_publication(entity)
+    return result
+
+
+def _build_publication(entity: dict[str, Any]) -> Publication:
+    """Convert an RO-Crate ScholarlyArticle entity to an arctrl Publication."""
+    raw_id = entity.get("identifier", "")
+    doi = _extract_doi(raw_id) if isinstance(raw_id, str) else ""
+    if not doi and isinstance(raw_id, dict):
+        doi = _extract_doi(raw_id.get("@id", ""))
+
+    authors = "; ".join(
+        _person_name(ref) if isinstance(ref, str) else _person_name(ref.get("@id", ""))
+        for ref in _as_list(entity.get("author", []))
+    )
+
+    return Publication(
+        title=entity.get("name"),
+        doi=doi,
+        authors=authors or None,
+    )
+
+
+def _extract_doi(raw_id: str) -> str:
+    """Return a DOI stripped from common URI prefixes, or the original value."""
+    prefixes = ("https://doi.org/", "http://doi.org/", "doi:")
+    for prefix in prefixes:
+        if raw_id.startswith(prefix):
+            return raw_id[len(prefix) :]
+    return raw_id
+
+
+def _person_name(ref_id: str) -> str:
+    """Placeholder for author name resolution from reference ID."""
+    return _local_id(ref_id)
+
+
+def _linked_publications(
+    investigation: dict[str, Any],
+    publication_by_id: dict[str, Publication],
+) -> list[Publication]:
+    """Resolve Publication references from investigationPublications."""
+    linked: list[Publication] = []
+    for ref in _as_list(investigation.get("investigationPublications", [])):
+        ref_id = ref if isinstance(ref, str) else ref.get("@id", "")
+        pub = publication_by_id.get(_local_id(ref_id))
+        if pub is not None and pub not in linked:
+            linked.append(pub)
+    return linked
+
+
+def _study_design_descriptors(study: dict[str, Any]) -> list[OntologyAnnotation]:
+    """Convert studyDesignDescriptors to arctrl OntologyAnnotation objects."""
+    descriptors: list[OntologyAnnotation] = []
+    for value in _as_list(study.get("studyDesignDescriptors", [])):
+        annotation = _ontology_annotation(value)
+        if annotation is not None:
+            descriptors.append(annotation)
+    return descriptors
+
+
+def _ontology_source_references(graph: list[dict[str, Any]]) -> list[OntologySourceReference]:
+    """Collect ontology source references used by entities in the graph."""
+    sources: list[OntologySourceReference] = []
+    has_ncbi = any(
+        "purl.obolibrary.org/obo/NCBITaxon" in str(v) for entity in graph for v in entity.values()
+    )
+    if has_ncbi:
+        sources.append(
+            OntologySourceReference(
+                name="NCBITaxon",
+                file="http://purl.obolibrary.org/obo/ncbitaxon.owl",
+                description="NCBI Taxonomy",
+            )
+        )
+    return sources
 
 
 def _ontology_annotation(value: Any) -> OntologyAnnotation | None:
