@@ -1,0 +1,698 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.2/context",
+    {
+      "Sample": "https://bioschemas.org/Sample",
+      "LabProtocol": "https://bioschemas.org/LabProtocol",
+      "LabProcess": "https://bioschemas.org/LabProcess",
+      "computationalTool": "https://bioschemas.org/properties/computationalTool",
+      "labEquipment": "https://bioschemas.org/properties/labEquipment",
+      "reagent": "https://bioschemas.org/properties/reagent",
+      "intendedUse": "https://bioschemas.org/properties/intendedUse",
+      "executesLabProtocol": "https://bioschemas.org/properties/executesLabProtocol",
+      "parameterValue": "https://bioschemas.org/properties/parameterValue",
+      "columnIndex": "https://w3id.org/ro/terms/arc#columnIndex"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "#Person_Timo_Mühlhaus",
+      "@type": "Person",
+      "givenName": "Timo",
+      "email": "timo.muehlhaus@rptu.de",
+      "familyName": "Mühlhaus"
+    },
+    {
+      "@id": "#Person_Uwe_Schmidhalter",
+      "@type": "Person",
+      "givenName": "Uwe",
+      "email": "schmidhalter@wzw.tum.de",
+      "familyName": "Schmidhalter"
+    },
+    {
+      "@id": "assays/Assay_1/dataset/sample1.tiff",
+      "@type": "File",
+      "name": "assays/Assay_1/dataset/sample1.tiff"
+    },
+    {
+      "@id": "assays/Assay_1/dataset/sample2.tiff",
+      "@type": "File",
+      "name": "assays/Assay_1/dataset/sample2.tiff"
+    },
+    {
+      "@id": "assays/Assay_1/dataset/sample3.tiff",
+      "@type": "File",
+      "name": "assays/Assay_1/dataset/sample3.tiff"
+    },
+    {
+      "@id": "#LDComment_Assay_Category_measurement",
+      "@type": "Comment",
+      "name": "Assay Category",
+      "text": "measurement"
+    },
+    {
+      "@id": "#LDComment_Assay_Type_imaging_assay",
+      "@type": "Comment",
+      "name": "Assay Type",
+      "text": "imaging_assay"
+    },
+    {
+      "@id": "#Sample_Sample_1_treated",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_1_treated"
+    },
+    {
+      "@id": "#Protocol_multispectral_imaging",
+      "@type": "LabProtocol"
+    },
+    {
+      "@id": "#ParameterValue_measurement_technique_Multispectral_imaging",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "measurement technique",
+      "value": "Multispectral imaging",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#ParameterValue_measurement_method_NDVI_calculation_from_red_and_near-infrared_reflectance_bands",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "measurement method",
+      "value": "NDVI calculation from red and near-infrared reflectance bands",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#ParameterValue_technology_type_Multispectral_imaging_sensor",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "technology type",
+      "value": "Multispectral imaging sensor",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#ParameterValue_technology_platform_DJI_Matrice_300_RTK_UAV",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "technology platform",
+      "value": "DJI Matrice 300 RTK UAV",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#Process_A_Assay_1_multispectral_imaging_0",
+      "@type": "LabProcess",
+      "name": "multispectral_imaging_0",
+      "object": {
+        "@id": "#Sample_Sample_1_treated"
+      },
+      "result": {
+        "@id": "assays/Assay_1/dataset/sample1.tiff"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_multispectral_imaging"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_measurement_technique_Multispectral_imaging"
+        },
+        {
+          "@id": "#ParameterValue_measurement_method_NDVI_calculation_from_red_and_near-infrared_reflectance_bands"
+        },
+        {
+          "@id": "#ParameterValue_technology_type_Multispectral_imaging_sensor"
+        },
+        {
+          "@id": "#ParameterValue_technology_platform_DJI_Matrice_300_RTK_UAV"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Sample_2_treated",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_2_treated"
+    },
+    {
+      "@id": "#Process_A_Assay_1_multispectral_imaging_1",
+      "@type": "LabProcess",
+      "name": "multispectral_imaging_1",
+      "object": {
+        "@id": "#Sample_Sample_2_treated"
+      },
+      "result": {
+        "@id": "assays/Assay_1/dataset/sample2.tiff"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_multispectral_imaging"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_measurement_technique_Multispectral_imaging"
+        },
+        {
+          "@id": "#ParameterValue_measurement_method_NDVI_calculation_from_red_and_near-infrared_reflectance_bands"
+        },
+        {
+          "@id": "#ParameterValue_technology_type_Multispectral_imaging_sensor"
+        },
+        {
+          "@id": "#ParameterValue_technology_platform_DJI_Matrice_300_RTK_UAV"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Sample_3_treated",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_3_treated"
+    },
+    {
+      "@id": "#Process_A_Assay_1_multispectral_imaging_2",
+      "@type": "LabProcess",
+      "name": "multispectral_imaging_2",
+      "object": {
+        "@id": "#Sample_Sample_3_treated"
+      },
+      "result": {
+        "@id": "assays/Assay_1/dataset/sample3.tiff"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_multispectral_imaging"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_measurement_technique_Multispectral_imaging"
+        },
+        {
+          "@id": "#ParameterValue_measurement_method_NDVI_calculation_from_red_and_near-infrared_reflectance_bands"
+        },
+        {
+          "@id": "#ParameterValue_technology_type_Multispectral_imaging_sensor"
+        },
+        {
+          "@id": "#ParameterValue_technology_platform_DJI_Matrice_300_RTK_UAV"
+        }
+      ]
+    },
+    {
+      "@id": "#OA_Multispectral_imaging_sensor",
+      "@type": "DefinedTerm",
+      "name": "Multispectral imaging sensor"
+    },
+    {
+      "@id": "#OA_DJI_Matrice_300_RTK_UAV",
+      "@type": "DefinedTerm",
+      "name": "DJI Matrice 300 RTK UAV"
+    },
+    {
+      "@id": "#PV_Multispectral_imaging",
+      "@type": "PropertyValue",
+      "name": "Multispectral imaging"
+    },
+    {
+      "@id": "assays/Assay_1/",
+      "@type": "Dataset",
+      "additionalType": "Assay",
+      "identifier": "Assay_1",
+      "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+      "hasPart": [
+        {
+          "@id": "assays/Assay_1/dataset/sample1.tiff"
+        },
+        {
+          "@id": "assays/Assay_1/dataset/sample2.tiff"
+        },
+        {
+          "@id": "assays/Assay_1/dataset/sample3.tiff"
+        }
+      ],
+      "name": "Assay for Wheat Drought Phenotyping Field Trial 2024",
+      "comment": [
+        {
+          "@id": "#LDComment_Assay_Category_measurement"
+        },
+        {
+          "@id": "#LDComment_Assay_Type_imaging_assay"
+        }
+      ],
+      "about": [
+        {
+          "@id": "#Process_A_Assay_1_multispectral_imaging_0"
+        },
+        {
+          "@id": "#Process_A_Assay_1_multispectral_imaging_1"
+        },
+        {
+          "@id": "#Process_A_Assay_1_multispectral_imaging_2"
+        }
+      ],
+      "measurementMethod": {
+        "@id": "#OA_Multispectral_imaging_sensor"
+      },
+      "measurementTechnique": {
+        "@id": "#OA_DJI_Matrice_300_RTK_UAV"
+      },
+      "variableMeasured": {
+        "@id": "#PV_Multispectral_imaging"
+      }
+    },
+    {
+      "@id": "#LDComment_Study_Design_Type_Randomized_complete_block_design",
+      "@type": "Comment",
+      "name": "Study Design Type",
+      "text": "Randomized complete block design"
+    },
+    {
+      "@id": "#CharacteristicValue_Organism",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "Organism",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#CharacteristicValue_geographic_location_(latitude)_49.4401",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "geographic location (latitude)",
+      "value": "49.4401",
+      "unitCode": "https://bioregistry.io/UO:0000185",
+      "unitText": "degree",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#CharacteristicValue_geographic_location_(longitude)_7.7491",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "geographic location (longitude)",
+      "value": "7.7491",
+      "unitCode": "https://bioregistry.io/UO:0000185",
+      "unitText": "degree",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#CharacteristicValue_geographic_location_(country)",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "geographic location (country)",
+      "columnIndex": "3"
+    },
+    {
+      "@id": "#CharacteristicValue_soil_type_Luvisol",
+      "@type": "PropertyValue",
+      "additionalType": "CharacteristicValue",
+      "name": "soil type",
+      "value": "Luvisol",
+      "columnIndex": "4"
+    },
+    {
+      "@id": "#Source_Source_1",
+      "@type": "Sample",
+      "additionalType": "Source",
+      "name": "Source_1",
+      "additionalProperty": [
+        {
+          "@id": "#CharacteristicValue_Organism"
+        },
+        {
+          "@id": "#CharacteristicValue_geographic_location_(latitude)_49.4401"
+        },
+        {
+          "@id": "#CharacteristicValue_geographic_location_(longitude)_7.7491"
+        },
+        {
+          "@id": "#CharacteristicValue_geographic_location_(country)"
+        },
+        {
+          "@id": "#CharacteristicValue_soil_type_Luvisol"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Sample_1",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_1"
+    },
+    {
+      "@id": "#Protocol_plant_material",
+      "@type": "LabProtocol"
+    },
+    {
+      "@id": "#Process_S_Study_1_plant_material_0",
+      "@type": "LabProcess",
+      "name": "plant_material",
+      "object": {
+        "@id": "#Source_Source_1"
+      },
+      "result": {
+        "@id": "#Sample_Sample_1"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_plant_material"
+      }
+    },
+    {
+      "@id": "#Protocol_drought_treatment",
+      "@type": "LabProtocol"
+    },
+    {
+      "@id": "#ParameterValue_irrigation_regime_full_irrigation",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "irrigation regime",
+      "value": "full irrigation",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#ParameterValue_water_amount_100",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "water amount",
+      "value": "100",
+      "unitCode": "https://bioregistry.io/UO:0000187",
+      "unitText": "percent",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#ParameterValue_process_type_UAV-based_remote_sensing",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "process type",
+      "value": "UAV-based remote sensing",
+      "columnIndex": "2"
+    },
+    {
+      "@id": "#Process_S_Study_1_drought_treatment_0",
+      "@type": "LabProcess",
+      "name": "drought_treatment_0",
+      "object": {
+        "@id": "#Sample_Sample_1"
+      },
+      "result": {
+        "@id": "#Sample_Sample_1_treated"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_drought_treatment"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_irrigation_regime_full_irrigation"
+        },
+        {
+          "@id": "#ParameterValue_water_amount_100"
+        },
+        {
+          "@id": "#ParameterValue_process_type_UAV-based_remote_sensing"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Sample_2",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_2"
+    },
+    {
+      "@id": "#ParameterValue_irrigation_regime_reduced_irrigation",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "irrigation regime",
+      "value": "reduced irrigation",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#ParameterValue_water_amount_50",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "water amount",
+      "value": "50",
+      "unitCode": "https://bioregistry.io/UO:0000187",
+      "unitText": "percent",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#Process_S_Study_1_drought_treatment_1",
+      "@type": "LabProcess",
+      "name": "drought_treatment_1",
+      "object": {
+        "@id": "#Sample_Sample_2"
+      },
+      "result": {
+        "@id": "#Sample_Sample_2_treated"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_drought_treatment"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_irrigation_regime_reduced_irrigation"
+        },
+        {
+          "@id": "#ParameterValue_water_amount_50"
+        },
+        {
+          "@id": "#ParameterValue_process_type_UAV-based_remote_sensing"
+        }
+      ]
+    },
+    {
+      "@id": "#Sample_Sample_3",
+      "@type": "Sample",
+      "additionalType": "Sample",
+      "name": "Sample_3"
+    },
+    {
+      "@id": "#ParameterValue_irrigation_regime_rain-fed_control",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "irrigation regime",
+      "value": "rain-fed control",
+      "columnIndex": "0"
+    },
+    {
+      "@id": "#ParameterValue_water_amount_0",
+      "@type": "PropertyValue",
+      "additionalType": "ParameterValue",
+      "name": "water amount",
+      "value": "0",
+      "unitCode": "https://bioregistry.io/UO:0000187",
+      "unitText": "percent",
+      "columnIndex": "1"
+    },
+    {
+      "@id": "#Process_S_Study_1_drought_treatment_2",
+      "@type": "LabProcess",
+      "name": "drought_treatment_2",
+      "object": {
+        "@id": "#Sample_Sample_3"
+      },
+      "result": {
+        "@id": "#Sample_Sample_3_treated"
+      },
+      "executesLabProtocol": {
+        "@id": "#Protocol_drought_treatment"
+      },
+      "parameterValue": [
+        {
+          "@id": "#ParameterValue_irrigation_regime_rain-fed_control"
+        },
+        {
+          "@id": "#ParameterValue_water_amount_0"
+        },
+        {
+          "@id": "#ParameterValue_process_type_UAV-based_remote_sensing"
+        }
+      ]
+    },
+    {
+      "@id": "studies/Study_1/",
+      "@type": "Dataset",
+      "additionalType": "Study",
+      "identifier": "Study_1",
+      "dateModified": "2026-07-16T11:25:26.1293053",
+      "description": "Study derived from Wheat Drought Phenotyping Field Trial 2024",
+      "hasPart": [],
+      "name": "Study of Wheat Drought Phenotyping Field Trial 2024",
+      "comment": {
+        "@id": "#LDComment_Study_Design_Type_Randomized_complete_block_design"
+      },
+      "about": [
+        {
+          "@id": "#Process_S_Study_1_plant_material_0"
+        },
+        {
+          "@id": "#Process_S_Study_1_drought_treatment_0"
+        },
+        {
+          "@id": "#Process_S_Study_1_drought_treatment_1"
+        },
+        {
+          "@id": "#Process_S_Study_1_drought_treatment_2"
+        }
+      ]
+    },
+    {
+      "@id": "https://doi.org/10.1234/fake-doi/wheat-2024",
+      "@type": "PropertyValue",
+      "name": "DOI",
+      "value": "https://doi.org/10.1234/fake-doi/wheat-2024",
+      "propertyID": "http://purl.obolibrary.org/obo/OBI_0002110"
+    },
+    {
+      "@id": "#Person_Mühlhaus_T;_Schmidhalter_U",
+      "@type": "Person",
+      "givenName": "Mühlhaus T; Schmidhalter U"
+    },
+    {
+      "@id": "#Multi-temporal_UAV-based_phenotyping_of_winter_wheat_under_drought_stress",
+      "@type": "ScholarlyArticle",
+      "headline": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+      "identifier": {
+        "@id": "https://doi.org/10.1234/fake-doi/wheat-2024"
+      },
+      "author": {
+        "@id": "#Person_Mühlhaus_T;_Schmidhalter_U"
+      }
+    },
+    {
+      "@id": "https://doi.org/10.5678/remote-sensing-review",
+      "@type": "PropertyValue",
+      "name": "DOI",
+      "value": "https://doi.org/10.5678/remote-sensing-review",
+      "propertyID": "http://purl.obolibrary.org/obo/OBI_0002110"
+    },
+    {
+      "@id": "#Person_Jones_HG;_Vaughan_RA",
+      "@type": "Person",
+      "givenName": "Jones HG; Vaughan RA"
+    },
+    {
+      "@id": "#Remote_sensing_of_crop_water_stress:_A_review",
+      "@type": "ScholarlyArticle",
+      "headline": "Remote sensing of crop water stress: A review",
+      "identifier": {
+        "@id": "https://doi.org/10.5678/remote-sensing-review"
+      },
+      "author": {
+        "@id": "#Person_Jones_HG;_Vaughan_RA"
+      }
+    },
+    {
+      "@id": "#LDComment_Investigation_Keywords_wheat;_drought_stress;_NDVI;_phenotyping;_field_trial;_Triticum_aestivum;_multispectral_imaging",
+      "@type": "Comment",
+      "name": "Investigation Keywords",
+      "text": "wheat; drought stress; NDVI; phenotyping; field trial; Triticum aestivum; multispectral imaging"
+    },
+    {
+      "@id": "#LDComment_Investigation_Funding_Agency_DFG_–_German_Research_Foundation",
+      "@type": "Comment",
+      "name": "Investigation Funding Agency",
+      "text": "DFG – German Research Foundation"
+    },
+    {
+      "@id": "#LDComment_Investigation_Publisher_#Publisher_RPTU_University_of_Kaiserslautern,_Plant_Phenomics_Group",
+      "@type": "Comment",
+      "name": "Investigation Publisher",
+      "text": "#Publisher_RPTU_University_of_Kaiserslautern,_Plant_Phenomics_Group"
+    },
+    {
+      "@id": "#LDComment_Investigation_Alternative_Title_Wheat_Drought_Field_Trial_2024",
+      "@type": "Comment",
+      "name": "Investigation Alternative Title",
+      "text": "Wheat Drought Field Trial 2024"
+    },
+    {
+      "@id": "#LDComment_Investigation_URL_https://fairweaver.example.org/datasets/wheat-drought-2024",
+      "@type": "Comment",
+      "name": "Investigation URL",
+      "text": "https://fairweaver.example.org/datasets/wheat-drought-2024"
+    },
+    {
+      "@id": "#LDComment_Investigation_Version_1.0",
+      "@type": "Comment",
+      "name": "Investigation Version",
+      "text": "1.0"
+    },
+    {
+      "@id": "#LDComment_Investigation_Language_en",
+      "@type": "Comment",
+      "name": "Investigation Language",
+      "text": "en"
+    },
+    {
+      "@id": "#LICENSE",
+      "@type": "CreativeWork",
+      "text": "ALL RIGHTS RESERVED BY THE AUTHORS"
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "additionalType": "Investigation",
+      "identifier": "wheat-drought-001",
+      "creator": [
+        {
+          "@id": "#Person_Timo_Mühlhaus"
+        },
+        {
+          "@id": "#Person_Uwe_Schmidhalter"
+        }
+      ],
+      "datePublished": "2026-07-16T11:25:26.0744769",
+      "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+      "hasPart": [
+        {
+          "@id": "assays/Assay_1/"
+        },
+        {
+          "@id": "studies/Study_1/"
+        }
+      ],
+      "name": "Wheat Drought Phenotyping Field Trial 2024",
+      "citation": [
+        {
+          "@id": "#Multi-temporal_UAV-based_phenotyping_of_winter_wheat_under_drought_stress"
+        },
+        {
+          "@id": "#Remote_sensing_of_crop_water_stress:_A_review"
+        }
+      ],
+      "comment": [
+        {
+          "@id": "#LDComment_Investigation_Keywords_wheat;_drought_stress;_NDVI;_phenotyping;_field_trial;_Triticum_aestivum;_multispectral_imaging"
+        },
+        {
+          "@id": "#LDComment_Investigation_Funding_Agency_DFG_–_German_Research_Foundation"
+        },
+        {
+          "@id": "#LDComment_Investigation_Publisher_#Publisher_RPTU_University_of_Kaiserslautern,_Plant_Phenomics_Group"
+        },
+        {
+          "@id": "#LDComment_Investigation_Alternative_Title_Wheat_Drought_Field_Trial_2024"
+        },
+        {
+          "@id": "#LDComment_Investigation_URL_https://fairweaver.example.org/datasets/wheat-drought-2024"
+        },
+        {
+          "@id": "#LDComment_Investigation_Version_1.0"
+        },
+        {
+          "@id": "#LDComment_Investigation_Language_en"
+        }
+      ],
+      "sdDatePublished": "2026-07-16T11:25:26.1365829",
+      "license": {
+        "@id": "#LICENSE"
+      }
+    },
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.2"
+      },
+      "about": {
+        "@id": "./"
+      }
+    }
+  ]
+}

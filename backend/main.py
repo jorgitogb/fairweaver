@@ -1031,29 +1031,48 @@ def _fallback_convert_to_arc(source: dict) -> dict:
         "datePublished": source.get("datePublished", ""),
         "license": source.get("license", ""),
     }
+    if source.get("url"):
+        inv["url"] = source["url"]
+    if source.get("version"):
+        inv["version"] = source["version"]
+    if source.get("inLanguage"):
+        inv["inLanguage"] = source["inLanguage"]
 
-    # Creator
+    # Creator(s) — support single dict or array
     creator = source.get("creator")
-    if creator and isinstance(creator, dict):
-        pid = _person_id(creator)
-        inv["creator"] = [{"@id": pid}]
-        graph.append(
-            {
-                "@id": pid,
-                "@type": "Person",
-                "givenName": creator.get("givenName", ""),
-                "familyName": creator.get("familyName", ""),
-                "name": creator.get("name", ""),
-                "email": creator.get("email", ""),
-            }
-        )
-        if "affiliation" in creator:
-            aff = creator["affiliation"]
-            if isinstance(aff, dict) and aff.get("name"):
-                org_id = "#Organization_" + aff["name"].replace(" ", "_")
-                inv["creator"][0]["@id"] = pid
+    creators = (
+        [creator] if isinstance(creator, dict) else (creator if isinstance(creator, list) else [])
+    )
+    person_entities = []
+    for c in creators:
+        if not isinstance(c, dict):
+            continue
+        pid = _person_id(c)
+        person_entities.append({"@id": pid})
+        person_entry = {
+            "@id": pid,
+            "@type": "Person",
+            "givenName": c.get("givenName", ""),
+            "familyName": c.get("familyName", ""),
+            "name": c.get("name", ""),
+            "email": c.get("email", ""),
+        }
+        if c.get("identifier"):
+            person_entry["identifier"] = c["identifier"]
+        if (
+            "affiliation" in c
+            and isinstance(c["affiliation"], dict)
+            and c["affiliation"].get("name")
+        ):
+            aff = c["affiliation"]
+            org_id = "#Organization_" + aff["name"].replace(" ", "_")
+            person_entry["affiliation"] = {"@id": org_id}
+            if not any(e.get("@id") == org_id for e in graph):
                 graph.append({"@id": org_id, "@type": "Organization", "name": aff["name"]})
-                graph[-2]["affiliation"] = {"@id": org_id}
+        graph.append(person_entry)
+
+    if person_entities:
+        inv["creator"] = person_entities
 
     if has_recommended:
         inv["keywords"] = source.get("keywords", [])
@@ -1061,24 +1080,27 @@ def _fallback_convert_to_arc(source: dict) -> dict:
         if isinstance(pub, dict):
             org_id = "#Publisher_" + pub.get("name", "Unknown").replace(" ", "_")
             inv["publisher"] = {"@id": org_id}
-            graph.append({"@id": org_id, "@type": "Organization", "name": pub.get("name", "")})
-        if source.get("url"):
-            inv["url"] = source["url"]
-        if source.get("version"):
-            inv["version"] = source["version"]
-        if source.get("inLanguage"):
-            inv["inLanguage"] = source["inLanguage"]
+            if not any(e.get("@id") == org_id for e in graph):
+                graph.append({"@id": org_id, "@type": "Organization", "name": pub.get("name", "")})
         if source.get("alternateName"):
-            inv["alternative_titles"] = [source["alternateName"]]
+            inv["alternative_titles"] = (
+                source["alternateName"]
+                if isinstance(source["alternateName"], list)
+                else [source["alternateName"]]
+            )
+
     if has_full:
         funder_val = source.get("funder")
-        inv["funder"] = (
-            funder_val
-            if isinstance(funder_val, str)
-            else (funder_val.get("name", "") if isinstance(funder_val, dict) else "")
-        )
-        if creator and isinstance(creator, dict):
-            inv["investigationContacts"] = [{"@id": pid}]
+        if funder_val:
+            inv["funder"] = (
+                funder_val
+                if isinstance(funder_val, str)
+                else (funder_val.get("name", "") if isinstance(funder_val, dict) else "")
+            )
+        # investigationContacts — use creator list
+        if person_entities:
+            inv["investigationContacts"] = person_entities
+        # investigationPublications — from citation or investigationPublications array
         citation = source.get("citation")
         if isinstance(citation, dict) and citation.get("identifier"):
             pub_id = "#Publication_1"
@@ -1091,25 +1113,119 @@ def _fallback_convert_to_arc(source: dict) -> dict:
                     "identifier": citation.get("identifier", ""),
                 }
             )
+        elif source.get("investigationPublications"):
+            inv["investigationPublications"] = source["investigationPublications"]
+        # distribution (data files)
+        if source.get("distribution"):
+            dist = source["distribution"]
+            dist_list = dist if isinstance(dist, list) else [dist]
+            for d in dist_list:
+                if isinstance(d, dict) and d.get("name"):
+                    file_id = "data/" + d.get("name", "file")
+                    graph.append(
+                        {
+                            "@id": file_id,
+                            "@type": "File",
+                            "name": d.get("name", ""),
+                            "encodingFormat": d.get("encodingFormat", ""),
+                            "contentUrl": d.get("contentUrl", ""),
+                        }
+                    )
+
+        # location / Geographic coverage
+        location = source.get("location")
+        if isinstance(location, dict):
+            loc_id = "#Location_1"
+            loc_entity = {
+                "@id": loc_id,
+                "@type": "Place",
+                "name": location.get("name", ""),
+            }
+            geo = location.get("geo")
+            if isinstance(geo, dict):
+                loc_entity["geo"] = {
+                    "@type": "GeoCoordinates",
+                    "latitude": geo.get("latitude"),
+                    "longitude": geo.get("longitude"),
+                }
+                if geo.get("altitude"):
+                    loc_entity["geo"]["altitude"] = geo["altitude"]
+            graph.append(loc_entity)
+            inv["location"] = {"@id": loc_id}
+
+        # Geographic coverage (country/state/county)
+        geo_coverage = {}
+        if source.get("country"):
+            geo_coverage["country"] = source["country"]
+        if source.get("state"):
+            geo_coverage["state"] = source["state"]
+        if source.get("county"):
+            geo_coverage["county"] = source["county"]
+        if geo_coverage:
+            gc_id = "#GeographicCoverage_1"
+            gc_entity = {"@id": gc_id, "@type": "DefinedRegion", **geo_coverage}
+            graph.append(gc_entity)
+            inv["geographicCoverage"] = {"@id": gc_id}
+
+        # Soil type
+        if source.get("soilType"):
+            soil_id = "#Soil_1"
+            graph.append(
+                {
+                    "@id": soil_id,
+                    "@type": "Thing",
+                    "name": source["soilType"],
+                    "additionalType": "SoilType",
+                }
+            )
+            inv["soil"] = {"@id": soil_id}
+
+        # Process type
+        if source.get("processType"):
+            proc_id = "#Process_1"
+            graph.append(
+                {
+                    "@id": proc_id,
+                    "@type": "Thing",
+                    "name": source["processType"],
+                    "additionalType": "Process",
+                }
+            )
+            inv["process"] = {"@id": proc_id}
+
     graph.append(inv)
 
     # ── Study ──
     study_id = "#Study_1"
+    study_name = source.get("studyName") or "Study of " + source.get("name", "Dataset")
+    study_desc = source.get("studyDescription") or "Study derived from " + source.get(
+        "name", "Dataset"
+    )
     study = {
         "@id": study_id,
         "@type": "Dataset",
         "additionalType": "Study",
-        "name": "Study of " + source.get("name", "Dataset"),
-        "description": "Study derived from " + source.get("name", "Dataset"),
+        "name": study_name,
+        "description": study_desc,
         "hasPart": [],
     }
-    if source.get("keywords"):
+    if source.get("studyDesignDescriptors"):
+        study["studyDesignDescriptors"] = source["studyDesignDescriptors"]
+    elif source.get("keywords"):
         study["studyDesignDescriptors"] = source["keywords"]
+    if source.get("studyDesignType"):
+        study["studyDesignType"] = source["studyDesignType"]
+    if source.get("studyPersonnel"):
+        study["studyPersonnel"] = source["studyPersonnel"]
     if has_full:
         crop = source.get("about")
         if isinstance(crop, dict):
             study["crop_species"] = crop.get("name", "")
             study["crop_species_uri"] = crop.get("sameAs", "")
+        if source.get("crop_species"):
+            study["crop_species"] = source["crop_species"]
+        if source.get("crop_species_uri"):
+            study["crop_species_uri"] = source["crop_species_uri"]
         if source.get("crop_pest"):
             study["crop_pest"] = source["crop_pest"]
         if source.get("crop_pest_uri"):
@@ -1125,14 +1241,20 @@ def _fallback_convert_to_arc(source: dict) -> dict:
         "@id": assay_id,
         "@type": "Dataset",
         "additionalType": "Assay",
-        "name": "Assay for " + source.get("name", "Dataset"),
+        "name": source.get("assayName") or "Assay for " + source.get("name", "Dataset"),
         "description": source.get("description", ""),
         "measurementTechnique": source.get("measurementTechnique", ""),
-        "measurementMethod": source.get("measurementTechnique", ""),
-        "technologyType": instr_info.get("additionalType", source.get("measurementTechnique", "")),
-        "technologyPlatform": instr_info.get("name", ""),
+        "measurementMethod": source.get("measurementMethod")
+        or source.get("measurementTechnique", ""),
+        "technologyType": source.get("technologyType")
+        or instr_info.get("additionalType", source.get("measurementTechnique", "")),
+        "technologyPlatform": source.get("technologyPlatform") or instr_info.get("name", ""),
         "about": [{"@id": study_id}],
     }
+    if source.get("assayCategory"):
+        assay["assayCategory"] = source["assayCategory"]
+    if source.get("assayType"):
+        assay["assayType"] = source["assayType"]
     if isinstance(instr, dict) and instr.get("name"):
         instr_id = "#Instrument_1"
         assay["instrument"] = [{"@id": instr_id}]

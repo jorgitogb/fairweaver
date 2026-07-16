@@ -419,3 +419,241 @@ class TestSchemaOrgToARCConversion:
         assert "technologyType" not in validation_errors
         assert "technologyPlatform" not in validation_errors
         assert "isa.investigation.xlsx" not in validation_errors
+
+    def test_measurementMethod_preserved_distinct_from_measurementTechnique(self):
+        """Test that measurementMethod is preserved as a distinct value from measurementTechnique."""
+        content = json.dumps(
+            {
+                "@context": "https://schema.org/",
+                "@type": "Dataset",
+                "name": "Measurement Test",
+                "description": "Testing distinct measurementMethod",
+                "creator": {"@type": "Person", "name": "Test User"},
+                "identifier": "measure-test-001",
+                "datePublished": "2023-01-01",
+                "license": "CC-BY-4.0",
+                "measurementTechnique": "Multispectral imaging",
+                "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+            }
+        )
+
+        resp = client.post(
+            "/convert/arc-export?preview=true",
+            files={"file": ("measure_test.json", content.encode(), "application/json")},
+            data={"source_format": "auto", "pivot_id": "fairagro_searchhub"},
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        graph = data["preview"]["@graph"]
+        assay = next((e for e in graph if e.get("additionalType") == "Assay"), {})
+
+        assert (
+            assay.get("measurementMethod")
+            == "NDVI calculation from red and near-infrared reflectance bands"
+        )
+        assert assay.get("measurementTechnique") == "Multispectral imaging"
+        assert assay["measurementMethod"] != assay["measurementTechnique"]
+
+    def test_full_wheat_input_preserves_all_fields(self):
+        """Test that full wheat input preserves crop, sensor, geo, soil, process fields."""
+        content = json.dumps(
+            {
+                "@context": "https://schema.org/",
+                "@type": "Dataset",
+                "name": "Wheat Drought Phenotyping Field Trial 2024",
+                "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat",
+                "creator": {
+                    "@type": "Person",
+                    "givenName": "Timo",
+                    "familyName": "Mühlhaus",
+                    "name": "Timo Mühlhaus",
+                    "email": "timo.muehlhaus@rptu.de",
+                    "identifier": {
+                        "@type": "PropertyValue",
+                        "propertyID": "orcid",
+                        "value": "0000-0003-3925-6778",
+                    },
+                    "affiliation": {
+                        "@type": "Organization",
+                        "name": "RPTU University of Kaiserslautern",
+                    },
+                },
+                "identifier": "wheat-drought-001",
+                "license": "https://creativecommons.org/licenses/by/4.0/",
+                "datePublished": "2024-09-15",
+                "keywords": ["wheat", "drought stress", "NDVI", "phenotyping", "field trial"],
+                "measurementTechnique": "Multispectral imaging",
+                "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+                "instrument": {
+                    "@type": "Sensor",
+                    "name": "Micasense RedEdge-MX",
+                    "description": "Multispectral sensor on DJI Matrice 300 RTK UAV",
+                },
+                "about": {
+                    "@type": "Thing",
+                    "name": "Triticum aestivum",
+                    "sameAs": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
+                },
+                "crop_pest": "Zymoseptoria tritici",
+                "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_5284",
+                "funder": "DFG – German Research Foundation",
+                "citation": {
+                    "@type": "ScholarlyArticle",
+                    "name": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+                    "identifier": "https://doi.org/10.1234/fake-doi/wheat-2024",
+                },
+                "location": {
+                    "@type": "Place",
+                    "name": "RPTU Field Station Kaiserslautern",
+                    "geo": {"@type": "GeoCoordinates", "latitude": 49.4401, "longitude": 7.7491},
+                },
+                "country": "Germany",
+                "state": "Rhineland-Palatinate",
+                "county": "Kaiserslautern",
+                "soilType": "Luvisol",
+                "processType": "UAV-based remote sensing",
+            }
+        )
+
+        resp = client.post(
+            "/convert/arc-export?preview=true",
+            files={"file": ("full_wheat.json", content.encode(), "application/json")},
+            data={"source_format": "auto", "pivot_id": "fairagro_searchhub"},
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        graph = data["preview"]["@graph"]
+        entities_by_id = {e.get("@id"): e for e in graph if e.get("@id")}
+        root = entities_by_id.get("./", {})
+
+        # Investigation-level fields
+        assert root.get("license") == "https://creativecommons.org/licenses/by/4.0/"
+        assert root.get("datePublished") == "2024-09-15"
+        assert "wheat" in root.get("keywords", [])
+        assert "DFG" in root.get("funder", "")
+        assert root.get("investigationContacts") is not None
+        assert root.get("investigationPublications") is not None
+
+        # Location/geo entities
+        assert any(e.get("additionalType") == "SoilType" for e in graph)
+        assert any(e.get("additionalType") == "Process" for e in graph)
+        assert any(e.get("@type") == "Place" for e in graph)
+        assert any(e.get("@type") == "DefinedRegion" for e in graph)
+
+        # Study-level fields
+        study = next((e for e in graph if e.get("additionalType") == "Study"), {})
+        assert "wheat" in study.get("studyDesignDescriptors", [])
+        assert study.get("crop_species") == "Triticum aestivum"
+
+        # Assay-level fields
+        assay = next((e for e in graph if e.get("additionalType") == "Assay"), {})
+        assert (
+            assay.get("measurementMethod")
+            == "NDVI calculation from red and near-infrared reflectance bands"
+        )
+        assert assay.get("measurementTechnique") == "Multispectral imaging"
+
+        # Hierarchy links
+        assert any(p.get("@id") == study.get("@id") for p in root.get("hasPart", []))
+        assert any(p.get("@id") == assay.get("@id") for p in study.get("hasPart", []))
+
+    def test_license_and_datePublished_preserved(self):
+        """Test that license URL and datePublished are preserved (not corrupted)."""
+        content = json.dumps(
+            {
+                "@context": "https://schema.org/",
+                "@type": "Dataset",
+                "name": "License Test",
+                "description": "Testing license and date preservation",
+                "creator": {"@type": "Person", "name": "Test User"},
+                "identifier": "license-test-001",
+                "datePublished": "2024-09-15",
+                "license": "https://creativecommons.org/licenses/by/4.0/",
+            }
+        )
+
+        resp = client.post(
+            "/convert/arc-export?preview=true",
+            files={"file": ("license_test.json", content.encode(), "application/json")},
+            data={"source_format": "auto", "pivot_id": "fairagro_searchhub"},
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        graph = data["preview"]["@graph"]
+        root = next((e for e in graph if e.get("@id") == "./"), {})
+
+        assert root.get("license") == "https://creativecommons.org/licenses/by/4.0/"
+        assert root.get("datePublished") == "2024-09-15"
+
+    def test_schema_org_plugin_loader_extracts_all_fields(self):
+        """Test that schema_org_plugin.load() extracts expanded field set."""
+        from formats.schema_org_plugin import load
+
+        content = json.dumps(
+            {
+                "@context": "https://schema.org/",
+                "@type": "Dataset",
+                "name": "Full Test",
+                "description": "Test all loader fields",
+                "creator": [{"@type": "Person", "name": "User"}],
+                "identifier": "full-test-001",
+                "datePublished": "2024-01-01",
+                "license": "CC-BY-4.0",
+                "keywords": ["test", "data"],
+                "alternateName": "ALT-001",
+                "funder": "DFG",
+                "citation": {"name": "Paper", "identifier": "doi:10.1234/test"},
+                "measurementTechnique": "UAV imaging",
+                "measurementMethod": "NDVI",
+                "technologyType": "Multispectral sensor",
+                "technologyPlatform": "DJI Matrice 300",
+                "instrument": {"name": "RedEdge-MX"},
+                "crop_species": "Triticum aestivum",
+                "crop_pest": "Fusarium",
+                "location": {"geo": {"latitude": 49.44, "longitude": 7.75}},
+                "country": "Germany",
+                "state": "RP",
+                "county": "KL",
+                "soilType": "Luvisol",
+                "processType": "UAV sensing",
+                "about": {"name": "Wheat"},
+            }
+        )
+
+        result = load(content)
+
+        # Core fields
+        assert result["name"] == "Full Test"
+        assert result["identifier"] == "full-test-001"
+
+        # Investigation-level
+        assert result["alternateName"] == "ALT-001"
+        assert result["funder"] == "DFG"
+        assert result["citation"]["name"] == "Paper"
+
+        # Study-level
+        assert result["crop_species"] == "Triticum aestivum"
+        assert result["crop_pest"] == "Fusarium"
+
+        # Assay-level
+        assert result["measurementTechnique"] == "UAV imaging"
+        assert result["measurementMethod"] == "NDVI"
+        assert result["technologyType"] == "Multispectral sensor"
+        assert result["technologyPlatform"] == "DJI Matrice 300"
+        assert result["instrument"]["name"] == "RedEdge-MX"
+
+        # Geographic
+        assert result["location"]["geo"]["latitude"] == 49.44
+        assert result["geo_country"] == "Germany"
+        assert result["geo_state"] == "RP"
+        assert result["geo_county"] == "KL"
+
+        # Soil / Process
+        assert result["soilType"] == "Luvisol"
+        assert result["processType"] == "UAV sensing"
+
+        # About (crop)
+        assert result["about"]["name"] == "Wheat"

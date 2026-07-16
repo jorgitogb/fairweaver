@@ -165,7 +165,7 @@ class FairagroArcValidator:
         field_options = [opt.strip() for opt in path.split("|")]
 
         for field_opt in field_options:
-            if "/" in field_opt:  # Entity.field format
+            if "." in field_opt:  # Entity.field format
                 entity_type, field = field_opt.split(".")
                 entities = [e for e in graph if self._has_type(e, entity_type)]
                 for entity in entities:

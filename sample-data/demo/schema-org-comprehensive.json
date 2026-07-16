@@ -1,0 +1,207 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://doi.org/10.5447/fairweaver/2024/wheat-drought-001",
+  "name": "Wheat Drought Phenotyping Field Trial 2024",
+  "description": "Multi-temporal drone-based NDVI and multispectral imaging of winter wheat (Triticum aestivum cv. Julius) under controlled drought stress. Six field plots with three irrigation regimes: full irrigation (100% ETc), reduced irrigation (50% ETc), and rain-fed control. Imaging conducted bi-weekly from stem elongation to physiological maturity using DJI Matrice 300 RTK equipped with Micasense RedEdge-MX multispectral sensor.",
+  "creator": [
+    {
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "Mühlhaus",
+      "name": "Timo Mühlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Uwe",
+      "familyName": "Schmidhalter",
+      "name": "Uwe Schmidhalter",
+      "email": "schmidhalter@wzw.tum.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Technical University of Munich"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0002-1234-5678"
+      }
+    }
+  ],
+  "identifier": "10.5447/fairweaver/2024/wheat-drought-001",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "datePublished": "2024-09-15",
+  "investigationContacts": [
+    {
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "Mühlhaus",
+      "name": "Timo Mühlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Uwe",
+      "familyName": "Schmidhalter",
+      "name": "Uwe Schmidhalter",
+      "email": "schmidhalter@wzw.tum.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Technical University of Munich"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0002-1234-5678"
+      }
+    }
+  ],
+  "investigationPublications": [
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Multi-temporal UAV-based phenotyping of winter wheat under drought stress",
+      "identifier": "https://doi.org/10.1234/fake-doi/wheat-2024",
+      "authorList": "Mühlhaus T; Schmidhalter U"
+    },
+    {
+      "@type": "ScholarlyArticle",
+      "name": "Remote sensing of crop water stress: A review",
+      "identifier": "https://doi.org/10.5678/remote-sensing-review",
+      "authorList": "Jones HG; Vaughan RA"
+    }
+  ],
+  "studyDesignDescriptors": [
+    {
+      "name": "wheat",
+      "termSource": "NCBITaxon",
+      "termAccession": "http://purl.obolibrary.org/obo/NCBITaxon_4565"
+    },
+    {
+      "name": "drought stress",
+      "termSource": "EO",
+      "termAccession": "http://purl.obolibrary.org/obo/EO_0000395"
+    },
+    {
+      "name": "NDVI",
+      "termSource": "MS",
+      "termAccession": "http://purl.obolibrary.org/obo/MS_1000134"
+    }
+  ],
+  "measurementTechnique": "Multispectral imaging",
+  "measurementMethod": "NDVI calculation from red and near-infrared reflectance bands",
+  "technologyType": "Multispectral imaging sensor",
+  "technologyPlatform": "DJI Matrice 300 RTK UAV",
+  "keywords": [
+    "wheat",
+    "drought stress",
+    "NDVI",
+    "phenotyping",
+    "field trial",
+    "Triticum aestivum",
+    "multispectral imaging"
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "RPTU University of Kaiserslautern, Plant Phenomics Group"
+  },
+  "url": "https://fairweaver.example.org/datasets/wheat-drought-2024",
+  "inLanguage": "en",
+  "version": "1.0",
+  "alternateName": "Wheat Drought Field Trial 2024",
+  "studyDesignType": "Randomized complete block design",
+  "studyPersonnel": [
+    {
+      "@type": "Person",
+      "givenName": "Timo",
+      "familyName": "Mühlhaus",
+      "name": "Timo Mühlhaus",
+      "email": "timo.muehlhaus@rptu.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "RPTU University of Kaiserslautern"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0003-3925-6778"
+      }
+    },
+    {
+      "@type": "Person",
+      "givenName": "Uwe",
+      "familyName": "Schmidhalter",
+      "name": "Uwe Schmidhalter",
+      "email": "schmidhalter@wzw.tum.de",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Technical University of Munich"
+      },
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "orcid",
+        "value": "0000-0002-1234-5678"
+      }
+    }
+  ],
+  "assayCategory": "measurement",
+  "assayType": "imaging_assay",
+  "about": {
+    "@type": "Thing",
+    "name": "Triticum aestivum",
+    "sameAs": "http://purl.obolibrary.org/obo/NCBITaxon_4565"
+  },
+  "instrument": {
+    "@type": "Thing",
+    "name": "Micasense RedEdge-MX",
+    "description": "Multispectral sensor on DJI Matrice 300 RTK UAV",
+    "additionalType": "Sensor"
+  },
+  "funder": {
+    "@type": "Organization",
+    "name": "DFG – German Research Foundation"
+  },
+  "distribution": {
+    "@type": "DataDownload",
+    "contentUrl": "https://fairweaver.example.org/datasets/wheat-drought-2024/download",
+    "encodingFormat": "application/zip"
+  },
+  "crop_species": "Triticum aestivum",
+  "crop_species_uri": "http://purl.obolibrary.org/obo/NCBITaxon_4565",
+  "crop_pest": "Zymoseptoria tritici",
+  "crop_pest_uri": "http://purl.obolibrary.org/obo/NCBITaxon_5284",
+  "sensorType": "Multispectral imaging sensor",
+  "sensorPlatformType": "DJI Matrice 300 RTK UAV",
+  "location": {
+    "@type": "Place",
+    "name": "RPTU Field Station Kaiserslautern",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 49.4401,
+      "longitude": 7.7491
+    }
+  },
+  "country": "Germany",
+  "state": "Rhineland-Palatinate",
+  "county": "Kaiserslautern",
+  "soilType": "Luvisol",
+  "processType": "UAV-based remote sensing"
+}
