@@ -58,12 +58,12 @@ Example:
 
 ```
 ## R1
-WHEN the user runs `python -m src.cli recent`, the system MUST
-print up to 5 notes sorted by `created_at` descending.
+WHEN the user uploads a schema.org JSON-LD file, the system MUST
+parse it and return a flat field dictionary.
 
 ## R2
-IF the flag `--limit` receives a value <= 0 THEN the system MUST
-print an error message to stderr and exit with code != 0.
+IF the uploaded file exceeds 10 MB THEN the system MUST
+return a 413 error and reject the upload.
 ```
 
 ## design.md — Technical decisions
@@ -82,10 +82,10 @@ Do not reinvent from first principles. Reference `docs/architecture.md` and `doc
 Discrete steps in order, each with a checkbox. Each task references at least one `R<n>`:
 
 ```
-- [ ] T1 — Add `cmd_recent` in `src/cli.py`. Covers: R1, R3.
-- [ ] T2 — Register subparser `recent` with flag `--limit`. Covers: R1, R2.
-- [ ] T3 — Add `test_recent_default_limit` in `tests/test_cli.py`. Covers: R1.
-- [ ] T4 — Add `test_recent_invalid_limit` in `tests/test_cli.py`. Covers: R2.
+- [ ] T1 — Add `POST /convert/arc-export` endpoint in `backend/main.py`. Covers: R1, R3.
+- [ ] T2 — Implement `convert_to_arc()` in `backend/mapping_engine.py`. Covers: R1.
+- [ ] T3 — Add `test_arc_export_basic` in `backend/tests/test_arc_export.py`. Covers: R1.
+- [ ] T4 — Add `test_arc_export_invalid_format` in `backend/tests/test_arc_export.py`. Covers: R2.
 ```
 
 The implementer marks `[x]` on each task as it completes. The reviewer rejects if any `[ ]` remain without documented justification.
@@ -100,9 +100,9 @@ The implementer documents the mapping in `progress/impl_<name>.md`:
 
 ```
 ## Traceability
-- R1 → `test_recent_default_limit`
-- R2 → `test_recent_invalid_limit`
-- R3 → `test_recent_custom_limit`
+- R1 → `test_arc_export_basic`
+- R2 → `test_arc_export_invalid_format`
+- R3 → `test_arc_export_custom_pivot`
 ```
 
 ## When SDD does NOT apply

@@ -12,16 +12,7 @@
 
 ### For the implementer
 
-- Run the full test suite: `if [ -f "package.json" ]; then
-  if pnpm test 2>&1; then
-    ok "All tests pass"
-  else
-    fail "Some tests failed"
-    EXIT_CODE=1
-  fi
-else
-  warn "No package.json — skipping tests"
-fi`
+- Run the full test suite: `cd backend && uv run pytest tests/` and `cd frontend && npm test`.
 - Verify every task in `tasks.md` is marked `[x]`.
 - Document the traceability map in `progress/impl_<feature>.md`.
 

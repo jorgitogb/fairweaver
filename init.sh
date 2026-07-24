@@ -30,35 +30,35 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 ok "node -> $(node --version)"
 
-# pnpm available
-if ! command -v pnpm >/dev/null 2>&1; then
-  fail "pnpm is not installed"
+# npm available
+if ! command -v npm >/dev/null 2>&1; then
+  fail "npm is not installed"
   exit 1
 fi
-ok "pnpm -> $(pnpm --version)"
+ok "npm -> $(npm --version)"
 
 # React framework checks
 
 # TypeScript available (common in React projects)
-if command -v pnpm >/dev/null 2>&1; then
-  if pnpm tsc --version >/dev/null 2>&1; then
-    ok "TypeScript available via pnpm"
+if command -v npm >/dev/null 2>&1; then
+  if npx tsc --version >/dev/null 2>&1; then
+    ok "TypeScript available via npx"
   else
-    warn "TypeScript not found — run 'pnpm add -D typescript' if needed"
+    warn "TypeScript not found — run 'npm install' in frontend/ if needed"
   fi
 else
-  warn "pnpm not found — skipping TypeScript check"
+  warn "npm not found — skipping TypeScript check"
 fi
 
 # Vite available (common React bundler)
-if command -v pnpm >/dev/null 2>&1; then
-  if pnpm vite --version >/dev/null 2>&1; then
-    ok "Vite available via pnpm"
+if command -v npm >/dev/null 2>&1; then
+  if npx vite --version >/dev/null 2>&1; then
+    ok "Vite available via npx"
   else
     warn "Vite not found — not required if using another bundler"
   fi
 else
-  warn "pnpm not found — skipping Vite check"
+  warn "npm not found — skipping Vite check"
 fi
 
 
@@ -119,7 +119,7 @@ echo ""
 echo "── 4. Running tests ────────────────────────────────────"
 
 if [ -f "package.json" ]; then
-  if pnpm test 2>&1; then
+  if npm test 2>&1; then
     ok "All tests pass"
   else
     fail "Some tests failed"

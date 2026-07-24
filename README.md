@@ -89,17 +89,13 @@ fairweaver/
 │   │   ├── Main.tsx              ← app entry point
 │   │   ├── components/
 │   │   │   ├── UploadZone.tsx
-│   │   │   ├── PivotSelector.tsx
-│   │   │   ├── MappingEditor.tsx
-│   │   │   ├── SuggestionPanel.tsx
-│   │   │   ├── ComparisonView.tsx
-│   │   │   ├── ArcExportPanel.tsx
-│   │   │   ├── ArcBatchProcessor.tsx
-│   │   │   ├── ArcTemplateSelector.tsx
 │   │   │   ├── ArcCrateView.tsx
+│   │   │   ├── ArcScaffoldCreator.tsx
 │   │   │   ├── ComplianceBadge.tsx
-│   │   │   ├── HarvestZone.tsx
-│   │   │   └── SimplePivotSelector.tsx
+│   │   │   ├── ArcEntityTree.tsx
+│   │   │   ├── ArcHierarchyTree.tsx
+│   │   │   ├── MiappeExtractionTree.tsx
+│   │   │   └── JsonHighlight.tsx
 │   │   ├── api/
 │   │   │   └── client.ts         ← typed API client (all fetch calls)
 │   │   └── App.tsx               ← main application with demo flow

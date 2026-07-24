@@ -34,9 +34,9 @@ The implementer documents the mapping in `progress/impl_<feature>.md`:
 ## TDD log
 
 ### Task T1 (covers R1, R3)
-1. Red: wrote `test_recent_default_limit` — fails ✅
-2. Green: implemented `cmd_recent()` — passes ✅
-3. Refactor: extracted `sort_notes()` helper — still passes ✅
+1. Red: wrote `test_upload_valid_file` — fails
+2. Green: implemented `UploadZone` — passes
+3. Refactor: extracted `validateFileType()` helper — still passes
 ```
 
 ## How TDD integrates with SDD

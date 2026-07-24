@@ -4,8 +4,10 @@
 
 ## Structure
 
-- `src/` — Production code. One module per file. Keep files focused.
-- `tests/` — Automated tests. One test file per module.
+- `backend/` — FastAPI Python service. One module per file. Keep files focused.
+- `frontend/` — React + Vite + TypeScript UI. One component per file.
+- `backend/tests/` — Automated Python tests. One test file per module.
+- `frontend/tests/` — Automated TypeScript tests. One test file per component.
 - `specs/` — Per-feature specifications (requirements, design, tasks).
 - `progress/` — Session state and history.
 - `docs/` — Project documentation.
@@ -20,18 +22,19 @@
 
 ## Naming
 
-- Files: `snake_case` for Python, `kebab-case` for Node/TypeScript.
-- Functions: `camelCase` for TypeScript, `snake_case` for Python/Go.
-- Classes: `PascalCase` everywhere.
-- Constants: `UPPER_SNAKE_CASE` everywhere.
+- Python files: `snake_case.py`
+- TypeScript files: `kebab-case.ts` for utilities, `PascalCase.tsx` for components
+- Functions: `camelCase` for TypeScript, `snake_case` for Python
+- Classes: `PascalCase` everywhere
+- Constants: `UPPER_SNAKE_CASE` everywhere
 
 ## Error handling
 
 - Return error objects, never throw in business logic.
-- CLI entry points catch and format errors for humans.
+- API entry points catch and format errors for humans.
 - Log errors to stderr, output to stdout.
 
 ## Dependencies
 
 - Minimal. No framework unless the project already uses one.
-- No new dependency without a justification in `docs/adr/`.
+- No new dependency without a justification.

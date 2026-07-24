@@ -1,49 +1,40 @@
-# FAIR Weaver
+# FAIRagro-MI — Frontend
 
-Data transformation platform for FAIR (Findable, Accessible, Interoperable, Reusable) metadata.
-
-## Tech Stack
-
-- **Frontend**: React + Vite + TypeScript
-- **Backend**: FastAPI (Python 3.12+)
+React + Vite + TypeScript UI for the FAIRagro metadata inspector.
 
 ## Quick Start
 
 ```bash
-# Frontend
-cd frontend && npm install && npm run dev
-
-# Backend
-cd backend && uv sync && uv run uvicorn main:app --reload
-
-# Docker (full stack)
-docker compose up
+cd frontend
+npm install
+npm run dev      # http://localhost:5173
+npm test         # run tests
+npm run typecheck # TypeScript check
 ```
 
-## Project Structure
+## Scripts
 
-```
-frontend/
-├── src/
-│   ├── components/    # React components
-│   │   ├── MappingEditor.tsx
-│   │   ├── PivotSelector.tsx
-│   │   ├── SuggestionPanel.tsx
-│   │   └── UploadZone.tsx
-│   ├── App.tsx
-│   └── main.tsx
-└── index.html
+| Script | Command |
+|--------|---------|
+| `dev` | `vite` — development server |
+| `build` | `vite build` — production build |
+| `test` | `vitest run` — run tests once |
+| `typecheck` | `tsc --noEmit` — TypeScript validation |
+| `lint` | `eslint .` — lint check |
 
-backend/
-├── main.py           # FastAPI entry
-├── plugins/          # Format plugins
-├── mappings/         # Field mappings
-└── pivot_registry.yaml
-```
+## Components
 
-## API Endpoints
+| Component | Purpose |
+|-----------|---------|
+| `UploadZone.tsx` | File drag-and-drop upload |
+| `ArcCrateView.tsx` | ARC RO-Crate preview (ARC / JSON-LD / Validation tabs) |
+| `ArcScaffoldCreator.tsx` | Generate ARC scaffold ZIP from RO-Crate |
+| `ComplianceBadge.tsx` | FAIRagro compliance level indicator |
+| `ArcEntityTree.tsx` | Entity tree view for ARC structure |
+| `ArcHierarchyTree.tsx` | Hierarchical tree for ARC elements |
+| `MiappeExtractionTree.tsx` | MIAPPE field extraction display |
+| `JsonHighlight.tsx` | Syntax-highlighted JSON viewer |
 
-- `GET /pivots` - List pivots
-- `POST /pivots/recommend` - Recommend pivot for file
-- `POST /convert` - Convert to pivot
-- `POST /convert/chain` - Source → pivot → target
+## API Client
+
+All backend calls are in `src/api/client.ts`.
