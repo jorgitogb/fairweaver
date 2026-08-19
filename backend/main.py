@@ -35,7 +35,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=[
+        "http://localhost:5173",
+        "https://fairweaver.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -49,6 +52,10 @@ engine = MappingEngine(PIVOT_REGISTRY_PATH, plugins)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://chat-ai.academiccloud.de/v1")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "meta-llama-3.1-8b-instruct")
+
+@app.get("/health", include_in_schema=False)
+def health():
+    return {"status": "ok", "service": "fairweaver-api"}
 
 # ── In-memory ARC record store for OAI-PMH serving ──────────────────────────
 arc_record_store: dict[

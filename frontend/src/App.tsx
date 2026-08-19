@@ -372,7 +372,7 @@ export default function App() {
       </main>
 
       <footer className="text-center text-xs text-slate-400 py-8 border-t border-slate-200">
-        FAIRagro-MI (metadata inspector, Demo) · BioHackathon Germany 2026
+        FAIRagro-MI (metadata inspector, Demo) · 2026
       </footer>
     </div>
   );

@@ -1,0 +1,84 @@
+services:
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairweaver-backend-prod
+    ports:
+      - "18000:8000"
+    environment:
+      - PIVOT_REGISTRY_PATH=/app/pivot_registry.yaml
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://chat-ai.academiccloud.de/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-meta-llama-3.1-8b-instruct}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ./backend/mappings:/app/mappings
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/pivots"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - fairweaver-prod
+
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fairweaver-frontend-prod
+    ports:
+      - "18080:80"
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fairweaver-prod
+
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fairweaver-backend-dev
+    ports:
+      - "28000:8000"
+    environment:
+      - PIVOT_REGISTRY_PATH=/app/pivot_registry.yaml
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://chat-ai.academiccloud.de/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-meta-llama-3.1-8b-instruct}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+    volumes:
+      - ./backend/mappings:/app/mappings
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/pivots"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - fairweaver-dev
+
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fairweaver-frontend-dev
+    ports:
+      - "28080:80"
+    depends_on:
+      backend-dev:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fairweaver-dev
+
+networks:
+  fairweaver-prod:
+    name: fairweaver-prod
+  fairweaver-dev:
+    name: fairweaver-dev

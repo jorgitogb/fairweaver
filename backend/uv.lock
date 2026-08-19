@@ -167,7 +167,7 @@ wheels = [
 ]
 
 [[package]]
-name = "faiagro-mi"
+name = "fairagro-mi"
 version = "0.1.0.dev0"
 source = { editable = "." }
 dependencies = [

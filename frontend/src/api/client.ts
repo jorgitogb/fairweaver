@@ -159,8 +159,10 @@ export async function harvestConvert(
 
 // ── HTTP helper ───────────────────────────────────────────────────────────────
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, options);
+  const res = await fetch(`${API_BASE}${path}`, options);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error((err as { detail?: string }).detail ?? "Request failed");
@@ -331,7 +333,7 @@ export async function createArcScaffold(file: File): Promise<Blob> {
   const form = new FormData();
   form.append("file", file);
 
-  const response = await fetch("/arc/scaffold", {
+  const response = await fetch(`${API_BASE}/arc/scaffold`, {
     method: "POST",
     body: form,
   });
@@ -362,7 +364,7 @@ export async function convertToArc(
   params.set("pivot_id", pivotId);
   params.set("preview", preview.toString());
 
-  const response = await fetch(`/convert/arc-export?${params.toString()}`, {
+  const response = await fetch(`${API_BASE}/convert/arc-export?${params.toString()}`, {
     method: "POST",
     body: form,
   });
@@ -398,7 +400,7 @@ export async function convertBatchToArc(
   params.set("batch", "true");
   params.set("preview", preview.toString());
 
-  const response = await fetch(`/convert/arc-export?${params.toString()}`, {
+  const response = await fetch(`${API_BASE}/convert/arc-export?${params.toString()}`, {
     method: "POST",
     body: form,
   });

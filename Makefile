@@ -3,7 +3,7 @@ SHELL := /bin/bash
 BACKEND_PORT := 8000
 FRONTEND_PORT := 5173
 
-.PHONY: dev kill install lint test docker docker-kill clean
+.PHONY: dev kill install lint test docker docker-kill clean podman-prod podman-dev podman-prod-stop podman-dev-stop
 
 dev:
 	@trap 'kill 0' SIGINT SIGTERM EXIT; \
@@ -49,3 +49,15 @@ docker:
 
 docker-kill:
 	docker compose down
+
+podman-prod:
+	podman-compose -f podman-compose.yml up backend-prod frontend-prod
+
+podman-dev:
+	podman-compose -f podman-compose.yml up backend-dev frontend-dev
+
+podman-prod-stop:
+	podman-compose -f podman-compose.yml down backend-prod frontend-prod
+
+podman-dev-stop:
+	podman-compose -f podman-compose.yml down backend-dev frontend-dev
