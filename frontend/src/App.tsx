@@ -41,6 +41,15 @@ async function detectSourceFormat(file: File): Promise<string> {
   return "isa_json";
 }
 
+async function isJsonArrayFile(file: File): Promise<boolean> {
+  try {
+    const data = JSON.parse(await file.text());
+    return Array.isArray(data);
+  } catch {
+    return false;
+  }
+}
+
 function getButtonLabel(sourceFormat: string, pivotId: string): string {
   if (sourceFormat === "ro_crate") {
     if (isFairagroPivot(pivotId)) return "Generate FAIRagro JSON-LD →";
@@ -74,6 +83,8 @@ export default function App() {
   const [arcResult, setArcResult] = useState<ArcExportResult | null>(null);
   const [pivotResult, setPivotResult] = useState<ConvertResult | null>(null);
   const [complianceResult, setComplianceResult] = useState<ComplianceResult | null>(null);
+  const [complianceError, setComplianceError] = useState<string | null>(null);
+  const [isListFile, setIsListFile] = useState(false);
 
   const [selectedPivot, setSelectedPivot] = useState("fairagro_searchhub");
 
@@ -100,8 +111,11 @@ export default function App() {
 
   const complianceMutation = useMutation({
     mutationFn: (f: File) => classifyCompliance(f),
-    onSuccess: (data) => setComplianceResult(data),
-    onError: () => setComplianceResult(null),
+    onSuccess: (data) => {
+      setComplianceError(null);
+      setComplianceResult(data);
+    },
+    onError: (err) => setComplianceError((err as Error).message),
   });
 
   const handleFileAccepted = useCallback(async (f: File) => {
@@ -109,11 +123,16 @@ export default function App() {
     setArcResult(null);
     setPivotResult(null);
     setComplianceResult(null);
+    setComplianceError(null);
+    setIsListFile(false);
 
     const fmt = await detectSourceFormat(f);
     setSourceFormat(fmt);
 
-    if (fmt !== "ro_crate") {
+    const list = await isJsonArrayFile(f);
+    setIsListFile(list);
+
+    if (fmt !== "ro_crate" && !list) {
       complianceMutation.mutate(f);
     }
   }, [complianceMutation]);
@@ -201,6 +220,7 @@ export default function App() {
                         <ComplianceBadge
                           result={complianceResult}
                           loading={complianceMutation.isPending}
+                          error={complianceError}
                         />
                       )}
                     </p>
@@ -232,7 +252,7 @@ export default function App() {
                   </div>
                   <button
                     onClick={() => convertMutation.mutate()}
-                    disabled={convertMutation.isPending}
+                    disabled={convertMutation.isPending || isListFile}
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all shadow-sm hover:shadow-md"
                   >
                     {convertMutation.isPending ? (

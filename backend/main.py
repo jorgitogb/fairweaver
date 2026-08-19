@@ -1681,6 +1681,13 @@ async def classify_compliance(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=422, detail="File must be valid JSON")
 
+    if not isinstance(data, dict):
+        raise HTTPException(
+            status_code=422,
+            detail="The file contains a JSON array instead of a single object. "
+            "Please upload a file with a single JSON object at the top level.",
+        )
+
     filename = file.filename or ""
     source_format = detect_format(filename, content)
     fairagro_keys = _schema_org_to_fairagro_keys(data)

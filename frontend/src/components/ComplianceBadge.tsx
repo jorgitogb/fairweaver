@@ -1,9 +1,10 @@
 import { type ComplianceResult } from "../api/client";
-import { ShieldCheck, ShieldAlert, Shield, Loader2 } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Shield, Loader2, AlertTriangle } from "lucide-react";
 
 interface Props {
   result?: ComplianceResult | null;
   loading?: boolean;
+  error?: string | null;
 }
 
 const LEVEL_STYLE: Record<string, string> = {
@@ -24,12 +25,23 @@ const LEVEL_LABEL: Record<string, string> = {
   full: "Full",
 };
 
-export default function ComplianceBadge({ result, loading }: Props) {
+export default function ComplianceBadge({ result, loading, error }: Props) {
   if (loading) {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-500 border-slate-200">
         <Loader2 className="w-3 h-3 animate-spin" />
         Analyzing…
+      </span>
+    );
+  }
+
+  if (error) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-red-50 text-red-600 border-red-200"
+      >
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+        {error}
       </span>
     );
   }

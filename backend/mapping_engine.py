@@ -439,6 +439,11 @@ class MappingEngine:
         return None
 
     def _flatten_keys(self, data: dict, prefix: str = "") -> list:
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Expected a JSON object but got {type(data).__name__}. "
+                "The file must contain a single JSON object, not an array or scalar."
+            )
         keys = []
         for k, v in data.items():
             full_key = f"{prefix}.{k}" if prefix else k
