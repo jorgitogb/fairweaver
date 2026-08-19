@@ -38,6 +38,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://fairweaver.vercel.app",
+        "https://*.vercel.app",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
